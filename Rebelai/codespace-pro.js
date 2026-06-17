@@ -8,9 +8,9 @@
   const AI_BASE = 'https://api-rebix.vercel.app/api/gpt-5';
 
   const DEFAULT_FILES = {
-    'app.js': `// Rebel Codespace — AI-powered editor\n// Ctrl+S save · F5 run · Ctrl+/ AI\n\nconst express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.send('<h1>Hello from Rebel Codespace!</h1>');\n});\n\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});`,
-    'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Rebel App</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Hello Rebel!</h1>\n  <p>Edit me in Codespace and press F5 to preview.</p>\n  <script src="app.js"><\/script>\n</body>\n</html>`,
-    'style.css': `body {\n  font-family: 'Roboto', sans-serif;\n  background: linear-gradient(135deg, #121212, #1a0a2e);\n  color: #fff;\n  margin: 0;\n  min-height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n}\nh1 { color: #8a2be2; font-size: 2.5rem; }`,
+    'app.js': `// Rebel Codespace — runs in Live Preview (browser)\n// Press F5 or enable Live toggle to refresh\n\ndocument.addEventListener('DOMContentLoaded', () => {\n  console.log('%c Rebel Preview Active ', 'background:#8a2be2;color:#fff;padding:4px 8px;border-radius:4px');\n\n  const btn = document.getElementById('demoBtn');\n  if (btn) {\n    btn.addEventListener('click', () => {\n      const out = document.getElementById('demoOutput');\n      if (out) out.textContent = 'Preview working! Edited at ' + new Date().toLocaleTimeString();\n      btn.textContent = 'Clicked ✓';\n    });\n  }\n\n  document.querySelectorAll('.feature-chip').forEach(chip => {\n    chip.addEventListener('click', () => chip.classList.toggle('active'));\n  });\n});`,
+    'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Rebel App</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <main class="app">\n    <h1>Hello Rebel!</h1>\n    <p>Edit HTML, CSS &amp; JS — press <strong>F5</strong> for live preview.</p>\n    <button id="demoBtn" type="button">Test Preview</button>\n    <p id="demoOutput" class="demo-output"></p>\n    <div class="chips">\n      <span class="feature-chip">Chat AI</span>\n      <span class="feature-chip">Voice</span>\n      <span class="feature-chip">Codespace</span>\n    </div>\n  </main>\n  <script src="app.js"><\/script>\n</body>\n</html>`,
+    'style.css': `* { box-sizing: border-box; }\nbody {\n  font-family: 'Roboto', sans-serif;\n  background: linear-gradient(135deg, #121212, #1a0a2e);\n  color: #fff;\n  margin: 0;\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.app {\n  text-align: center;\n  padding: 32px 24px;\n  max-width: 480px;\n}\nh1 { color: #8a2be2; font-size: 2.5rem; margin: 0 0 12px; }\np { color: rgba(255,255,255,0.75); line-height: 1.6; }\n#demoBtn {\n  margin-top: 20px;\n  padding: 12px 28px;\n  border: none;\n  border-radius: 10px;\n  background: linear-gradient(135deg, #8a2be2, #00ced1);\n  color: #fff;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: transform 0.15s, box-shadow 0.15s;\n}\n#demoBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(138,43,226,0.4); }\n.demo-output { min-height: 1.4em; color: #00ced1; font-size: 0.9rem; margin-top: 12px; }\n.chips { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }\n.feature-chip {\n  padding: 6px 14px;\n  border-radius: 999px;\n  border: 1px solid rgba(138,43,226,0.4);\n  background: rgba(138,43,226,0.12);\n  font-size: 0.82rem;\n  cursor: pointer;\n  transition: background 0.2s, border-color 0.2s;\n}\n.feature-chip.active, .feature-chip:hover {\n  background: rgba(0,206,209,0.2);\n  border-color: rgba(0,206,209,0.5);\n}`,
     'README.md': `# Rebel Codespace\n\n- **Ctrl+S** Save\n- **F5** Run Preview\n- **Ctrl+F** Search\n\nAsk Rebel AI in the right panel for help!`,
   };
 
@@ -30,6 +30,10 @@
   let problemsList = [];
   let termPanel = 'terminal';
   let importInputBound = false;
+  let previewLive = true;
+  let previewOpen = false;
+  let previewDebounce = null;
+  let previewBlobUrl = null;
 
   const $ = id => document.getElementById(id);
 
@@ -200,28 +204,184 @@
     el.innerHTML = changes.length ? changes.map(f => `<div class="ide-git-change modified"><i class="fas fa-pen"></i> ${f}</div>`).join('') : '<div style="padding:12px;color:rgba(255,255,255,0.3);font-size:0.75rem;">No changes</div>';
   }
 
-  // ── Live Preview ──────────────────────────────────────────
+  // ── Live Preview (full browser bundle) ────────────────────
+  function normalizeAssetPath(href) {
+    if (!href || /^https?:\/\//i.test(href) || /^\/\//.test(href) || /^data:/i.test(href)) return null;
+    return href.replace(/^\.\//, '').split('?')[0].split('#')[0];
+  }
+
+  function extractTagAttr(tag, attr) {
+    const m = tag.match(new RegExp('\\b' + attr + '\\s*=\\s*["\\\']([^"\\\']+)["\\\']', 'i'));
+    return m ? m[1] : null;
+  }
+
+  function findHtmlEntry() {
+    if (files['index.html']) return 'index.html';
+    if (files['index.htm']) return 'index.htm';
+    return Object.keys(files).find(f => /\.html?$/i.test(f)) || null;
+  }
+
+  function setPreviewStatus(text, type) {
+    const el = $('ide-preview-status');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'ide-preview-status' + (type ? ' ' + type : '');
+  }
+
+  function buildPreviewDocument() {
+    syncEditorToFile();
+    const entry = findHtmlEntry();
+
+    if (!entry) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:system-ui;background:#111;color:#fff;padding:24px}code{color:#00ced1}</style></head><body><h1>No HTML file</h1><p>Create <code>index.html</code> in your project to use Live Preview.</p></body></html>';
+    }
+
+    let html = files[entry];
+    const cssFiles = new Set();
+    const jsFiles = new Set();
+
+    function queueCss(file) {
+      if (file && files[file] && !cssFiles.has(file)) cssFiles.add(file);
+    }
+    function queueJs(file) {
+      if (file && files[file] && !jsFiles.has(file)) jsFiles.add(file);
+    }
+
+    html = html.replace(/<link\b[^>]*>/gi, tag => {
+      const rel = (extractTagAttr(tag, 'rel') || '').toLowerCase();
+      if (!rel.includes('stylesheet')) return tag;
+      const href = extractTagAttr(tag, 'href');
+      const file = normalizeAssetPath(href);
+      if (file && files[file]) { queueCss(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<script\b[^>]*\ssrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
+      const file = normalizeAssetPath(src);
+      if (file && files[file]) { queueJs(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<script\b[^>]*src=["']([^"']+)["'][^>]*\/>/gi, (tag, src) => {
+      const file = normalizeAssetPath(src);
+      if (file && files[file]) { queueJs(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<base\b[^>]*>/gi, '');
+
+    if (cssFiles.size === 0 && files['style.css']) queueCss('style.css');
+    if (jsFiles.size === 0 && files['app.js'] && /<\/body>/i.test(html)) queueJs('app.js');
+
+    const cssBundle = [...cssFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
+    const jsBundle = [...jsFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
+
+    const previewHead = `
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style id="rebel-preview-base">
+  #rebel-preview-error-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:#1a0a0a;color:#ff7676;padding:10px 14px;font:12px/1.45 monospace;z-index:2147483647;border-top:2px solid #e74c3c;max-height:35vh;overflow:auto;white-space:pre-wrap}
+  #rebel-preview-error-bar.show{display:block}
+</style>
+${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
+<script id="rebel-preview-shim">
+(function(){
+  if(typeof module==='undefined')window.module={exports:{}};
+  if(typeof exports==='undefined')window.exports=module.exports;
+  if(typeof require==='undefined'){
+    window.require=function(n){console.warn('[Preview] Node module unavailable in browser:',n);return {};};
+  }
+  window.process=window.process||{env:{NODE_ENV:'preview'}};
+  window.addEventListener('error',function(e){
+    var b=document.getElementById('rebel-preview-error-bar');
+    if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
+    b.className='show';
+    b.textContent='Error: '+(e.message||'Unknown')+(e.filename?'\\n@ '+e.filename+(e.lineno?':'+e.lineno:''):'');
+    window.parent.postMessage({type:'rebel-preview-error',message:e.message||String(e)},'*');
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var b=document.getElementById('rebel-preview-error-bar');
+    if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
+    b.className='show';
+    b.textContent='Promise Error: '+(e.reason&&(e.reason.message||e.reason)||'Unknown');
+  });
+  window.addEventListener('load',function(){
+    window.parent.postMessage({type:'rebel-preview-ready'},'*');
+  });
+})();
+<\/script>`;
+
+    const previewJs = jsBundle
+      ? `<script id="rebel-inlined-js">\n${jsBundle}\n<\/script>`
+      : '';
+
+    const isFullDoc = /<html[\s>]/i.test(html);
+
+    if (isFullDoc) {
+      if (/<head[\s>]/i.test(html)) {
+        html = html.replace(/<head([^>]*)>/i, '<head$1>' + previewHead);
+      } else {
+        html = html.replace(/<html([^>]*)>/i, '<html$1><head>' + previewHead + '</head>');
+      }
+      if (/<\/body>/i.test(html)) {
+        html = html.replace(/<\/body>/i, previewJs + '</body>');
+      } else {
+        html += previewJs;
+      }
+    } else {
+      html = `<!DOCTYPE html><html lang="en"><head>${previewHead}</head><body>${html}${previewJs}</body></html>`;
+    }
+
+    return html;
+  }
+
+  function applyPreviewToFrame() {
+    const frame = $('ide-preview-frame');
+    if (!frame) return;
+    const doc = buildPreviewDocument();
+    setPreviewStatus('Loading…', 'loading');
+    frame.srcdoc = doc;
+    logOutput('Live preview updated.', 'info');
+  }
+
   function runPreview() {
     syncEditorToFile();
-    const html = files['index.html'] || '<h1>No index.html</h1>';
-    const css = files['style.css'] || '';
-    const js = files['app.js'] || '';
-    const doc = html.includes('<html') ? html : `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
-    const full = doc.replace('</head>', `<style>${css}</style></head>`).replace(/<script src="app\.js"><\/script>/, `<script>${js}<\/script>`);
-    const frame = $('ide-preview-frame');
     const panel = $('ide-preview-panel');
-    if (frame) { frame.srcdoc = full; }
-    if (panel) { panel.style.display = 'flex'; $('ide-editor-area')?.classList.add('preview-open'); }
+    previewOpen = true;
+    if (panel) {
+      panel.style.display = 'flex';
+      $('ide-editor-area')?.classList.add('preview-open');
+    }
     $('ide-preview-btn')?.classList.add('active');
-    termLog('Preview updated.', 'out');
+    $('ide-run-btn')?.classList.add('active');
+    applyPreviewToFrame();
+    termLog('Live preview opened.', 'out');
     trackCodespace('preview');
     runLinter();
   }
 
+  function schedulePreviewRefresh() {
+    if (!previewOpen || !previewLive) return;
+    clearTimeout(previewDebounce);
+    previewDebounce = setTimeout(applyPreviewToFrame, 500);
+  }
+
   function closePreview() {
+    previewOpen = false;
     $('ide-preview-panel').style.display = 'none';
     $('ide-editor-area')?.classList.remove('preview-open');
     $('ide-preview-btn')?.classList.remove('active');
+    $('ide-run-btn')?.classList.remove('active');
+    clearTimeout(previewDebounce);
+  }
+
+  function openPreviewNewTab() {
+    syncEditorToFile();
+    const doc = buildPreviewDocument();
+    if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl);
+    previewBlobUrl = URL.createObjectURL(new Blob([doc], { type: 'text/html;charset=utf-8' }));
+    window.open(previewBlobUrl, '_blank', 'noopener');
+    toast('Opened in new tab');
   }
 
   function downloadProject() {
@@ -573,9 +733,9 @@
     if (lc === 'date') { termLog(new Date().toString(), 'out'); return; }
     if (lc === 'git status') { updateGitPanel(); const ch = Object.keys(files).filter(f => dirty[f]); termLog('On branch main\n' + (ch.length ? 'Modified: ' + ch.join(', ') : 'nothing to commit, working tree clean'), 'out'); return; }
     if (lc === 'npm install') { npmInstalled = true; termLog('added 248 packages in 2.1s', 'out'); return; }
-    if (lc === 'npm run dev' || lc === 'node app.js') {
-      if (!npmInstalled) termLog('Run npm install first.', 'err');
-      else { termLog('> rebel-project@1.0.0 dev\n> node app.js\n\nServer running on port 3000', 'out'); runPreview(); }
+    if (lc === 'npm run dev' || lc === 'node app.js' || lc === 'npm start') {
+      termLog('Starting browser live preview…', 'out');
+      runPreview();
       return;
     }
     if (lc.startsWith('cat ')) { const f = c.slice(4).trim(); termLog(files[f] ? files[f].slice(0, 500) : 'No such file', files[f] ? 'out' : 'err'); return; }
@@ -680,6 +840,7 @@
         if (!openTabs.includes(b.file)) openTabs.push(b.file);
       });
       renderFileTree(); renderTabs(); refreshEditor();
+      if (previewOpen) schedulePreviewRefresh();
       trackCodespace('ai-write');
     } catch (err) {
       typing.remove();
@@ -730,6 +891,7 @@
         updateCursorPosition();
         clearTimeout(inputTimer);
         inputTimer = setTimeout(runLinter, 800);
+        schedulePreviewRefresh();
       });
       ta.addEventListener('click', updateCursorPosition);
       ta.addEventListener('keyup', updateCursorPosition);
@@ -789,6 +951,23 @@
     $('ide-run-btn')?.addEventListener('click', runPreview);
     $('ide-preview-btn')?.addEventListener('click', runPreview);
     $('ide-preview-close')?.addEventListener('click', closePreview);
+    $('ide-preview-refresh')?.addEventListener('click', () => { applyPreviewToFrame(); toast('Preview refreshed'); });
+    $('ide-preview-newtab')?.addEventListener('click', openPreviewNewTab);
+    $('ide-preview-live')?.addEventListener('change', e => {
+      previewLive = e.target.checked;
+      toast(previewLive ? 'Live preview ON' : 'Live preview paused');
+      if (previewLive && previewOpen) schedulePreviewRefresh();
+    });
+
+    window.addEventListener('message', e => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'rebel-preview-ready') setPreviewStatus('Ready', 'ready');
+      if (e.data.type === 'rebel-preview-error') setPreviewStatus('Error', 'error');
+    });
+
+    $('ide-preview-frame')?.addEventListener('load', () => {
+      if (previewOpen) setPreviewStatus('Ready', 'ready');
+    });
     $('ide-ai-send-btn')?.addEventListener('click', ideAiSend);
     $('ide-ai-input')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ideAiSend(); } });
     $('ide-search-input')?.addEventListener('input', e => searchFiles(e.target.value));

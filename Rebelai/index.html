@@ -761,10 +761,17 @@
           <!-- Live Preview Panel -->
           <div class="ide-preview-panel" id="ide-preview-panel" style="display:none;">
             <div class="ide-preview-header">
-              <span><i class="fas fa-eye"></i> Live Preview</span>
-              <button id="ide-preview-close"><i class="fas fa-times"></i></button>
+              <span class="ide-preview-title"><i class="fas fa-eye"></i> Live Preview <span id="ide-preview-status" class="ide-preview-status">Ready</span></span>
+              <div class="ide-preview-actions">
+                <label class="ide-preview-live-toggle" title="Auto-refresh while typing">
+                  <input type="checkbox" id="ide-preview-live" checked> Live
+                </label>
+                <button type="button" id="ide-preview-refresh" title="Refresh preview"><i class="fas fa-sync-alt"></i></button>
+                <button type="button" id="ide-preview-newtab" title="Open in new tab"><i class="fas fa-external-link-alt"></i></button>
+                <button type="button" id="ide-preview-close" title="Close preview"><i class="fas fa-times"></i></button>
+              </div>
             </div>
-            <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals" title="Preview"></iframe>
+            <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview"></iframe>
           </div>
 
           <!-- Terminal panel (bottom split) -->
