@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="advanced.css">
   <link rel="stylesheet" href="codespace-pro.css">
+  <link rel="stylesheet" href="rebel-codespace-advanced.css">
   <link rel="stylesheet" href="admin-control.css">
   <link rel="stylesheet" href="rebel-3d.css">
   <link rel="stylesheet" href="rebel-perf.css">
@@ -625,6 +626,7 @@
           <span class="ide-title-icon"><i class="fas fa-code"></i></span>
           <span class="ide-title-text">Rebel Codespace</span>
           <span class="ide-title-badge">AI</span>
+          <span class="ide-title-badge-v4">PRO v4</span>
         </div>
         <div class="ide-titlebar-right">
           <button class="ide-topbtn ide-toolbar-btn" id="ide-format-btn" title="Format"><i class="fas fa-magic"></i></button>
@@ -704,6 +706,7 @@
           <button class="ide-act-btn active" data-panel="explorer" title="Explorer"><i class="fas fa-copy"></i></button>
           <button class="ide-act-btn" data-panel="search" title="Search"><i class="fas fa-search"></i></button>
           <button class="ide-act-btn" data-panel="git" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-act-btn" data-panel="templates" title="Templates"><i class="fas fa-layer-group"></i></button>
           <button class="ide-act-btn" data-panel="preview" title="Preview"><i class="fas fa-eye"></i></button>
           <div class="ide-act-spacer"></div>
           <button class="ide-act-btn" data-panel="settings" title="Settings"><i class="fas fa-cog"></i></button>
@@ -717,10 +720,19 @@
           </div>
           <div class="ide-tree" id="ide-file-tree"></div>
         </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-templates" style="display:none;">
+          <div class="ide-sidebar-title">TEMPLATES</div>
+          <div class="ide-templates-list" id="ide-templates-list" style="padding:8px;"></div>
+        </div>
         <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-search" style="display:none;">
           <div class="ide-sidebar-title">SEARCH</div>
           <div class="ide-search-wrap">
             <input type="text" id="ide-search-input" placeholder="Search in files…" spellcheck="false">
+          </div>
+          <div class="ide-replace-row">
+            <input type="text" id="ide-replace-input" placeholder="Replace with…" spellcheck="false">
+            <button type="button" id="ide-replace-btn">Replace</button>
+            <button type="button" id="ide-replace-all-btn">All Files</button>
           </div>
           <div class="ide-search-results" id="ide-search-results"></div>
         </div>
@@ -733,11 +745,20 @@
               <button class="ide-git-btn-action" id="ide-git-add"><i class="fas fa-plus"></i> Stage All</button>
               <button class="ide-git-btn-action" id="ide-git-commit"><i class="fas fa-check"></i> Commit</button>
             </div>
+            <div class="ide-git-diff" id="ide-git-diff"></div>
           </div>
         </div>
         <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-settings" style="display:none;">
           <div class="ide-sidebar-title">SETTINGS</div>
           <div class="ide-settings-list">
+            <label>IDE Theme
+              <select id="ide-ide-theme">
+                <option value="rebel">Rebel Dark</option>
+                <option value="midnight">Midnight</option>
+                <option value="ocean">Ocean</option>
+                <option value="ember">Ember</option>
+              </select>
+            </label>
             <label>Font Size <input type="range" id="ide-font-size" min="11" max="20" value="14"></label>
             <label>Tab Size <input type="number" id="ide-tab-size" min="2" max="8" value="2"></label>
             <label>Word Wrap <input type="checkbox" id="ide-word-wrap" checked></label>
@@ -749,6 +770,16 @@
         <div class="ide-editor-area" id="ide-editor-area">
 
           <!-- Tab Bar -->
+          <div class="ide-breadcrumbs" id="ide-breadcrumbs">
+            <span>rebel-project</span><i class="fas fa-chevron-right"></i><span id="ide-breadcrumb-file">app.js</span>
+          </div>
+          <div class="ide-ai-quickbar" id="ide-ai-quickbar">
+            <button type="button" data-ai-action="explain"><i class="fas fa-lightbulb"></i> Explain</button>
+            <button type="button" data-ai-action="refactor"><i class="fas fa-wrench"></i> Refactor</button>
+            <button type="button" data-ai-action="tests"><i class="fas fa-vial"></i> Tests</button>
+            <span class="ide-quickbar-spacer"></span>
+            <button type="button" id="ide-palette-btn" title="Command Palette (Ctrl+Shift+P)"><i class="fas fa-terminal"></i> ⌘⇧P</button>
+          </div>
           <div class="ide-tabbar" id="ide-tabbar"></div>
 
           <!-- Code Editor (Pro) -->
@@ -758,6 +789,7 @@
               <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
               <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             </div>
+            <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
           </div>
 
           <!-- Live Preview Panel -->
@@ -844,12 +876,26 @@
 
       </div><!-- end ide-body -->
 
+      <!-- IDE Command Palette (v4) -->
+      <div class="ide-cmd-palette" id="ide-cmd-palette">
+        <div class="ide-cmd-backdrop" id="ide-cmd-backdrop"></div>
+        <div class="ide-cmd-box">
+          <div class="ide-cmd-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="ide-cmd-input" placeholder="Type a command…" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="ide-cmd-list" id="ide-cmd-list"></div>
+          <div class="ide-cmd-footer">↑↓ navigate · Enter run · Esc close · Ctrl+Shift+P</div>
+        </div>
+      </div>
+
       <!-- Status Bar (bottom, like VS Code) -->
       <div class="ide-statusbar">
         <span class="ide-sb-item"><i class="fas fa-code-branch"></i> main</span>
         <span class="ide-sb-item" id="ide-sb-errors"><i class="fas fa-check-circle"></i> 0 errors</span>
         <span class="ide-sb-item" id="ide-sb-warnings"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
         <div class="ide-sb-spacer"></div>
+        <span class="ide-sb-item" id="ide-sb-selection"></span>
         <span class="ide-sb-item" id="ide-sb-position">Ln 1, Col 1</span>
         <span class="ide-sb-item" id="ide-sb-lang">JavaScript</span>
         <span class="ide-sb-item">UTF-8</span>
@@ -1608,6 +1654,9 @@
         <div class="shortcut-row"><span>Toggle comment</span><kbd>Ctrl /</kbd></div>
         <div class="shortcut-row"><span>Duplicate line</span><kbd>Ctrl D</kbd></div>
         <div class="shortcut-row"><span>Go to line</span><kbd>Ctrl G</kbd></div>
+        <div class="shortcut-row"><span>Quick fix at cursor</span><kbd>Ctrl .</kbd></div>
+        <div class="shortcut-row"><span>Command palette (IDE)</span><kbd>Ctrl Shift P</kbd></div>
+        <div class="shortcut-row"><span>Zen mode</span><kbd>Ctrl Shift K</kbd></div>
         <div class="shortcut-row"><span>Insert snippet</span><kbd>Ctrl Shift S</kbd></div>
       </div>
     </div>
@@ -1623,6 +1672,7 @@
   <script src="rebel-3d.js"></script>
   <script src="rebel-v3.js"></script>
   <script src="codespace-pro.js"></script>
+  <script src="rebel-codespace-advanced.js"></script>
   <script src="admin-control.js"></script>
 </body>
 </html>

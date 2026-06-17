@@ -1554,8 +1554,81 @@ Rebel AI:`;
     $('ide-tab-size')?.addEventListener('change', e => {
       if (ta) ta.style.tabSize = e.target.value;
     });
+
+    document.dispatchEvent(new CustomEvent('rebel-codespace-ready'));
   }
 
   document.addEventListener('DOMContentLoaded', () => { init().catch(() => {}); });
-  window.RebelCodespace = { saveProject, runPreview, getFiles: () => ({ ...files }) };
+
+  function applyTemplate(templateFiles) {
+    if (!templateFiles || !Object.keys(templateFiles).length) return;
+    syncEditorToFile();
+    files = { ...templateFiles };
+    openTabs = Object.keys(files).slice(0, 8);
+    currentFile = openTabs[0];
+    Object.keys(files).forEach(f => { dirty[f] = true; savedSnapshot[f] = ''; });
+    renderFileTree();
+    renderTabs();
+    refreshEditor();
+    scheduleAutoSave();
+    runLinter();
+    termLog('Template loaded — ' + openTabs.join(', '), 'out');
+  }
+
+  function getEditorSelection() {
+    const ta = $('ide-textarea');
+    if (!ta) return { text: '', start: 0, end: 0 };
+    return {
+      text: ta.value.slice(ta.selectionStart, ta.selectionEnd),
+      start: ta.selectionStart,
+      end: ta.selectionEnd,
+    };
+  }
+
+  function askAi(prompt) {
+    const input = $('ide-ai-input');
+    if (!input) return Promise.resolve();
+    input.value = prompt;
+    return ideAiSend();
+  }
+
+  window.RebelCodespace = {
+    saveProject: (opts) => saveProject(opts || {}),
+    runPreview,
+    runLinter,
+    fixWithAi,
+    fixAllQuick,
+    showTermPanel,
+    showPanel,
+    goToLineInFile,
+    applyTemplate,
+    askAi,
+    getFiles: () => ({ ...files }),
+    getCurrentFile: () => currentFile,
+    getSavedSnapshot: () => ({ ...savedSnapshot }),
+    getDirty: () => ({ ...dirty }),
+    getSelection: getEditorSelection,
+    openFile,
+    syncEditor: syncEditorToFile,
+    refresh: () => { renderFileTree(); renderTabs(); refreshEditor(); },
+    setFiles: (next) => {
+      files = { ...next };
+      openTabs = Object.keys(files).slice(0, 8);
+      currentFile = openTabs[0] || 'app.js';
+      Object.keys(files).forEach(f => { dirty[f] = true; });
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+      scheduleAutoSave();
+    },
+    updateFile: (name, content) => {
+      files[name] = content;
+      dirty[name] = true;
+      if (!openTabs.includes(name)) openTabs.push(name);
+      renderFileTree();
+      renderTabs();
+      if (currentFile === name) refreshEditor();
+      scheduleAutoSave();
+    },
+  };
 })();
