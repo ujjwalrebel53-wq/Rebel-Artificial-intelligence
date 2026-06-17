@@ -16,6 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="advanced.css">
+  <link rel="stylesheet" href="codespace-pro.css">
+  <link rel="stylesheet" href="admin-control.css">
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
@@ -589,20 +591,25 @@
           <span class="ide-title-badge">AI</span>
         </div>
         <div class="ide-titlebar-right">
-          <button class="ide-topbtn" id="ide-run-btn" title="Run"><i class="fas fa-play"></i></button>
-          <button class="ide-topbtn" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn" id="ide-save-btn" title="Save (Ctrl+S)"><i class="fas fa-save"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn" id="ide-new-file-btn" title="New File"><i class="fas fa-file-medical"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn" id="ide-preview-btn" title="Live Preview"><i class="fas fa-eye"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn" id="ide-download-btn" title="Download Project"><i class="fas fa-download"></i></button>
+          <button class="ide-topbtn" id="ide-run-btn" title="Run (F5)"><i class="fas fa-play"></i></button>
+          <button class="ide-topbtn" id="ide-git-btn" title="Git Status"><i class="fas fa-code-branch"></i></button>
           <button class="ide-close-btn" id="closeCodespaceModal2">✕</button>
         </div>
       </div>
 
       <!-- ── Menu Bar ── -->
-      <div class="ide-menubar">
-        <span class="ide-menu-item">File</span>
-        <span class="ide-menu-item">Edit</span>
-        <span class="ide-menu-item">View</span>
-        <span class="ide-menu-item">Terminal</span>
+        <div class="ide-menubar">
+        <span class="ide-menu-item" data-menu="file">File</span>
+        <span class="ide-menu-item" data-menu="edit">Edit</span>
+        <span class="ide-menu-item" id="ide-toggle-preview-menu">View</span>
+        <span class="ide-menu-item" id="ide-toggle-terminal-menu">Terminal</span>
         <span class="ide-menu-item">Help</span>
         <div class="ide-menu-spacer"></div>
+        <span class="ide-save-status" id="ide-save-status"><i class="fas fa-check-circle"></i> Saved</span>
         <span class="ide-menu-status"><span class="ide-status-dot-green"></span> Rebel AI Connected</span>
       </div>
 
@@ -611,93 +618,68 @@
 
         <!-- Activity Bar (far left icons, like VS Code) -->
         <div class="ide-activitybar">
-          <button class="ide-act-btn active" title="Explorer"><i class="fas fa-copy"></i></button>
-          <button class="ide-act-btn" title="Search"><i class="fas fa-search"></i></button>
-          <button class="ide-act-btn" title="Git"><i class="fas fa-code-branch"></i></button>
-          <button class="ide-act-btn" title="Extensions"><i class="fas fa-puzzle-piece"></i></button>
+          <button class="ide-act-btn active" data-panel="explorer" title="Explorer"><i class="fas fa-copy"></i></button>
+          <button class="ide-act-btn" data-panel="search" title="Search"><i class="fas fa-search"></i></button>
+          <button class="ide-act-btn" data-panel="git" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-act-btn" data-panel="preview" title="Preview"><i class="fas fa-eye"></i></button>
           <div class="ide-act-spacer"></div>
-          <button class="ide-act-btn" title="Settings"><i class="fas fa-cog"></i></button>
+          <button class="ide-act-btn" data-panel="settings" title="Settings"><i class="fas fa-cog"></i></button>
         </div>
 
-        <!-- Sidebar — File Explorer -->
-        <div class="ide-sidebar">
-          <div class="ide-sidebar-title">EXPLORER</div>
-          <div class="ide-tree">
-            <div class="ide-tree-folder open">
-              <i class="fas fa-chevron-down ide-chevron"></i>
-              <i class="fas fa-folder-open ide-folder-icon"></i>
-              <span>rebel-project</span>
-            </div>
-            <div class="ide-tree-file active" data-file="app.js">
-              <i class="fas fa-file-code ide-file-icon js"></i>
-              <span>app.js</span>
-            </div>
-            <div class="ide-tree-file" data-file="index.html">
-              <i class="fas fa-file-code ide-file-icon html"></i>
-              <span>index.html</span>
-            </div>
-            <div class="ide-tree-file" data-file="style.css">
-              <i class="fas fa-file-code ide-file-icon css"></i>
-              <span>style.css</span>
-            </div>
-            <div class="ide-tree-file" data-file="README.md">
-              <i class="fas fa-file-alt ide-file-icon md"></i>
-              <span>README.md</span>
-            </div>
-            <div class="ide-tree-folder">
-              <i class="fas fa-chevron-right ide-chevron"></i>
-              <i class="fas fa-folder ide-folder-icon"></i>
-              <span>node_modules</span>
-            </div>
+        <!-- Sidebar panels -->
+        <div class="ide-sidebar" id="ide-sidebar-explorer">
+          <div class="ide-sidebar-title">
+            <span>EXPLORER</span>
+            <button class="ide-sidebar-action" id="ide-add-file-btn" title="New File"><i class="fas fa-plus"></i></button>
+          </div>
+          <div class="ide-tree" id="ide-file-tree"></div>
+        </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-search" style="display:none;">
+          <div class="ide-sidebar-title">SEARCH</div>
+          <div class="ide-search-wrap">
+            <input type="text" id="ide-search-input" placeholder="Search in files…" spellcheck="false">
+          </div>
+          <div class="ide-search-results" id="ide-search-results"></div>
+        </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-git" style="display:none;">
+          <div class="ide-sidebar-title">SOURCE CONTROL</div>
+          <div class="ide-git-status" id="ide-git-status">
+            <div class="ide-git-branch"><i class="fas fa-code-branch"></i> main</div>
+            <div id="ide-git-changes"></div>
+          </div>
+        </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-settings" style="display:none;">
+          <div class="ide-sidebar-title">SETTINGS</div>
+          <div class="ide-settings-list">
+            <label>Font Size <input type="range" id="ide-font-size" min="11" max="20" value="14"></label>
+            <label>Tab Size <input type="number" id="ide-tab-size" min="2" max="8" value="2"></label>
+            <label>Word Wrap <input type="checkbox" id="ide-word-wrap" checked></label>
+            <button class="ide-settings-btn" id="ide-reset-project"><i class="fas fa-undo"></i> Reset Project</button>
           </div>
         </div>
 
         <!-- Editor + Terminal split -->
-        <div class="ide-editor-area">
+        <div class="ide-editor-area" id="ide-editor-area">
 
           <!-- Tab Bar -->
-          <div class="ide-tabbar">
-            <div class="ide-tab active" data-file="app.js">
-              <i class="fas fa-file-code" style="color:#f0db4f;font-size:0.65rem;"></i>
-              <span>app.js</span>
-              <span class="ide-tab-close">×</span>
-            </div>
-            <div class="ide-tab" data-file="index.html">
-              <i class="fas fa-file-code" style="color:#e44d26;font-size:0.65rem;"></i>
-              <span>index.html</span>
-              <span class="ide-tab-close">×</span>
-            </div>
-            <div class="ide-tab" data-file="style.css">
-              <i class="fas fa-file-code" style="color:#264de4;font-size:0.65rem;"></i>
-              <span>style.css</span>
-              <span class="ide-tab-close">×</span>
+          <div class="ide-tabbar" id="ide-tabbar"></div>
+
+          <!-- Code Editor (Pro) -->
+          <div class="ide-editor ide-editor-pro" id="ide-editor">
+            <div class="ide-gutter" id="ide-gutter"></div>
+            <div class="ide-editor-wrap">
+              <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
+              <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             </div>
           </div>
 
-          <!-- Code Editor -->
-          <div class="ide-editor" id="ide-editor">
-            <div class="ide-gutter">
-              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-              <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-              <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
-              <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span>
-              <span>21</span><span>22</span><span>23</span><span>24</span><span>25</span>
+          <!-- Live Preview Panel -->
+          <div class="ide-preview-panel" id="ide-preview-panel" style="display:none;">
+            <div class="ide-preview-header">
+              <span><i class="fas fa-eye"></i> Live Preview</span>
+              <button id="ide-preview-close"><i class="fas fa-times"></i></button>
             </div>
-            <div class="ide-code" id="ide-code-content" contenteditable="true" spellcheck="false">
-<span class="tok-comment">// Rebel Codespace — AI-powered editor</span>
-<span class="tok-comment">// Ask Rebel AI anything in the panel →</span>
-
-<span class="tok-kw">const</span> <span class="tok-var">express</span> = <span class="tok-fn">require</span>(<span class="tok-str">'express'</span>);
-<span class="tok-kw">const</span> <span class="tok-var">app</span> = <span class="tok-fn">express</span>();
-
-<span class="tok-var">app</span>.<span class="tok-fn">get</span>(<span class="tok-str">'/'</span>, (<span class="tok-var">req</span>, <span class="tok-var">res</span>) =&gt; {
-  <span class="tok-var">res</span>.<span class="tok-fn">send</span>(<span class="tok-str">'&lt;h1&gt;Hello from Rebel Codespace!&lt;/h1&gt;'</span>);
-});
-
-<span class="tok-var">app</span>.<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>, () =&gt; {
-  <span class="tok-var">console</span>.<span class="tok-fn">log</span>(<span class="tok-str">'Server running on port 3000'</span>);
-});
-            </div>
+            <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals" title="Preview"></iframe>
           </div>
 
           <!-- Terminal panel (bottom split) -->
@@ -825,6 +807,9 @@
             </a>
             <a href="#" class="admin-nav-item" data-tab="logs">
               <i class="fas fa-terminal"></i><span>System Logs</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="control">
+              <i class="fas fa-gamepad"></i><span>Control Center</span>
             </a>
             <a href="#" class="admin-nav-item" data-tab="settings">
               <i class="fas fa-sliders-h"></i><span>Settings</span>
@@ -1175,6 +1160,72 @@
             </div>
           </div>
 
+          <!-- TAB: Control Center -->
+          <div class="admin-tab" id="tab-control">
+            <div class="control-grid">
+              <div class="admin-card">
+                <div class="admin-card-header"><h3><i class="fas fa-power-off"></i> Platform Controls</h3></div>
+                <div class="control-toggles" id="controlToggles">
+                  <div class="control-toggle-item">
+                    <div><strong>Maintenance Mode</strong><span>Disable entire platform</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-maintenance"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="control-toggle-item">
+                    <div><strong>Chat Enabled</strong><span>Rebel Gpt chat access</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-chat" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="control-toggle-item">
+                    <div><strong>Codespace Enabled</strong><span>IDE access for users</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-codespace" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="control-toggle-item">
+                    <div><strong>Voice AI Enabled</strong><span>Voice assistant access</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-voice" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="control-toggle-item">
+                    <div><strong>Image Upload</strong><span>Allow image in chat</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-image" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="control-toggle-item">
+                    <div><strong>AI Streaming</strong><span>Typewriter effect</span></div>
+                    <label class="admin-toggle"><input type="checkbox" id="ctrl-streaming" checked><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+                <button class="admin-btn-primary" id="saveControlBtn" style="margin-top:16px;"><i class="fas fa-save"></i> Save Controls</button>
+                <div id="controlSaveMsg" class="control-msg"></div>
+              </div>
+              <div class="admin-card">
+                <div class="admin-card-header"><h3><i class="fas fa-bullhorn"></i> Broadcast Message</h3></div>
+                <textarea id="broadcastMessage" class="admin-textarea" rows="4" placeholder="Message shown to all users on the site…"></textarea>
+                <div style="display:flex;gap:10px;margin-top:12px;">
+                  <button class="admin-btn-primary" id="saveBroadcastBtn"><i class="fas fa-paper-plane"></i> Publish</button>
+                  <button class="admin-btn-secondary" id="clearBroadcastBtn"><i class="fas fa-times"></i> Clear</button>
+                </div>
+              </div>
+            </div>
+            <div class="control-grid" style="margin-top:20px;">
+              <div class="admin-card">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-bolt"></i> Live Activity</h3>
+                  <button class="admin-btn-secondary" id="refreshControlBtn"><i class="fas fa-sync"></i></button>
+                </div>
+                <div class="control-activity" id="controlActivity">Loading…</div>
+              </div>
+              <div class="admin-card">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-users-cog"></i> Quick Actions</h3>
+                </div>
+                <div class="control-actions">
+                  <button class="control-action-btn" id="exportUsersBtn"><i class="fas fa-file-export"></i> Export Users CSV</button>
+                  <button class="control-action-btn" id="clearAllLogsBtn"><i class="fas fa-trash"></i> Clear System Logs</button>
+                  <button class="control-action-btn danger" id="disableAllUsersBtn"><i class="fas fa-ban"></i> Disable All Users</button>
+                  <button class="control-action-btn" id="enableAllUsersBtn"><i class="fas fa-check"></i> Enable All Users</button>
+                </div>
+                <div class="control-stats-row" id="controlStatsRow"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- TAB: Settings -->
           <div class="admin-tab" id="tab-settings">
             <div class="admin-row">
@@ -1427,9 +1478,15 @@
     </div>
   </div>
 
+  <!-- Broadcast banner (admin controlled) -->
+  <div id="broadcastBanner" class="broadcast-banner" style="display:none;"></div>
+
   <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
+  <script>window.__REBEL_USE_CODESPACE_PRO__ = true;</script>
   <script src="advanced.js"></script>
   <script src="main.js"></script>
+  <script src="codespace-pro.js"></script>
+  <script src="admin-control.js"></script>
 </body>
 </html>
 

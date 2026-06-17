@@ -370,6 +370,87 @@ elseif ($route === '/api/stats/poll' && $method === 'GET') {
     jsonResponse(getStats());
 }
 
+// PUBLIC settings — feature flags for frontend (no auth)
+elseif ($route === '/api/public/settings' && $method === 'GET') {
+    $s = readJSON(FILE_SETTINGS, []);
+    jsonResponse(['ok' => true, 'settings' => [
+        'maintenance'       => ($s['maintenance'] ?? 'false') === 'true',
+        'chat_enabled'      => ($s['chat_enabled'] ?? 'true') !== 'false',
+        'codespace_enabled' => ($s['codespace_enabled'] ?? 'true') !== 'false',
+        'voice_enabled'     => ($s['voice_enabled'] ?? 'true') !== 'false',
+        'ai_streaming'      => ($s['ai_streaming'] ?? 'true') !== 'false',
+        'image_upload'      => ($s['image_upload'] ?? 'true') !== 'false',
+        'broadcast'         => $s['broadcast_message'] ?? '',
+    ]]);
+}
+
+// ADMIN CONTROL CENTER — get all control state
+elseif ($route === '/api/control' && $method === 'GET') {
+    requireAdmin();
+    $s = readJSON(FILE_SETTINGS, []);
+    $users = readJSON(FILE_USERS, []);
+    $messages = readJSON(FILE_MESSAGES, []);
+    jsonResponse(['ok' => true, 'control' => [
+        'maintenance'       => ($s['maintenance'] ?? 'false') === 'true',
+        'chat_enabled'      => ($s['chat_enabled'] ?? 'true') !== 'false',
+        'codespace_enabled' => ($s['codespace_enabled'] ?? 'true') !== 'false',
+        'voice_enabled'     => ($s['voice_enabled'] ?? 'true') !== 'false',
+        'ai_streaming'      => ($s['ai_streaming'] ?? 'true') !== 'false',
+        'image_upload'      => ($s['image_upload'] ?? 'true') !== 'false',
+        'analytics'         => ($s['analytics'] ?? 'true') !== 'false',
+        'broadcast_message' => $s['broadcast_message'] ?? '',
+        'total_users'       => count($users),
+        'active_users'      => count(array_filter($users, fn($u) => ($u['status'] ?? '') === 'active')),
+        'total_messages'    => count($messages),
+        'recent_logins'     => array_slice(array_reverse(array_map(fn($u) => [
+            'name' => $u['name'], 'email' => $u['email'] ?? '',
+            'last_login' => $u['last_login'] ?? '', 'device' => $u['device'] ?? ''
+        ], $users)), 0, 10),
+    ]]);
+}
+
+// ADMIN CONTROL CENTER — update flags
+elseif ($route === '/api/control' && $method === 'PUT') {
+    requireAdmin();
+    $settings = readJSON(FILE_SETTINGS, []);
+    $boolKeys = ['maintenance','chat_enabled','codespace_enabled','voice_enabled','ai_streaming','image_upload','analytics'];
+    foreach ($boolKeys as $k) {
+        if (array_key_exists($k, $body)) {
+            $settings[$k] = !empty($body[$k]) ? 'true' : 'false';
+        }
+    }
+    if (array_key_exists('broadcast_message', $body)) {
+        $settings['broadcast_message'] = sanitize($body['broadcast_message'] ?? '', 500);
+    }
+    writeJSON(FILE_SETTINGS, $settings);
+    dbLog('info', 'Admin updated control center settings');
+    jsonResponse(['ok' => true]);
+}
+
+// USERS — bulk export (admin)
+elseif ($route === '/api/users/export' && $method === 'GET') {
+    requireAdmin();
+    $users = readJSON(FILE_USERS, []);
+    jsonResponse(['ok' => true, 'users' => array_map('safeUser', $users)]);
+}
+
+// USERS — update role/status (admin)
+elseif (preg_match('#^/api/users/(\d+)/update$#', $route, $m) && $method === 'PUT') {
+    requireAdmin();
+    $id = (int)$m[1];
+    $users = readJSON(FILE_USERS, []);
+    foreach ($users as &$u) {
+        if ($u['id'] == $id) {
+            if (isset($body['role']))   $u['role']   = sanitize($body['role'], 20);
+            if (isset($body['status'])) $u['status'] = sanitize($body['status'], 20);
+            writeJSON(FILE_USERS, $users);
+            dbLog('info', "User #{$id} updated by admin");
+            jsonResponse(['ok' => true, 'user' => safeUser($u)]);
+        }
+    }
+    jsonResponse(['ok' => false], 404);
+}
+
 // 404
 else {
     jsonResponse(['ok' => false, 'error' => 'Not found'], 404);

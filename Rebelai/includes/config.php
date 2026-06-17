@@ -233,6 +233,10 @@ function seedDefaults() {
             'ai_streaming'  => 'true',
             'image_upload'  => 'true',
             'maintenance'   => 'false',
+            'chat_enabled'  => 'true',
+            'codespace_enabled' => 'true',
+            'voice_enabled' => 'true',
+            'broadcast_message' => '',
             'analytics'     => 'true'
         ];
         writeJSON(FILE_SETTINGS, $settings);

@@ -345,10 +345,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── Codespace Modal ────────────────────────────────────────
-  // ══════════════════════════════════════════════════════════════
-  //  CODESPACE IDE — full implementation
-  // ══════════════════════════════════════════════════════════════
-
+  // Handled by codespace-pro.js when __REBEL_USE_CODESPACE_PRO__ is set
+  if (!window.__REBEL_USE_CODESPACE_PRO__) {
   const codespaceBtn   = document.getElementById('codespaceBtn');
   const codespaceModal = document.getElementById('codespaceModal');
 
@@ -804,6 +802,7 @@ And the HTML:
 
   // Init gutter on load
   ideUpdateGutter(IDE_RAW['app.js'].split('\n').length);
+  } // end legacy codespace
 
   // ── Access Rebel Ai Modal ──────────────────────────────────
   const accessRebelBtn   = document.getElementById('accessRebelBtn');
@@ -1548,7 +1547,7 @@ And the HTML:
         this.classList.add('active');
         document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
         const target = document.getElementById('tab-' + tab); if (target) target.classList.add('active');
-        const titles = { overview: 'Dashboard Overview', users: 'User Management', apikeys: 'API Key Management', ping: 'Ping Monitor', logs: 'System Logs', settings: 'Settings & Info' };
+        const titles = { overview: 'Dashboard Overview', users: 'User Management', apikeys: 'API Key Management', ping: 'Ping Monitor', logs: 'System Logs', control: 'Control Center', settings: 'Settings & Info' };
         const titleEl = document.getElementById('adminTabTitle'); if (titleEl) titleEl.textContent = titles[tab] || 'Admin';
         clearInterval(pingInterval);
         if (tab === 'ping')     { doPing(); pingInterval = setInterval(doPing, 3500); }
@@ -1557,6 +1556,7 @@ And the HTML:
         if (tab === 'apikeys')  renderApiKeys();
         if (tab === 'overview') refreshOverview();
         if (tab === 'settings') renderBrowserInfo();
+        if (tab === 'control') { /* handled by admin-control.js */ }
       });
     });
   });
@@ -1725,6 +1725,7 @@ And the HTML:
         <td style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${lastLoginStr}</td>
         <td>
           <button class="table-action-btn" title="Toggle" onclick="adminToggleUser(${u.id})"><i class="fas fa-power-off"></i></button>
+          <button class="table-action-btn edit" title="Edit Role" onclick="adminEditUserRole(${u.id}, '${u.role}')"><i class="fas fa-user-edit"></i></button>
           <button class="table-action-btn danger" title="Delete" onclick="adminDeleteUser(${u.id})"><i class="fas fa-trash"></i></button>
         </td>`;
       tbody.appendChild(tr);
@@ -1740,6 +1741,14 @@ And the HTML:
     if (!confirm('Delete user?')) return;
     await del('/api/users/' + id);
     renderUsers();
+  };
+
+  window.adminEditUserRole = async function (id, currentRole) {
+    const role = prompt('Set role (User / VIP / Admin):', currentRole || 'User');
+    if (!role || !['User', 'VIP', 'Admin'].includes(role)) return;
+    const result = await put('/api/users/' + id + '/update', { role });
+    if (result.ok) renderUsers();
+    else alert('Update failed — check backend.');
   };
 
   function setupUserActions() {
