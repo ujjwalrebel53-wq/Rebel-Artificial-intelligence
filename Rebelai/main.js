@@ -423,40 +423,13 @@ Powered by Rebel AI.
 
   // ── Simple syntax highlighter ──────────────────────────────────
   function ideHighlight(code, filename) {
-    const ext = filename.split('.').pop();
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    if (ext === 'js' || ext === 'ts') {
-      return esc(code)
-        .replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
-        .replace(/\b(const|let|var|function|return|async|await|if|else|for|while|of|in|new|class|import|export|from|default|try|catch|throw)\b/g, '<span class="tok-kw">$1</span>')
-        .replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g, '<span class="tok-str">$1</span>')
-        .replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, '<span class="tok-fn">$1</span>');
+    if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+      return window.RebelSyntax.highlightCode(code, filename);
     }
-    if (ext === 'html') {
-      return esc(code)
-        .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-comment">$1</span>')
-        .replace(/(&lt;\/?[a-zA-Z][a-zA-Z0-9]*)/g, '<span class="tok-fn">$1</span>')
-        .replace(/(\/?\s*&gt;)/g, '<span class="tok-fn">$1</span>')
-        .replace(/([a-zA-Z-]+)(\s*=\s*)/g, '<span class="tok-var">$1</span>$2')
-        .replace(/("(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    }
-    if (ext === 'css') {
-      return esc(code)
-        .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>')
-        .replace(/([.#]?[a-zA-Z][a-zA-Z0-9_-]*)\s*\{/g, '<span class="tok-var">$1</span> {')
-        .replace(/([\w-]+)\s*:/g, '<span class="tok-kw">$1</span>:')
-        .replace(/(#[0-9a-fA-F]{3,8}|\d+(?:px|em|rem|%|vh|vw|s))/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^']*)'|"(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    }
-    if (ext === 'md') {
-      return esc(code)
-        .replace(/(#{1,6} .+)/g, '<span class="tok-comment">$1</span>')
-        .replace(/(`[^`]+`)/g, '<span class="tok-str">$1</span>')
-        .replace(/(\*\*[^*]+\*\*)/g, '<strong>$1</strong>');
-    }
-    return esc(code);
+    return (code || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   // ── Gutter line numbers ─────────────────────────────────────────

@@ -63,24 +63,11 @@
   }
 
   function highlight(code, filename) {
-    const ext = (filename || '').split('.').pop();
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    let h = esc(code);
-    if (ext === 'js') {
-      h = h.replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
-        .replace(/\b(const|let|var|function|return|async|await|if|else|for|while|require)\b/g, '<span class="tok-kw">$1</span>')
-        .replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/g, '<span class="tok-str">$1</span>');
-    } else if (ext === 'html') {
-      h = h.replace(/(&lt;\/?[a-zA-Z][^&]*&gt;)/g, '<span class="tok-fn">$1</span>')
-        .replace(/("(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    } else if (ext === 'css') {
-      h = h.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>')
-        .replace(/([.#]?[\w-]+)\s*\{/g, '<span class="tok-var">$1</span> {');
-    } else if (ext === 'md') {
-      h = h.replace(/(#{1,6} .+)/g, '<span class="tok-comment">$1</span>');
+    if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+      return window.RebelSyntax.highlightCode(code, filename) + '\n';
     }
-    return h + '\n';
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc(code) + '\n';
   }
 
   function syncEditorToFile() {
