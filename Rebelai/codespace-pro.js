@@ -28,6 +28,8 @@
   let outputLog = [];
   let gitStaged = [];
   let problemsList = [];
+  let previewErrors = [];
+  let selectedProblemId = null;
   let termPanel = 'terminal';
   let importInputBound = false;
   let previewLive = true;
@@ -87,10 +89,15 @@
     const ta = $('ide-textarea');
     if (!gutter || !ta) return;
     const lines = (ta.value.match(/\n/g) || []).length + 1;
+    const fileProblems = problemsList.filter(p => p.file === currentFile);
+    const errorLines = new Set(fileProblems.filter(p => p.sev === 'error').map(p => p.line));
+    const warnLines = new Set(fileProblems.filter(p => p.sev === 'warn').map(p => p.line));
     gutter.innerHTML = '';
     for (let i = 1; i <= lines; i++) {
       const s = document.createElement('span');
       s.textContent = i;
+      if (errorLines.has(i)) s.className = 'gutter-error';
+      else if (warnLines.has(i)) s.className = 'gutter-warn';
       gutter.appendChild(s);
     }
   }
@@ -297,13 +304,15 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
     b.className='show';
     b.textContent='Error: '+(e.message||'Unknown')+(e.filename?'\\n@ '+e.filename+(e.lineno?':'+e.lineno:''):'');
-    window.parent.postMessage({type:'rebel-preview-error',message:e.message||String(e)},'*');
+    window.parent.postMessage({type:'rebel-preview-error',message:e.message||String(e),line:e.lineno||1,col:e.colno||1,sourceFile:''},'*');
   });
   window.addEventListener('unhandledrejection',function(e){
     var b=document.getElementById('rebel-preview-error-bar');
     if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
     b.className='show';
-    b.textContent='Promise Error: '+(e.reason&&(e.reason.message||e.reason)||'Unknown');
+    var msg='Promise Error: '+(e.reason&&(e.reason.message||e.reason)||'Unknown');
+    b.textContent=msg;
+    window.parent.postMessage({type:'rebel-preview-error',message:msg,line:1,col:1,sourceFile:''},'*');
   });
   window.addEventListener('load',function(){
     window.parent.postMessage({type:'rebel-preview-ready'},'*');
@@ -338,10 +347,12 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
   function applyPreviewToFrame() {
     const frame = $('ide-preview-frame');
     if (!frame) return;
+    previewErrors = [];
     const doc = buildPreviewDocument();
     setPreviewStatus('Loading…', 'loading');
     frame.srcdoc = doc;
     logOutput('Live preview updated.', 'info');
+    runLinter();
   }
 
   function runPreview() {
@@ -482,21 +493,212 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     reader.readAsText(file);
   }
 
+  function goToLineInFile(name, line) {
+    const n = parseInt(line, 10) || 1;
+    if (name && name !== 'preview' && files[name]) {
+      if (name !== currentFile) openFile(name);
+    }
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const lines = ta.value.split('\n');
+    if (n > lines.length) return;
+    let pos = 0;
+    for (let i = 0; i < n - 1; i++) pos += lines[i].length + 1;
+    ta.focus();
+    ta.setSelectionRange(pos, pos);
+    const lh = parseInt(getComputedStyle(ta).lineHeight, 10) || 18;
+    ta.scrollTop = Math.max(0, (n - 4) * lh);
+    updateCursorPosition();
+  }
+
+  function mapPreviewError(data) {
+    const msg = data.message || 'Preview runtime error';
+    let line = data.line || 1;
+
+    const bundled = msg.match(/rebel-inlined-js:(\d+)/i) || msg.match(/:(\d+):(\d+)/);
+    if (bundled) line = parseInt(bundled[1], 10) || line;
+
+    if (data.sourceFile && files[data.sourceFile]) {
+      return { file: data.sourceFile, line, msg: 'Preview: ' + msg };
+    }
+
+    const jsFiles = [];
+    const entry = findHtmlEntry();
+    if (entry && files[entry]) {
+      const html = files[entry];
+      html.replace(/<script\b[^>]*\ssrc=["']([^"']+)["']/gi, (_, src) => {
+        const f = normalizeAssetPath(src);
+        if (f && files[f] && !jsFiles.includes(f)) jsFiles.push(f);
+        return '';
+      });
+    }
+    if (!jsFiles.length && files['app.js']) jsFiles.push('app.js');
+    Object.keys(files).filter(f => f.endsWith('.js') && !jsFiles.includes(f)).forEach(f => jsFiles.push(f));
+
+    let offset = 1;
+    for (const f of jsFiles) {
+      const blockLines = (`/* ${f} */\n${files[f] || ''}`).split('\n').length;
+      if (line <= offset + blockLines - 1) {
+        return { file: f, line: Math.max(1, line - offset + 1), msg: 'Preview: ' + msg };
+      }
+      offset += blockLines + 1;
+    }
+
+    return { file: jsFiles[0] || 'app.js', line, msg: 'Preview: ' + msg };
+  }
+
   function runLinter() {
     syncEditorToFile();
-    problemsList = [];
-    Object.entries(files).forEach(([name, code]) => {
-      const lines = code.split('\n');
-      lines.forEach((line, i) => {
-        if (name.endsWith('.js')) {
-          if (line.includes('console.log') && !line.trim().startsWith('//')) problemsList.push({ file: name, line: i + 1, msg: 'Avoid console.log in production', sev: 'warn' });
-          if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length && line.includes('(')) problemsList.push({ file: name, line: i + 1, msg: 'Possible unbalanced parentheses', sev: 'error' });
-        }
-        if (line.includes('TODO') || line.includes('FIXME')) problemsList.push({ file: name, line: i + 1, msg: 'TODO/FIXME found', sev: 'info' });
+    if (window.RebelDiagnostics && window.RebelDiagnostics.analyze) {
+      problemsList = window.RebelDiagnostics.analyze(files, previewErrors);
+    } else {
+      problemsList = [];
+      Object.entries(files).forEach(([name, code]) => {
+        code.split('\n').forEach((line, i) => {
+          if (name.endsWith('.js') && line.includes('console.log') && !line.trim().startsWith('//')) {
+            problemsList.push({ file: name, line: i + 1, msg: 'Unexpected console statement', sev: 'info', fixable: true, rule: 'console-log', id: name + ':' + (i + 1) + ':console-log' });
+          }
+        });
       });
-    });
+    }
     renderProblems();
     updateStatusBarCounts();
+    updateGutter();
+  }
+
+  function getProblemById(id) {
+    return problemsList.find(p => p.id === id);
+  }
+
+  function applyQuickFixForProblem(problem) {
+    if (!problem || !files[problem.file]) return false;
+    if (!window.RebelDiagnostics || !window.RebelDiagnostics.applyQuickFix) return false;
+    pushUndo();
+    const fixed = window.RebelDiagnostics.applyQuickFix(problem, files[problem.file]);
+    if (fixed === null) return false;
+    files[problem.file] = fixed;
+    dirty[problem.file] = true;
+    if (problem.file === currentFile) {
+      const ta = $('ide-textarea');
+      if (ta) {
+        ta.value = fixed;
+        ta.dispatchEvent(new Event('input'));
+      }
+    } else {
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+    }
+    logOutput('Quick fix: ' + problem.file + ':' + problem.line + ' — ' + problem.msg, 'success');
+    toast('Fixed!');
+    runLinter();
+    schedulePreviewRefresh();
+    return true;
+  }
+
+  function fixAllQuick() {
+    const fixable = problemsList.filter(p => p.fixable);
+    if (!fixable.length) {
+      toast('No quick fixes — try AI Fix All');
+      return;
+    }
+    pushUndo();
+    const byFile = {};
+    fixable.forEach(p => { (byFile[p.file] = byFile[p.file] || []).push(p); });
+    let count = 0;
+    Object.entries(byFile).forEach(([file, probs]) => {
+      probs.sort((a, b) => b.line - a.line);
+      probs.forEach(p => {
+        const fixed = window.RebelDiagnostics.applyQuickFix(p, files[file]);
+        if (fixed !== null) { files[file] = fixed; count++; }
+      });
+      dirty[file] = true;
+    });
+    refreshEditor();
+    runLinter();
+    schedulePreviewRefresh();
+    logOutput('Applied ' + count + ' quick fix(es)', 'success');
+    toast('Applied ' + count + ' quick fix(es)');
+  }
+
+  async function fixWithAi(problems) {
+    const list = problems && problems.length ? problems : problemsList.filter(p => p.sev === 'error' || p.fixable);
+    if (!list.length) {
+      toast('No problems to fix');
+      return;
+    }
+    syncEditorToFile();
+    showTermPanel('problems');
+    const btn = $('ide-fix-all-ai-btn');
+    if (btn) btn.disabled = true;
+
+    const problemText = list.map(p => `- ${p.file}:${p.line} [${p.sev}] ${p.msg}`).join('\n');
+    const fileSnippets = [...new Set(list.map(p => p.file))].map(f =>
+      `// FILE: ${f}\n${(files[f] || '').slice(0, 2500)}`
+    ).join('\n\n');
+
+    const prompt = `${IDE_AI_SYSTEM}
+
+Fix ALL of these code problems. Return corrected full files using fenced blocks with // FILE: filename on the first line.
+
+PROBLEMS:
+${problemText}
+
+CURRENT FILES:
+${fileSnippets}
+
+User: Fix every problem listed above with working code.
+Rebel AI:`;
+
+    ideAddAiMsg('Fix these problems:\n' + problemText, 'user');
+    const typing = document.createElement('div');
+    typing.className = 'ide-ai-msg bot';
+    typing.id = 'ide-ai-typing-indicator';
+    typing.innerHTML = '<div class="ide-ai-avatar"><i class="fas fa-robot"></i></div><div class="ide-ai-typing"><span></span><span></span><span></span> Fixing errors…</div>';
+    $('ide-ai-messages')?.appendChild(typing);
+
+    try {
+      const resp = await fetch(AI_BASE + '?q=' + encodeURIComponent(prompt));
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const reply = data.results || data.result || 'No response';
+      typing.remove();
+      ideAddAiMsg(reply, 'bot');
+      extractBlocks(reply).forEach(b => {
+        files[b.file] = b.code;
+        dirty[b.file] = true;
+        if (!openTabs.includes(b.file)) openTabs.push(b.file);
+      });
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+      previewErrors = [];
+      runLinter();
+      if (previewOpen) schedulePreviewRefresh();
+      logOutput('AI fixed ' + list.length + ' problem(s)', 'success');
+      toast('AI fixes applied!');
+      trackCodespace('ai-fix');
+    } catch (err) {
+      typing.remove();
+      ideAddAiMsg('Fix failed: ' + err.message, 'bot');
+      toast('AI fix failed');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function quickFixAtCursor() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const lineNum = ta.value.slice(0, ta.selectionStart).split('\n').length;
+    const onLine = problemsList.filter(p => p.file === currentFile && p.line === lineNum);
+    const problem = onLine.find(p => p.fixable) || onLine[0];
+    if (!problem) {
+      toast('No fix at this line');
+      return;
+    }
+    if (problem.fixable && applyQuickFixForProblem(problem)) return;
+    fixWithAi([problem]);
   }
 
   function renderProblems() {
@@ -504,11 +706,52 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     const cnt = $('ide-problems-count');
     if (cnt) cnt.textContent = problemsList.length ? `(${problemsList.length})` : '';
     if (!el) return;
-    el.innerHTML = problemsList.length ? problemsList.map(p =>
-      `<div class="ide-problem ide-problem-${p.sev}" data-file="${p.file}" data-line="${p.line}"><i class="fas fa-${p.sev === 'error' ? 'times-circle' : p.sev === 'warn' ? 'exclamation-triangle' : 'info-circle'}"></i> <strong>${p.file}:${p.line}</strong> ${p.msg}</div>`
-    ).join('') : '<div class="ide-no-problems"><i class="fas fa-check-circle"></i> No problems detected</div>';
+
+    if (!problemsList.length) {
+      el.innerHTML = '<div class="ide-no-problems"><i class="fas fa-check-circle"></i> No problems detected — code looks clean!</div>';
+      return;
+    }
+
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    el.innerHTML = problemsList.map(p => {
+      const icon = p.sev === 'error' ? 'times-circle' : p.sev === 'warn' ? 'exclamation-triangle' : 'info-circle';
+      const sel = p.id === selectedProblemId ? ' selected' : '';
+      return `<div class="ide-problem ide-problem-${p.sev}${sel}" data-id="${p.id}" data-file="${p.file}" data-line="${p.line}">
+        <i class="fas fa-${icon}"></i>
+        <div class="ide-problem-main">
+          <strong>${esc(p.file)}:${p.line}</strong>
+          <span class="ide-problem-msg">${esc(p.msg)}</span>
+          ${p.source ? `<span class="ide-problem-src">${esc(p.source)}</span>` : ''}
+        </div>
+        <div class="ide-problem-actions">
+          ${p.fixable ? `<button type="button" class="ide-problem-fix" data-id="${p.id}" title="Quick fix">Fix</button>` : ''}
+          <button type="button" class="ide-problem-ai" data-id="${p.id}" title="AI fix">AI</button>
+        </div>
+      </div>`;
+    }).join('');
+
     el.querySelectorAll('.ide-problem').forEach(row => {
-      row.addEventListener('click', () => openFile(row.dataset.file));
+      row.addEventListener('click', e => {
+        if (e.target.closest('.ide-problem-actions')) return;
+        selectedProblemId = row.dataset.id;
+        renderProblems();
+        goToLineInFile(row.dataset.file, row.dataset.line);
+      });
+    });
+    el.querySelectorAll('.ide-problem-fix').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = getProblemById(btn.dataset.id);
+        if (p) applyQuickFixForProblem(p);
+      });
+    });
+    el.querySelectorAll('.ide-problem-ai').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = getProblemById(btn.dataset.id);
+        if (p) fixWithAi([p]);
+      });
     });
   }
 
@@ -676,6 +919,8 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
       'copy': () => { const ta = $('ide-textarea'); navigator.clipboard.writeText(ta?.value.slice(ta.selectionStart, ta.selectionEnd) || ta?.value || ''); toast('Copied'); },
       'paste': async () => { const ta = $('ide-textarea'); try { const t = await navigator.clipboard.readText(); if (ta) { pushUndo(); const s = ta.selectionStart; ta.value = ta.value.slice(0, s) + t + ta.value.slice(ta.selectionEnd); ta.dispatchEvent(new Event('input')); } } catch(e) {} },
       'format': formatDocument,
+      'fix-all': fixAllQuick,
+      'fix-all-ai': () => fixWithAi(),
       'find': () => { showPanel('search'); $('ide-search-input')?.focus(); },
       'preview': runPreview,
       'toggle-terminal': () => { const p = $('ide-terminal-panel'); p.style.display = p.style.display === 'none' ? '' : 'none'; },
@@ -685,7 +930,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
       'term-problems': () => showTermPanel('problems'),
       'term-output': () => showTermPanel('output'),
       'term-clear': () => { $('ide-terminal-output').innerHTML = ''; termLog('', 'out'); },
-      'shortcuts': () => alert('Ctrl+S Save · Ctrl+F Find · F5 Preview · Ctrl+Z Undo · Ctrl+Y Redo · Esc Close'),
+      'shortcuts': () => alert('Ctrl+S Save · Ctrl+F Find · F5 Preview · Ctrl+. Quick Fix · Ctrl+Z Undo · Ctrl+Y Redo · Esc Close'),
       'docs': () => { openFile('README.md'); showPanel('explorer'); },
       'ai-help': () => { $('ide-ai-input').value = 'Explain this project and how to run it'; $('ide-ai-input')?.focus(); },
     };
@@ -742,6 +987,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     if (lc.startsWith('echo ')) { termLog(c.slice(5), 'out'); return; }
     if (lc === 'rebel help') { termLog('Commands: ls, cat, npm install, npm run dev, git status, clear, preview', 'out'); return; }
     if (lc === 'preview') { runPreview(); return; }
+    if (lc === 'lint' || lc === 'diagnostics') { runLinter(); showTermPanel('problems'); termLog('Found ' + problemsList.length + ' problem(s)', 'out'); return; }
     if (lc === 'save') { saveProject(); return; }
     if (lc === 'format') { formatDocument(); return; }
     if (lc === 'git add .') { gitStageAll(); termLog('Staged all changes.', 'out'); return; }
@@ -962,7 +1208,17 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     window.addEventListener('message', e => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'rebel-preview-ready') setPreviewStatus('Ready', 'ready');
-      if (e.data.type === 'rebel-preview-error') setPreviewStatus('Error', 'error');
+      if (e.data.type === 'rebel-preview-error') {
+        setPreviewStatus('Error', 'error');
+        const mapped = mapPreviewError(e.data);
+        const dup = previewErrors.some(p => p.msg === mapped.msg && p.line === mapped.line);
+        if (!dup) {
+          previewErrors.push(mapped);
+          runLinter();
+          showTermPanel('problems');
+          logOutput('Preview error: ' + mapped.msg, 'info');
+        }
+      }
     });
 
     $('ide-preview-frame')?.addEventListener('load', () => {
@@ -986,6 +1242,11 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
       });
     }
 
+    $('ide-fix-all-btn')?.addEventListener('click', fixAllQuick);
+    $('ide-fix-all-ai-btn')?.addEventListener('click', () => fixWithAi());
+    $('ide-refresh-diagnostics-btn')?.addEventListener('click', () => { previewErrors = []; runLinter(); toast('Re-scanned'); });
+    $('ide-sb-errors')?.addEventListener('click', () => showTermPanel('problems'));
+    $('ide-sb-warnings')?.addEventListener('click', () => showTermPanel('problems'));
     $('ide-term-close')?.addEventListener('click', () => { $('ide-terminal-panel').style.display = $('ide-terminal-panel').style.display === 'none' ? '' : 'none'; });
     $('ide-git-btn')?.addEventListener('click', () => showPanel('git'));
 
@@ -1014,6 +1275,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
       if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); duplicateLine(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); goToLine(); }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); pickSnippet(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); quickFixAtCursor(); }
       if (e.key === 'Escape') closeModal();
     });
 

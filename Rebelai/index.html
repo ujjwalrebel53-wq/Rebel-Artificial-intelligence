@@ -660,6 +660,8 @@
             <button data-action="copy"><i class="fas fa-copy"></i> Copy</button>
             <button data-action="paste"><i class="fas fa-paste"></i> Paste</button>
             <button data-action="format"><i class="fas fa-magic"></i> Format Document</button>
+            <button data-action="fix-all"><i class="fas fa-wrench"></i> Fix All Problems</button>
+            <button data-action="fix-all-ai"><i class="fas fa-robot"></i> Fix All with AI</button>
             <button data-action="find"><i class="fas fa-search"></i> Find <kbd>Ctrl+F</kbd></button>
           </div>
         </div>
@@ -794,6 +796,12 @@
             </div>
             </div>
             <div class="ide-term-panel" id="ide-term-panel-problems">
+              <div class="ide-problems-toolbar">
+                <button type="button" id="ide-fix-all-btn" title="Apply quick fixes"><i class="fas fa-wrench"></i> Fix All</button>
+                <button type="button" id="ide-fix-all-ai-btn" title="Ask Rebel AI to fix all errors"><i class="fas fa-robot"></i> Fix All with AI</button>
+                <button type="button" id="ide-refresh-diagnostics-btn" title="Re-scan project"><i class="fas fa-sync"></i> Re-scan</button>
+                <span class="ide-problems-hint"><kbd>Ctrl+.</kbd> Quick fix at cursor</span>
+              </div>
               <div class="ide-problems-body" id="ide-problems-body"></div>
             </div>
             <div class="ide-term-panel" id="ide-term-panel-output">
@@ -1612,6 +1620,7 @@
   <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
   <script>window.__REBEL_USE_CODESPACE_PRO__ = true;</script>
   <script src="syntax-highlight.js"></script>
+  <script src="rebel-diagnostics.js"></script>
   <script src="advanced.js"></script>
   <script src="main.js"></script>
   <input type="file" id="ide-import-input" accept=".json" style="display:none;">
