@@ -1,0 +1,15 @@
+[
+    {
+        "device_fp": "0aa930073a3d3bbd4ef96c31790f6cb642ae5af526f5804ba72f22f7eff24ff1",
+        "attempts": 1,
+        "reason": "warn:asset_integrity",
+        "at": 1781070449
+    },
+    {
+        "device_fp": "0aa930073a3d3bbd4ef96c31790f6cb642ae5af526f5804ba72f22f7eff24ff1",
+        "attempts": 99,
+        "reason": "warn:asset_integrity",
+        "at": 1781070449,
+        "type": "permanent_ban"
+    }
+]

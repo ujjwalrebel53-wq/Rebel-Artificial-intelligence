@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="format-detection" content="telephone=no">
+  <title>Rebel Ai </title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- FIX: Correct relative path (no /assets/ prefix) -->
+  <link rel="stylesheet" href="style.css">
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="logo">Rebel Ai</div>
+      <nav>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#" id="adminPanelBtn" class="nav-link admin-nav-btn"><i class="fas fa-shield-alt"></i> Admin</a>
+      </nav>
+    </div>
+  </header>
+  
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-layout">
+        <div class="hero-content animate">
+          <h1>
+            Rebel Ai<br><span>Unleash the Code.</span>
+          </h1>
+          <p class="hero-subtitle">
+            An advanced AI assistant designed for those who dare to think differently. Powered by cutting-edge technology and a rebellious spirit.
+          </p>
+          <div class="hero-buttons">
+            <a href="#" id="aboutDevBtn" class="btn btn-primary telegram-btn">
+              <i class="fas fa-user-secret"></i> 
+              <span>About Developer</span>
+            </a>
+            <a href="#" id="accessRebelBtn" class="btn btn-access-rebel">
+              <span class="access-btn-glow"></span>
+              <i class="fas fa-unlock-alt"></i>
+              <span>Access Rebel Ai</span>
+            </a>
+            <a href="#" id="codespaceBtn" class="btn btn-codespace">
+              <span class="codespace-btn-shimmer"></span>
+              <i class="fas fa-code"></i>
+              <span>Codespace</span>
+            </a>
+          </div>
+          <div class="guarantee">
+            <i class="fas fa-shield-alt"></i>
+            <span>100% Free. Unsubscribe anytime</span>
+          </div>
+        </div>
+        
+        <div class="hero-visual animate">
+          <div class="ai-avatar">
+            <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="AI Assistant">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring-2"></div>
+          </div>
+          <div class="floating-features">
+            <div class="feature-bubble bubble-1">
+              <i class="fas fa-robot"></i>
+              <span>AI Bots</span>
+            </div>
+            <div class="feature-bubble bubble-2">
+              <i class="fas fa-cogs"></i>
+              <span>Automation</span>
+            </div>
+            <div class="feature-bubble bubble-3">
+              <i class="fas fa-chart-line"></i>
+              <span>Analytics</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- About Section -->
+  <section id="about" class="features">
+    <div class="container">
+      <h2 class="section-title animate">What you get with Rebel Ai</h2>
+      <div class="features-grid">
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-robot"></i></div>
+          <h3>Ready-to-use AI Bots</h3>
+          <p>Download and launch ready-made chatbots to automate your business. Save time on development.</p>
+        </div>
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-cogs"></i></div>
+          <h3>Make Integrations</h3>
+          <p>Ready-made automation scenarios from experts. Integrate services and save hours of manual work every day.</p>
+        </div>
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-newspaper"></i></div>
+          <h3>AI News</h3>
+          <p>Be the first to know about new neural networks, updates, and trends. Stay up to date with all changes in the world of AI.</p>
+        </div>
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+          <h3>Hacks & Guides</h3>
+          <p>Step-by-step guides for setting up AI tools. From beginner to pro in minimal time.</p>
+        </div>
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-rocket"></i></div>
+          <h3>Speed Up Work</h3>
+          <p>Automate routine tasks and free up time for creativity. Increase productivity by 2-3 times.</p>
+        </div>
+        <div class="feature-card animate">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Business Growth</h3>
+          <p>Use AI for scaling. Optimize processes and increase profits with automation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-logo">Rebel Ai</div>
+      <p class="copyright">© 2026 Rebel Ai. Created by Rebel bhaiya.</p>
+    </div>
+  </footer>
+  
+  <!-- About Dev Modal -->
+  <div id="devModal" class="modal">
+    <div class="modal-content animated-modal">
+      <span class="close-modal">&times;</span>
+      <div class="dev-profile">
+        <div class="dev-avatar-container">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Bhaiya" class="dev-avatar">
+          <div class="dev-pulse"></div>
+        </div>
+        <h2>About Developer</h2>
+        <div class="dev-role">Visionary Technologist</div>
+        <p class="dev-bio">Ujjwal Tiwari Popularly Known As Rebel Bhaiya is a visionary technologist with a unique blend of skills. As a Black Hat Hacker turned security expert, OSINT specialist, and proficient Malware & Web Developer, he created Rebel GPT to push the boundaries of what AI assistants can achieve.</p>
+        <div class="dev-skills">
+          <span class="skill-tag">Security Expert</span>
+          <span class="skill-tag">OSINT</span>
+          <span class="skill-tag">Web Dev</span>
+          <span class="skill-tag">AI Architect</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ACCESS REBEL AI MODAL (Picker)
+  ════════════════════════════════════════════ -->
+  <div id="accessRebelModal" class="modal full-screen-modal">
+    <div class="modal-content access-rebel-content full-screen-content">
+      <button class="auth-close-x" id="closeAccessModal">✕</button>
+      <div class="access-rebel-inner">
+        <div class="access-rebel-logo">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <h2 class="auth-title">Access <span>Rebel Ai</span></h2>
+          <p class="auth-subtitle">Choose your experience</p>
+        </div>
+        <div class="access-rebel-btns">
+          <button id="accessChatBtn" class="access-option-btn">
+            <div class="access-option-icon"><i class="fas fa-robot"></i></div>
+            <div class="access-option-info">
+              <span class="access-option-title">Chat with Rebel Gpt</span>
+              <span class="access-option-desc">AI powered chat assistant</span>
+            </div>
+            <i class="fas fa-chevron-right access-option-arrow"></i>
+          </button>
+          <button id="accessVoiceBtn" class="access-option-btn">
+            <div class="access-option-icon voice"><i class="fas fa-user-astronaut"></i></div>
+            <div class="access-option-info">
+              <span class="access-option-title">Rebel Ai Voice Assistant</span>
+              <span class="access-option-desc">Talk to Rebel Ai — say "Hey Rebel"</span>
+            </div>
+            <i class="fas fa-chevron-right access-option-arrow"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       AUTH MODAL — 4 Steps:
+       stepLogin  → Login (Username + Password + Create Account)
+       stepEmail  → Register: Enter Email for OTP
+       stepOtp    → Verify OTP
+       stepCreate → Create Account (Username + Pass + Confirm)
+       After stepCreate success → back to stepLogin
+  ════════════════════════════════════════════════════════════ -->
+  <div id="authModal" class="modal full-screen-modal">
+    <div class="modal-content auth-modal-content full-screen-content">
+      <button class="auth-close-x" id="closeAuthModal">✕</button>
+
+      <!-- ── STEP: Login ── -->
+      <div class="auth-step" id="authStepLogin">
+        <div class="auth-brand">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <h2 class="auth-title">Welcome to <span>Rebel Ai</span></h2>
+          <p class="auth-subtitle" id="loginSubtitle">Sign in to continue</p>
+        </div>
+        <div class="auth-form">
+          <div class="auth-input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" id="loginUsername" placeholder="Username" autocomplete="username" aria-label="Username">
+          </div>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" aria-label="Password">
+          </div>
+          <div class="auth-err" id="loginErr"></div>
+          <button class="auth-btn" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+          <div class="auth-divider"><span>or</span></div>
+          <button class="auth-btn auth-btn-secondary" id="goToRegisterBtn">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP: Enter Email for OTP ── -->
+      <div class="auth-step" id="authStepEmail" style="display:none;">
+        <div class="auth-brand">
+          <div class="auth-otp-icon" style="color:#00ced1;border-color:rgba(0,206,209,0.4);background:linear-gradient(135deg,rgba(0,206,209,0.12),rgba(138,43,226,0.08));">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h2 class="auth-title">Verify <span>Email</span></h2>
+          <p class="auth-subtitle">Enter your email to receive OTP</p>
+        </div>
+        <div class="auth-form">
+          <div class="auth-input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email" aria-label="Email address">
+          </div>
+          <div class="auth-err" id="emailErr"></div>
+          <button class="auth-btn" id="sendOtpBtn">
+            <span id="sendOtpText"><i class="fas fa-paper-plane"></i> Send OTP</span>
+            <span id="sendOtpLoader" style="display:none;"><i class="fas fa-circle-notch fa-spin"></i> Sending…</span>
+          </button>
+          <p class="auth-note">A 6-digit OTP will be sent to your email</p>
+          <button class="auth-back-btn" id="backToLoginFromEmail"><i class="fas fa-arrow-left"></i> Back to Login</button>
+        </div>
+      </div>
+
+      <!-- ── STEP: OTP Verify ── -->
+      <div class="auth-step" id="authStepOtp" style="display:none;">
+        <div class="auth-brand">
+          <div class="auth-otp-icon"><i class="fas fa-shield-alt"></i></div>
+          <h2 class="auth-title">Check Your <span>Email</span></h2>
+          <p class="auth-subtitle" id="otpSentTo">OTP sent to your email</p>
+        </div>
+        <div class="auth-form">
+          <div class="otp-boxes" id="otpBoxes">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric">
+          </div>
+          <div class="auth-err" id="otpErr"></div>
+          <button class="auth-btn" id="verifyOtpBtn">
+            <i class="fas fa-check-circle"></i> Verify OTP
+          </button>
+          <div class="auth-resend">
+            Didn't receive? <button id="resendOtpBtn" class="auth-link-btn">Resend OTP</button>
+            <span id="resendTimer"></span>
+          </div>
+          <button class="auth-back-btn" id="backToEmail"><i class="fas fa-arrow-left"></i> Change Email</button>
+        </div>
+      </div>
+
+      <!-- ── STEP: Create Account ── -->
+      <div class="auth-step" id="authStepCreate" style="display:none;">
+        <div class="auth-brand">
+          <div class="auth-otp-icon" style="background:linear-gradient(135deg,rgba(0,206,209,0.15),rgba(138,43,226,0.15));border-color:rgba(0,206,209,0.35);">
+            <i class="fas fa-user-plus" style="color:#00ced1;"></i>
+          </div>
+          <h2 class="auth-title">Create <span>Account</span></h2>
+          <p class="auth-subtitle">Set your login credentials</p>
+        </div>
+        <div class="auth-form">
+          <div class="auth-input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" id="authName" placeholder="Choose a username" autocomplete="username" aria-label="Username">
+          </div>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="authPassword" placeholder="Create a password (min 6 chars)" autocomplete="new-password" aria-label="Password">
+          </div>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="authConfirmPassword" placeholder="Confirm your password" autocomplete="new-password" aria-label="Confirm password">
+          </div>
+          <div class="auth-err" id="nameErr"></div>
+          <button class="auth-btn" id="startChatBtn">
+            <i class="fas fa-rocket"></i> Create Account
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CHAT MODAL
+  ════════════════════════════════════════════ -->
+  <div id="chatModal" class="modal full-screen-modal">
+    <div class="modal-content chat-modal-content full-screen-content">
+      <span class="close-chat">&times;</span>
+      <div class="chat-header">
+        <div class="chat-header-user">
+          <div class="chat-user-avatar" id="chatUserAvatar">?</div>
+          <div>
+            <div class="chat-header-name" id="chatHeaderName">Rebel Gpt</div>
+            <div class="chat-header-status">● Online</div>
+          </div>
+        </div>
+        <h2 style="position:absolute;left:50%;transform:translateX(-50%);">Rebel Gpt</h2>
+        <!-- Model Selector -->
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+          <select id="modelSelector" style="
+            background: rgba(138,43,226,0.15);
+            border: 1px solid rgba(138,43,226,0.4);
+            color: #fff;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path fill=%22%23aaa%22 d=%22M0 0l5 6 5-6z%22/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+            max-width: 180px;
+          ">
+            <option value="claude-sonnet-4-20250514">Sonnet 4 (Default)</option>
+            <option value="claude-opus-4.6">Claude Opus 4.6</option>
+            <option value="claude-opus-4-6">Claude Opus 4-6</option>
+            <option value="cursorlm">CursorLM</option>
+            <option value="claude-opus-4.6-2026">Opus 4.6-2026</option>
+            <option value="claude-opus-4-7">Claude Opus 4-7</option>
+          </select>
+        </div>
+      </div>
+      <div class="chat-container">
+        <div id="chatMessages" class="chat-messages">
+          <div class="message bot-message">Welcome to Rebel Gpt</div>
+        </div>
+        
+        <!-- Image Preview Area -->
+        <div id="imagePreviewContainer" style="display:none; padding: 10px 15px; background: rgba(20,20,20,0.95); border-top: 1px solid rgba(255,255,255,0.05);">
+          <div style="position:relative; display:inline-block;">
+            <img id="imagePreview" src="" alt="Preview" style="max-height: 80px; max-width: 120px; border-radius: 10px; border: 2px solid var(--accent-teal);">
+            <button id="removeImageBtn" type="button" style="position:absolute; top:-8px; right:-8px; background:#e74c3c; border:none; color:white; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;">✕</button>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <input type="file" id="imageInput" accept="image/*" style="display: none;">
+          <button id="uploadBtn" type="button" title="Upload Image">
+            <i class="fas fa-image"></i>
+          </button>
+          <input type="text" id="chatInput" placeholder="Type message or upload image...">
+          <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CODESPACE MODAL
+  ════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════
+       CODESPACE — CURSOR-STYLE IDE INTERFACE
+  ════════════════════════════════════════════════════════ -->
+  <div id="codespaceModal" class="modal full-screen-modal">
+    <div class="modal-content ide-shell full-screen-content">
+
+      <!-- ── Title Bar (like Cursor/VS Code) ── -->
+      <div class="ide-titlebar">
+        <div class="ide-titlebar-left">
+          <span class="ide-dot red"></span>
+          <span class="ide-dot yellow"></span>
+          <span class="ide-dot green" id="closeCodespaceModal"></span>
+        </div>
+        <div class="ide-titlebar-center">
+          <span class="ide-title-icon"><i class="fas fa-code"></i></span>
+          <span class="ide-title-text">Rebel Codespace</span>
+          <span class="ide-title-badge">AI</span>
+        </div>
+        <div class="ide-titlebar-right">
+          <button class="ide-topbtn" id="ide-run-btn" title="Run"><i class="fas fa-play"></i></button>
+          <button class="ide-topbtn" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-close-btn" id="closeCodespaceModal2">✕</button>
+        </div>
+      </div>
+
+      <!-- ── Menu Bar ── -->
+      <div class="ide-menubar">
+        <span class="ide-menu-item">File</span>
+        <span class="ide-menu-item">Edit</span>
+        <span class="ide-menu-item">View</span>
+        <span class="ide-menu-item">Terminal</span>
+        <span class="ide-menu-item">Help</span>
+        <div class="ide-menu-spacer"></div>
+        <span class="ide-menu-status"><span class="ide-status-dot-green"></span> Rebel AI Connected</span>
+      </div>
+
+      <!-- ── Main IDE Body ── -->
+      <div class="ide-body">
+
+        <!-- Activity Bar (far left icons, like VS Code) -->
+        <div class="ide-activitybar">
+          <button class="ide-act-btn active" title="Explorer"><i class="fas fa-copy"></i></button>
+          <button class="ide-act-btn" title="Search"><i class="fas fa-search"></i></button>
+          <button class="ide-act-btn" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-act-btn" title="Extensions"><i class="fas fa-puzzle-piece"></i></button>
+          <div class="ide-act-spacer"></div>
+          <button class="ide-act-btn" title="Settings"><i class="fas fa-cog"></i></button>
+        </div>
+
+        <!-- Sidebar — File Explorer -->
+        <div class="ide-sidebar">
+          <div class="ide-sidebar-title">EXPLORER</div>
+          <div class="ide-tree">
+            <div class="ide-tree-folder open">
+              <i class="fas fa-chevron-down ide-chevron"></i>
+              <i class="fas fa-folder-open ide-folder-icon"></i>
+              <span>rebel-project</span>
+            </div>
+            <div class="ide-tree-file active" data-file="app.js">
+              <i class="fas fa-file-code ide-file-icon js"></i>
+              <span>app.js</span>
+            </div>
+            <div class="ide-tree-file" data-file="index.html">
+              <i class="fas fa-file-code ide-file-icon html"></i>
+              <span>index.html</span>
+            </div>
+            <div class="ide-tree-file" data-file="style.css">
+              <i class="fas fa-file-code ide-file-icon css"></i>
+              <span>style.css</span>
+            </div>
+            <div class="ide-tree-file" data-file="README.md">
+              <i class="fas fa-file-alt ide-file-icon md"></i>
+              <span>README.md</span>
+            </div>
+            <div class="ide-tree-folder">
+              <i class="fas fa-chevron-right ide-chevron"></i>
+              <i class="fas fa-folder ide-folder-icon"></i>
+              <span>node_modules</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor + Terminal split -->
+        <div class="ide-editor-area">
+
+          <!-- Tab Bar -->
+          <div class="ide-tabbar">
+            <div class="ide-tab active" data-file="app.js">
+              <i class="fas fa-file-code" style="color:#f0db4f;font-size:0.65rem;"></i>
+              <span>app.js</span>
+              <span class="ide-tab-close">×</span>
+            </div>
+            <div class="ide-tab" data-file="index.html">
+              <i class="fas fa-file-code" style="color:#e44d26;font-size:0.65rem;"></i>
+              <span>index.html</span>
+              <span class="ide-tab-close">×</span>
+            </div>
+            <div class="ide-tab" data-file="style.css">
+              <i class="fas fa-file-code" style="color:#264de4;font-size:0.65rem;"></i>
+              <span>style.css</span>
+              <span class="ide-tab-close">×</span>
+            </div>
+          </div>
+
+          <!-- Code Editor -->
+          <div class="ide-editor" id="ide-editor">
+            <div class="ide-gutter">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+              <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+              <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span>
+              <span>21</span><span>22</span><span>23</span><span>24</span><span>25</span>
+            </div>
+            <div class="ide-code" id="ide-code-content" contenteditable="true" spellcheck="false">
+<span class="tok-comment">// Rebel Codespace — AI-powered editor</span>
+<span class="tok-comment">// Ask Rebel AI anything in the panel →</span>
+
+<span class="tok-kw">const</span> <span class="tok-var">express</span> = <span class="tok-fn">require</span>(<span class="tok-str">'express'</span>);
+<span class="tok-kw">const</span> <span class="tok-var">app</span> = <span class="tok-fn">express</span>();
+
+<span class="tok-var">app</span>.<span class="tok-fn">get</span>(<span class="tok-str">'/'</span>, (<span class="tok-var">req</span>, <span class="tok-var">res</span>) =&gt; {
+  <span class="tok-var">res</span>.<span class="tok-fn">send</span>(<span class="tok-str">'&lt;h1&gt;Hello from Rebel Codespace!&lt;/h1&gt;'</span>);
+});
+
+<span class="tok-var">app</span>.<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>, () =&gt; {
+  <span class="tok-var">console</span>.<span class="tok-fn">log</span>(<span class="tok-str">'Server running on port 3000'</span>);
+});
+            </div>
+          </div>
+
+          <!-- Terminal panel (bottom split) -->
+          <div class="ide-terminal-panel" id="ide-terminal-panel">
+            <div class="ide-terminal-tabs">
+              <span class="ide-term-tab active"><i class="fas fa-terminal"></i> Terminal</span>
+              <span class="ide-term-tab"><i class="fas fa-exclamation-triangle"></i> Problems</span>
+              <span class="ide-term-tab"><i class="fas fa-list"></i> Output</span>
+              <button class="ide-term-close-btn" id="ide-term-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ide-terminal-body" id="ide-terminal-output">
+              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcmd">node app.js</span></div>
+              <div class="ide-tout">Server running on port 3000</div>
+              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcursor">▌</span></div>
+            </div>
+            <div class="ide-terminal-input-row">
+              <span class="ide-tprompt-inline">$</span>
+              <input class="ide-terminal-input" id="ide-terminal-input" placeholder="Enter command..." autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── AI Chat Panel (right side — like Cursor's AI panel) ── -->
+        <div class="ide-ai-panel">
+          <div class="ide-ai-header">
+            <div class="ide-ai-title">
+              <span class="ide-ai-dot"></span>
+              <span>Rebel AI</span>
+            </div>
+            <div class="ide-ai-model-badge">GPT-5</div>
+          </div>
+
+          <div class="ide-ai-messages" id="ide-ai-messages">
+            <div class="ide-ai-msg bot">
+              <div class="ide-ai-avatar"><i class="fas fa-robot"></i></div>
+              <div class="ide-ai-bubble">
+                Hey! I'm Rebel AI, your coding assistant. Ask me anything — explain code, fix bugs, generate functions, or review your work.
+              </div>
+            </div>
+          </div>
+
+          <div class="ide-ai-input-area">
+            <div class="ide-ai-input-wrap">
+              <textarea
+                id="ide-ai-input"
+                class="ide-ai-textarea"
+                placeholder="Ask Rebel AI… (Enter to send)"
+                rows="1"
+              ></textarea>
+              <button class="ide-ai-send-btn" id="ide-ai-send-btn">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+            <div class="ide-ai-hint">Powered by Rebel AI · same API as Rebel Gpt</div>
+          </div>
+        </div>
+
+      </div><!-- end ide-body -->
+
+      <!-- Status Bar (bottom, like VS Code) -->
+      <div class="ide-statusbar">
+        <span class="ide-sb-item"><i class="fas fa-code-branch"></i> main</span>
+        <span class="ide-sb-item"><i class="fas fa-check-circle"></i> 0 errors</span>
+        <span class="ide-sb-item"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
+        <div class="ide-sb-spacer"></div>
+        <span class="ide-sb-item">JavaScript</span>
+        <span class="ide-sb-item">UTF-8</span>
+        <span class="ide-sb-item ide-sb-ai"><i class="fas fa-robot"></i> Rebel AI Ready</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FIX: Removed lib.youware.com SDK scripts (don't work outside Youware) -->
+  <!-- FIX: Correct relative path for main.js -->
+  <!-- Admin Panel Modal -->
+  <div id="adminModal" class="modal full-screen-modal">
+    <div class="modal-content admin-modal-content full-screen-content">
+      
+      <!-- Admin Login Screen -->
+      <div id="adminLogin" class="admin-login-screen">
+        <div class="admin-login-box">
+          <div class="admin-login-logo">
+            <i class="fas fa-shield-alt"></i>
+            <h2>Admin Panel</h2>
+            <p>Rebel Ai Control Center</p>
+          </div>
+          <div class="admin-input-group">
+            <label>Admin Password</label>
+            <div class="admin-input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="adminPasswordInput" placeholder="Enter admin password...">
+            </div>
+          </div>
+          <button id="adminLoginBtn" class="admin-login-submit">
+            <i class="fas fa-sign-in-alt"></i> Login to Admin
+          </button>
+          <p class="admin-login-err" id="adminLoginErr"></p>
+          <button id="closeAdminLogin" class="admin-close-btn-top">✕</button>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard -->
+      <div id="adminDashboard" class="admin-dashboard" style="display:none;">
+        
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar">
+          <div class="admin-brand">
+            <i class="fas fa-shield-alt"></i>
+            <span>Rebel Admin</span>
+          </div>
+          <nav class="admin-nav">
+            <a href="#" class="admin-nav-item active" data-tab="overview">
+              <i class="fas fa-th-large"></i><span>Overview</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="users">
+              <i class="fas fa-users"></i><span>Users</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="apikeys">
+              <i class="fas fa-key"></i><span>API Keys</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="ping">
+              <i class="fas fa-satellite-dish"></i><span>Ping Monitor</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="logs">
+              <i class="fas fa-terminal"></i><span>System Logs</span>
+            </a>
+            <a href="#" class="admin-nav-item" data-tab="settings">
+              <i class="fas fa-sliders-h"></i><span>Settings</span>
+            </a>
+          </nav>
+          <div class="admin-sidebar-footer">
+            <div class="admin-online-dot"></div>
+            <span>System Online</span>
+          </div>
+        </div>
+
+        <!-- Admin Main Content -->
+        <div class="admin-main">
+          <div class="admin-topbar">
+            <div class="admin-topbar-title" id="adminTabTitle">Dashboard Overview</div>
+            <div class="admin-topbar-actions">
+              <div class="admin-time" id="adminClock"></div>
+              <button id="adminLogoutBtn" class="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+              <button id="closeAdminDashboard" class="admin-close-btn-top">✕</button>
+            </div>
+          </div>
+
+          <!-- TAB: Overview -->
+          <div class="admin-tab active" id="tab-overview">
+            <!-- Primary Stats -->
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card">
+                <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                  <div class="stat-number" id="stat-total-users">—</div>
+                  <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-trend neutral" id="stat-online-badge">Live</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="stat-icon teal"><i class="fas fa-comments"></i></div>
+                <div class="stat-info">
+                  <div class="stat-number" id="stat-messages">—</div>
+                  <div class="stat-label">Messages Sent</div>
+                </div>
+                <div class="stat-trend up">Real-time</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="stat-icon green"><i class="fas fa-key"></i></div>
+                <div class="stat-info">
+                  <div class="stat-number" id="stat-api-keys">—</div>
+                  <div class="stat-label">Active API Keys</div>
+                </div>
+                <div class="stat-trend neutral">Tracked</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="stat-icon red"><i class="fas fa-satellite-dish"></i></div>
+                <div class="stat-info">
+                  <div class="stat-number" id="stat-ping">—</div>
+                  <div class="stat-label">Live API Ping</div>
+                </div>
+                <div class="stat-trend neutral" id="ping-status-badge">Pinging…</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="stat-icon teal" style="background:rgba(46,204,113,0.12);"><i class="fas fa-circle" style="color:#2ecc71;font-size:0.7rem;"></i></div>
+                <div class="stat-info">
+                  <div class="stat-number" id="stat-online-users" style="color:#2ecc71;">—</div>
+                  <div class="stat-label">Online Now</div>
+                </div>
+                <div class="stat-trend up">Live</div>
+              </div>
+            </div>
+            <!-- Secondary Stats -->
+            <div class="admin-stats-grid" style="margin-top:12px;">
+              <div class="admin-stat-card" style="padding:14px 18px;">
+                <div class="stat-icon purple" style="width:36px;height:36px;font-size:0.85rem;border-radius:9px;"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-info"><div class="stat-number" style="font-size:1.15rem;" id="stat-sessions">—</div><div class="stat-label">Sessions</div></div>
+              </div>
+              <div class="admin-stat-card" style="padding:14px 18px;">
+                <div class="stat-icon teal" style="width:36px;height:36px;font-size:0.85rem;border-radius:9px;"><i class="fas fa-bolt"></i></div>
+                <div class="stat-info"><div class="stat-number" style="font-size:1.15rem;" id="stat-avg-ms">—</div><div class="stat-label">Avg Response</div></div>
+              </div>
+              <div class="admin-stat-card" style="padding:14px 18px;">
+                <div class="stat-icon green" style="width:36px;height:36px;font-size:0.85rem;border-radius:9px;"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info"><div class="stat-number" style="font-size:1.15rem;" id="stat-success">—</div><div class="stat-label">Success Rate</div></div>
+              </div>
+              <div class="admin-stat-card" style="padding:14px 18px;">
+                <div class="stat-icon red" style="width:36px;height:36px;font-size:0.85rem;border-radius:9px;"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-info"><div class="stat-number" style="font-size:1.15rem;" id="stat-errors">—</div><div class="stat-label">API Errors</div></div>
+              </div>
+            </div>
+            <div class="admin-row" style="margin-top:16px;">
+              <div class="admin-card flex-2">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-chart-bar"></i> Messages — Last 7 Days <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);font-weight:400;margin-left:8px;">Real data from this browser</span></h3>
+                </div>
+                <div class="admin-chart-area">
+                  <div class="bar-chart" id="activityChart"></div>
+                </div>
+              </div>
+              <div class="admin-card flex-1">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-heartbeat"></i> Live System Status</h3>
+                </div>
+                <div class="system-status-list">
+                  <div class="status-item">
+                    <span class="status-dot" id="sys-api-dot"></span>
+                    <span class="status-name">Main API</span>
+                    <span class="status-val" id="sys-api">Checking…</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-dot" id="sys-chat-dot"></span>
+                    <span class="status-name">Chat Engine</span>
+                    <span class="status-val" id="sys-chat">Checking…</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-dot" id="sys-storage-dot"></span>
+                    <span class="status-name">Local Storage</span>
+                    <span class="status-val" id="sys-storage">Checking…</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-dot" id="sys-analytics-dot"></span>
+                    <span class="status-name">Analytics</span>
+                    <span class="status-val" id="sys-analytics">Checking…</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-dot green"></span>
+                    <span class="status-name">Avg API Resp</span>
+                    <span class="status-val" id="sys-rt">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Users -->
+          <div class="admin-tab" id="tab-users">
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-users"></i> User Management</h3>
+                <div class="admin-card-actions">
+                  <input type="text" id="userSearch" placeholder="Search users..." class="admin-search-input">
+                  <button class="admin-btn-primary" id="addUserBtn"><i class="fas fa-plus"></i> Add User</button>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table" id="usersTable">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>User</th>
+                      <th>Email</th>
+                      <th>Password</th>
+                      <th>IP Address</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Joined</th>
+                      <th>Messages</th>
+                      <th>Last Login</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <!-- Add User Modal -->
+            <div id="addUserModal" class="admin-inner-modal" style="display:none;">
+              <div class="admin-inner-modal-content">
+                <h3>Add New User</h3>
+                <div class="admin-form-group">
+                  <label>Name</label>
+                  <input type="text" id="newUserName" placeholder="Full name">
+                </div>
+                <div class="admin-form-group">
+                  <label>Email / ID</label>
+                  <input type="text" id="newUserEmail" placeholder="user@email.com">
+                </div>
+                <div class="admin-form-group">
+                  <label>Role</label>
+                  <select id="newUserRole">
+                    <option value="User">User</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <div class="admin-inner-modal-actions">
+                  <button id="saveUserBtn" class="admin-btn-primary">Save User</button>
+                  <button id="cancelUserBtn" class="admin-btn-secondary">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: API Keys -->
+          <div class="admin-tab" id="tab-apikeys">
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-key"></i> API Key Management</h3>
+                <div class="admin-card-actions">
+                  <button class="admin-btn-secondary" id="refreshApiStatsBtn"><i class="fas fa-sync"></i> Refresh</button>
+                  <button class="admin-btn-primary" id="genKeyBtn"><i class="fas fa-plus"></i> Generate Key</button>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table" id="apiKeysTable">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Key Name</th>
+                      <th>API Key</th>
+                      <th>Permissions</th>
+                      <th>Usage</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="apiKeysTableBody">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="admin-card" style="margin-top:20px;">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-link"></i> API Endpoint Config</h3>
+              </div>
+              <div class="api-config-grid">
+                <div class="api-config-item">
+                  <label>Base URL</label>
+                  <div class="api-config-value-wrap">
+                    <input type="text" id="apiBaseUrl" value="https://api-rebix.vercel.app/api/gpt-5" class="admin-config-input">
+                    <button class="admin-btn-primary small" onclick="document.getElementById('apiBaseUrl').select()"><i class="fas fa-copy"></i></button>
+                  </div>
+                </div>
+                <div class="api-config-item">
+                  <label>Model</label>
+                  <select class="admin-config-input">
+                    <option>GPT-5 (Default)</option>
+                    <option>GPT-4o</option>
+                    <option>Claude 3.5 Sonnet</option>
+                    <option>Gemini Pro</option>
+                  </select>
+                </div>
+                <div class="api-config-item">
+                  <label>Rate Limit (req/min)</label>
+                  <input type="number" value="60" class="admin-config-input">
+                </div>
+                <div class="api-config-item">
+                  <label>Max Tokens</label>
+                  <input type="number" value="4096" class="admin-config-input">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Ping Monitor -->
+          <div class="admin-tab" id="tab-ping">
+            <div class="admin-row">
+              <div class="admin-card flex-1">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-satellite-dish"></i> Live API Ping</h3>
+                  <button class="admin-btn-primary" id="refreshPingBtn" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <div class="ping-display">
+                  <div class="ping-circle" id="pingCircle">
+                    <span id="pingValue">—</span>
+                    <small>ms</small>
+                  </div>
+                  <div class="ping-status-text" id="pingStatusText">Connecting…</div>
+                </div>
+                <!-- Uptime / Min / Max / Avg -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 10px 10px;">
+                  <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;">
+                    <div style="font-size:1rem;font-weight:700;" id="pingUptime">—</div>
+                    <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:3px;">Uptime</div>
+                  </div>
+                  <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;">
+                    <div style="font-size:1rem;font-weight:700;color:#2ecc71;" id="pingMin">—</div>
+                    <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:3px;">Min</div>
+                  </div>
+                  <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;">
+                    <div style="font-size:1rem;font-weight:700;color:#e74c3c;" id="pingMax">—</div>
+                    <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:3px;">Max</div>
+                  </div>
+                  <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;">
+                    <div style="font-size:1rem;font-weight:700;color:#00ced1;" id="pingAvg">—</div>
+                    <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:3px;">Avg</div>
+                  </div>
+                </div>
+                <div class="ping-history-chart" id="pingHistoryChart"></div>
+              </div>
+              <div class="admin-card flex-1">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-network-wired"></i> Endpoint Status</h3>
+                </div>
+                <div class="endpoint-list" id="endpointList">
+                  <div class="endpoint-item">
+                    <div class="endpoint-info">
+                      <div class="endpoint-name">Main API</div>
+                      <div class="endpoint-url">api-rebix.vercel.app</div>
+                    </div>
+                    <div class="endpoint-ping" id="ep-ping-1">— ms</div>
+                    <div class="endpoint-badge" id="ep-badge-1">—</div>
+                  </div>
+                  <div class="endpoint-item">
+                    <div class="endpoint-info">
+                      <div class="endpoint-name">CDN</div>
+                      <div class="endpoint-url">cdn.vercel-edge.com</div>
+                    </div>
+                    <div class="endpoint-ping" id="ep-ping-2">— ms</div>
+                    <div class="endpoint-badge" id="ep-badge-2">—</div>
+                  </div>
+                  <div class="endpoint-item">
+                    <div class="endpoint-info">
+                      <div class="endpoint-name">Auth Service</div>
+                      <div class="endpoint-url">auth.rebel-ai.dev</div>
+                    </div>
+                    <div class="endpoint-ping" id="ep-ping-3">— ms</div>
+                    <div class="endpoint-badge" id="ep-badge-3">—</div>
+                  </div>
+                  <div class="endpoint-item">
+                    <div class="endpoint-info">
+                      <div class="endpoint-name">Image API</div>
+                      <div class="endpoint-url">img.rebel-ai.dev</div>
+                    </div>
+                    <div class="endpoint-ping" id="ep-ping-4">— ms</div>
+                    <div class="endpoint-badge" id="ep-badge-4">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: System Logs -->
+          <div class="admin-tab" id="tab-logs">
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-terminal"></i> System Logs</h3>
+                <div class="admin-card-actions">
+                  <select class="admin-config-input" id="logFilter">
+                    <option value="all">All Logs</option>
+                    <option value="info">Info</option>
+                    <option value="warn">Warning</option>
+                    <option value="error">Error</option>
+                  </select>
+                  <button class="admin-btn-secondary" id="clearLogsBtn"><i class="fas fa-trash"></i> Clear</button>
+                </div>
+              </div>
+              <div class="log-terminal" id="logTerminal">
+                <!-- Logs JS se aayenge -->
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Settings -->
+          <div class="admin-tab" id="tab-settings">
+            <div class="admin-row">
+              <div class="admin-card flex-1">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-robot"></i> Bot Settings</h3>
+                </div>
+                <div class="settings-group">
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <div class="setting-title">AI Response Streaming</div>
+                      <div class="setting-desc">Type-writer effect for bot responses</div>
+                    </div>
+                    <label class="admin-toggle">
+                      <input type="checkbox" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <div class="setting-title">Image Upload</div>
+                      <div class="setting-desc">Allow users to send images</div>
+                    </div>
+                    <label class="admin-toggle">
+                      <input type="checkbox" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <div class="setting-title">Maintenance Mode</div>
+                      <div class="setting-desc">Disable chat for all users</div>
+                    </div>
+                    <label class="admin-toggle">
+                      <input type="checkbox">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <div class="setting-title">Usage Analytics</div>
+                      <div class="setting-desc">Track user interactions</div>
+                    </div>
+                    <label class="admin-toggle">
+                      <input type="checkbox" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="admin-card flex-1">
+                <div class="admin-card-header">
+                  <h3><i class="fas fa-paint-brush"></i> System Prompt</h3>
+                </div>
+                <div class="admin-form-group">
+                  <label>Current System Prompt</label>
+                  <textarea id="systemPromptEdit" class="admin-textarea" rows="7">You are Rebel Gpt, an advanced AI assistant created by Rebel bhaiya. You are helpful, rebellious, and expert in coding.</textarea>
+                </div>
+                <button class="admin-btn-primary" style="margin-top:10px;" id="savePromptBtn"><i class="fas fa-save"></i> Save Prompt</button>
+                <div id="promptSaveMsg" style="color:#00ced1; font-size:0.85rem; margin-top:8px; display:none;">✓ Prompt saved!</div>
+              </div>
+            </div>
+            <!-- Anthropic API Configuration -->
+            <div class="admin-card" style="margin-top:20px; border: 1px solid rgba(138,43,226,0.3);">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-robot"></i> Anthropic API (Claude) — Direct Integration</h3>
+              </div>
+              <div style="padding:4px 0 12px; color:rgba(255,255,255,0.5); font-size:0.8rem;">
+                API key set karo to Rebel Gpt directly Claude se powered hoga <strong style="color:#00ced1;">conversation history ke saath</strong>. 
+                Free API ke bina bhi kaam karega.<br>
+                <span style="color:#8a2be2;">curl -X POST https://api.anthropic.com/v1/messages</span> — yahi use hota hai internally.
+              </div>
+              <div class="admin-row" style="gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                <div class="admin-form-group" style="flex:2; min-width:260px;">
+                  <label>Anthropic API Key</label>
+                  <input type="password" id="anthropicApiKeyInput" placeholder="sk-ant-api03-..." class="admin-config-input" autocomplete="off">
+                </div>
+                <div style="display:flex; align-items:flex-end; padding-bottom:2px; gap:8px;">
+                  <button class="admin-btn-primary" id="saveAnthropicKeyBtn"><i class="fas fa-save"></i> Save Key</button>
+                  <button class="admin-btn-secondary" id="testAnthropicKeyBtn"><i class="fas fa-flask"></i> Test</button>
+                </div>
+              </div>
+              <div style="margin-top:12px; display:flex; align-items:center; gap:12px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;">
+                  <label class="admin-toggle" style="margin:0;">
+                    <input type="checkbox" id="useAnthropicToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span>Anthropic API use karo (ON = Claude, OFF = Free API)</span>
+                </label>
+              </div>
+              <div id="anthropicKeyMsg" style="font-size:0.85rem; margin-top:10px; display:none;"></div>
+              <div style="margin-top:12px; background:rgba(0,0,0,0.3); border-radius:8px; padding:12px; font-size:0.75rem; color:rgba(255,255,255,0.4);">
+                <strong style="color:rgba(255,255,255,0.6);">curl command (reference):</strong><br>
+                <code style="color:#00ced1; word-break:break-all;">
+                  curl -X POST https://api.anthropic.com/v1/messages \<br>
+                  &nbsp;&nbsp;-H "x-api-key: YOUR_KEY" \<br>
+                  &nbsp;&nbsp;-H "anthropic-version: 2023-06-01" \<br>
+                  &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                  &nbsp;&nbsp;-d '{"model":"claude-sonnet-4-5","max_tokens":1024,"messages":[{"role":"user","content":"Hello"}]}'
+                </code>
+              </div>
+            </div>
+            <div class="admin-card" style="margin-top:20px;">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-history"></i> Chat History Management</h3>
+              </div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.82rem; margin-bottom:12px;">Sabhi users ki conversation history manage karo.</div>
+              <button class="admin-btn-secondary" id="clearAllHistoryBtn" style="border-color:rgba(231,76,60,0.4);color:#e74c3c;"><i class="fas fa-trash"></i> Clear All Chat Histories</button>
+              <div id="clearHistoryMsg" style="font-size:0.85rem; margin-top:8px; display:none; color:#2ecc71;">✓ Sab histories clear ho gayi!</div>
+            </div>
+            <div class="admin-card" style="margin-top:20px;">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-lock"></i> Change Admin Password</h3>
+              </div>
+              <div class="admin-row" style="gap:15px; flex-wrap:wrap;">
+                <div class="admin-form-group" style="flex:1; min-width:200px;">
+                  <label>New Password</label>
+                  <input type="password" id="newAdminPass" placeholder="New password" class="admin-config-input">
+                </div>
+                <div class="admin-form-group" style="flex:1; min-width:200px;">
+                  <label>Confirm Password</label>
+                  <input type="password" id="confirmAdminPass" placeholder="Confirm password" class="admin-config-input">
+                </div>
+                <div style="display:flex; align-items:flex-end; padding-bottom:2px;">
+                  <button class="admin-btn-primary" id="changePassBtn"><i class="fas fa-key"></i> Update</button>
+                </div>
+              </div>
+              <div id="passChangeMsg" style="font-size:0.85rem; margin-top:8px; display:none;"></div>
+            </div>
+            <!-- Browser / Client Info — Real Data -->
+            <div class="admin-card" style="margin-top:20px;">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-desktop"></i> Client Info <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);font-weight:400;margin-left:8px;">Real browser data from this session</span></h3>
+                <button class="admin-btn-secondary" id="resetAnalyticsBtn" style="border-color:rgba(231,76,60,0.4);color:#e74c3c;"><i class="fas fa-trash"></i> Reset All Analytics</button>
+              </div>
+              <div class="system-status-list" id="browserInfoPanel">
+                <div style="color:rgba(255,255,255,0.2);padding:20px;text-align:center;">Loading browser info…</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end admin-main -->
+      </div><!-- end adminDashboard -->
+    </div>
+  </div>
+  <!-- END Admin Panel -->
+
+  <!-- ═══════════════════════════════════════════════════
+       REBEL AI VOICE ASSISTANT — FUTURISTIC UI v2
+  ════════════════════════════════════════════════════ -->
+  <div id="voiceAvatarModal" class="rai-overlay">
+    <div class="rai-modal">
+
+      <!-- Top Bar -->
+      <div class="rai-topbar">
+        <div class="rai-topbar-left">
+          <span class="rai-live-indicator">
+            <span class="rai-live-dot" id="vaStatusDot"></span>
+            <span id="vaStatusLabel">STANDBY</span>
+          </span>
+        </div>
+        <div class="rai-topbar-center">REBEL AI · NEURAL INTERFACE</div>
+        <div class="rai-topbar-right">
+          <button class="rai-close-btn" id="vaCloseBtn"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <!-- Main Layout -->
+      <div class="rai-body">
+
+        <!-- Left: Avatar Stage -->
+        <div class="rai-avatar-panel">
+          <!-- Outer HUD rings -->
+          <div class="rai-ring rai-ring-1"></div>
+          <div class="rai-ring rai-ring-2"></div>
+          <div class="rai-ring rai-ring-3"></div>
+          <!-- Corner accents -->
+          <div class="rai-corner rai-tl"></div>
+          <div class="rai-corner rai-tr"></div>
+          <div class="rai-corner rai-bl"></div>
+          <div class="rai-corner rai-br"></div>
+          <!-- Avatar canvas -->
+          <canvas id="vaCanvas" width="300" height="300" class="rai-canvas"></canvas>
+          <!-- Wake word hint -->
+          <div class="rai-wake-hint">Say <span>"Hey Rebel"</span> to activate</div>
+          <!-- Waveform -->
+          <canvas id="vaWave" width="300" height="40" class="rai-waveform"></canvas>
+        </div>
+
+        <!-- Right: Controls + Transcript -->
+        <div class="rai-control-panel">
+
+          <!-- Transcript box -->
+          <div class="rai-transcript" id="vaTranscript">
+            <div class="rai-msg rai-sys">
+              <span class="rai-tag">SYS</span>
+              <span>Rebel AI initialized. Say "Hey Rebel" or tap the mic.</span>
+            </div>
+          </div>
+
+          <!-- Mic Controls -->
+          <div class="rai-mic-area">
+            <button class="rai-mic-btn" id="vaMicBtn">
+              <span class="rai-mic-pulse"></span>
+              <span class="rai-mic-pulse rai-mic-pulse-2"></span>
+              <i class="fas fa-microphone" id="vaMicIcon"></i>
+            </button>
+            <div class="rai-mic-labels">
+              <span class="rai-mic-label" id="vaMicLabel">TAP TO SPEAK</span>
+              <span class="rai-mic-sub">or say "Hey Rebel"</span>
+            </div>
+            <button class="rai-stop-btn" id="vaStopBtn" style="display:none;">
+              <i class="fas fa-stop-circle"></i>
+            </button>
+          </div>
+
+          <!-- Hidden voice grid (Callum is always used) -->
+          <div style="display:none;" id="vaVoiceGridEn"></div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
+  <script src="main.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

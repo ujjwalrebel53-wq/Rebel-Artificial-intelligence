@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Thalaexch - Real-Time Sports Exchange & Casino | Demo + Payments</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+            color: #eef2ff;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fbbf24;
+            border-radius: 10px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+        .logo span {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            display: block;
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: #cbd5e6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .nav-links a:hover {
+            color: #fbbf24;
+        }
+        .balance-card {
+            background: #1e293b;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            border-left: 3px solid #fbbf24;
+        }
+        .balance-card span:first-child {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .balance-card .points {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #fbbf24;
+            margin-left: 8px;
+        }
+        .btn-demo {
+            background: #fbbf24;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #0f172a;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-demo:hover {
+            background: #f59e0b;
+            transform: scale(1.02);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: radial-gradient(circle at 30% 10%, rgba(251,191,36,0.08), transparent);
+        }
+        .hero h2 {
+            font-size: 2.2rem;
+            background: linear-gradient(120deg, #fff, #fbbf24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .hero p {
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+        .demo-badge {
+            display: inline-block;
+            background: #1f2937;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            color: #fbbf24;
+        }
+
+        /* Cards Grid */
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            border-left: 5px solid #fbbf24;
+            padding-left: 1rem;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+        .game-card {
+            background: #111827;
+            border-radius: 24px;
+            overflow: hidden;
+            transition: 0.25s ease;
+            border: 1px solid #1f2a3e;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
+        }
+        .game-card:hover {
+            transform: translateY(-6px);
+            border-color: #fbbf24;
+            box-shadow: 0 20px 30px -12px rgba(251,191,36,0.2);
+        }
+        .card-img {
+            height: 160px;
+            background: linear-gradient(145deg, #1e2a3a, #0f172a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        .card-info {
+            padding: 1.2rem;
+        }
+        .card-info h3 {
+            font-size: 1.3rem;
+        }
+        .card-info p {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin: 0.5rem 0;
+        }
+        .bet-btn {
+            background: #1f2a3e;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            color: #fbbf24;
+            font-weight: bold;
+            border-radius: 40px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .bet-btn:hover {
+            background: #fbbf24;
+            color: #0f172a;
+        }
+
+        /* QR / Payment Section */
+        .payment-section {
+            background: linear-gradient(135deg, #0f172a, #0a0f1e);
+            border-radius: 2rem;
+            margin: 2rem auto;
+            padding: 1.8rem;
+            border: 1px solid rgba(251,191,36,0.4);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+        }
+        .payment-title {
+            font-size: 1.7rem;
+            text-align: center;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .payment-title span {
+            background: #fbbf24;
+            color: #0f172a;
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .qr-payment-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            align-items: stretch;
+        }
+        .qr-card {
+            background: #111827ee;
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 1.5rem;
+            text-align: center;
+            min-width: 260px;
+            flex: 1;
+            border: 1px solid #2d3a52;
+            transition: all 0.2s;
+        }
+        .qr-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+        }
+        .qr-placeholder {
+            background: white;
+            width: 160px;
+            height: 160px;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            background: #fef9e6;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .qr-placeholder canvas {
+            width: 140px;
+            height: 140px;
+            border-radius: 16px;
+        }
+        .amount-input {
+            background: #1e293b;
+            border: 1px solid #fbbf24;
+            padding: 12px;
+            border-radius: 60px;
+            width: 80%;
+            margin: 10px 0;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .pay-btn {
+            background: #fbbf24;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #0f172a;
+        }
+        .pay-btn:hover {
+            background: #ffcd4a;
+            transform: scale(0.98);
+        }
+        .transaction-note {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 12px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #0f172a;
+            max-width: 400px;
+            width: 90%;
+            padding: 1.8rem;
+            border-radius: 32px;
+            border-top: 4px solid #fbbf24;
+            text-align: center;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 40px;
+            color: white;
+            font-size: 1rem;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .confirm-btn {
+            background: #fbbf24;
+            color: black;
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+        .cancel-btn {
+            background: #334155;
+            flex: 1;
+            border: none;
+            border-radius: 40px;
+            color: white;
+        }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid #1f2937;
+            margin-top: 3rem;
+            color: #5b6e8c;
+            font-size: 0.8rem;
+        }
+        .live-badge {
+            background: #ef4444;
+            font-size: 0.7rem;
+            border-radius: 30px;
+            padding: 2px 8px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        @media (max-width: 700px) {
+            .navbar { flex-direction: column; align-items: stretch; text-align: center; }
+            .nav-links { justify-content: center; }
+            .hero h2 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">
+        <h1>🔷 THALAEXCH</h1>
+        <span>Real-Time • Live Odds • Demo + UPI Payments</span>
+    </div>
+    <div class="nav-links">
+        <a href="#" id="navSports">Sports</a>
+        <a href="#" id="navCasino">Casino</a>
+        <a href="#" id="navPayments">Deposit</a>
+        <div class="balance-card">
+            <span>💰 REAL + DEMO POINTS</span>
+            <span class="points" id="pointsBalance">10000</span>
+        </div>
+        <button class="btn-demo" id="addPointsBtn">+ Free Demo Points</button>
+    </div>
+</div>
+
+<div class="hero">
+    <h2>India's No.1 Real-Time Sports Exchange & Casino</h2>
+    <p>Live odds updating • Instant results • QR Payments to add funds</p>
+    <div class="demo-badge">⚡ LIVE BETTING SIMULATION | UPI/QR TOP-UP</div>
+</div>
+
+<div class="container">
+    <div class="section-title" id="dynamicTitle">🔥 Live Sports Exchange (Real-Time Odds)</div>
+    <div class="cards-grid" id="sportsGrid"></div>
+    <div class="cards-grid" id="casinoGrid" style="display: none;"></div>
+
+    <!-- QR Payment Integration Section -->
+    <div class="payment-section" id="qrPaymentBlock">
+        <div class="payment-title">
+            💳 Instant Top-Up via QR/UPI <span>REAL-TIME ADD</span>
+        </div>
+        <div class="qr-payment-grid">
+            <div class="qr-card">
+                <h3>📱 Scan & Pay</h3>
+                <div class="qr-placeholder" id="qrCanvasContainer">
+                    <canvas id="qrCodeCanvas" width="140" height="140"></canvas>
+                </div>
+                <p style="margin: 8px 0; font-size:0.8rem;">UPI ID: <strong>thalaexch@okhdfcbank</strong></p>
+                <input type="number" id="rechargeAmount" class="amount-input" placeholder="Enter amount (₹)" value="500">
+                <button id="simulateQrPayment" class="pay-btn">✅ Pay & Add Points</button>
+                <div class="transaction-note">*Demo simulation: QR code represents UPI. Click to add points instantly.</div>
+            </div>
+            <div class="qr-card">
+                <h3>💸 Fast Deposit</h3>
+                <p style="margin-top: 20px;">Get <span style="color:#fbbf24;">20% BONUS</span> on first deposit!</p>
+                <p style="font-size:0.85rem;">Min ₹100 → +2000 demo points</p>
+                <button id="quickAdd100" class="pay-btn" style="background:#3b82f6;">➕ Add ₹100 (2000 pts)</button>
+                <button id="quickAdd500" class="pay-btn" style="margin-top:10px; background:#10b981;">🌟 Add ₹500 (10000 pts)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>© 2025 Thalaexch • Real-time betting simulation & UPI QR demo • No real money gambling • 18+ Only</p>
+    <p>All payments are simulated for practice — Points are virtual but reflect real-time top-up flow.</p>
+</div>
+
+<!-- Bet Modal -->
+<div id="betModal" class="modal">
+    <div class="modal-content">
+        <h3>🎯 Place Virtual Bet (Real-Time)</h3>
+        <p id="modalGameName" style="margin: 8px 0;">Game Name</p>
+        <input type="number" id="betAmount" placeholder="Enter points (min 10)" value="100">
+        <div class="modal-buttons">
+            <button class="confirm-btn" id="confirmBetBtn">Place Bet 🎲</button>
+            <button class="cancel-btn" id="cancelBetBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+    // ======================= REAL TIME WORKING + QR PAYMENTS =======================
+    let userPoints = 10000;   // virtual points
+
+    // Live odds updater variables
+    let sportsGames = [
+        { name: "🏏 IND vs PAK (T20)", type: "sports", odds: "1.85x", baseOdds: 1.85, desc: "Match Winner - LIVE" },
+        { name: "⚽ Manchester Derby", type: "sports", odds: "2.10x", baseOdds: 2.10, desc: "Both Teams to Score - LIVE" },
+        { name: "🎾 Australian Open Final", type: "sports", odds: "1.65x", baseOdds: 1.65, desc: "Set Winner - LIVE" },
+        { name: "🏀 NBA Finals Game 5", type: "sports", odds: "1.95x", baseOdds: 1.95, desc: "Over/Under - LIVE" }
+    ];
+
+    const casinoGames = [
+        { name: "🎰 Classic Slots", type: "casino", odds: "random win", desc: "Jackpot Style | Real RNG", multiplierConfig: "slot" },
+        { name: "♠️ Andar Bahar", type: "casino", odds: "1.9x", desc: "Real-time 1.9x", multiplierConfig: "andar" },
+        { name: "🃏 Teen Patti", type: "casino", odds: "2x", desc: "Side Bets | 2x Payout", multiplierConfig: "tp" },
+        { name: "🎡 Roulette", type: "casino", odds: "2.5x", desc: "Numbers/Colors (2.5x)", multiplierConfig: "roulette" }
+    ];
+
+    // Live odds updater (every 5 seconds)
+    let oddsInterval;
+    function startLiveOddsUpdater() {
+        if(oddsInterval) clearInterval(oddsInterval);
+        oddsInterval = setInterval(() => {
+            // random fluctuation of odds +/- 0.08
+            sportsGames = sportsGames.map(game => {
+                let newOddsVal = game.baseOdds + (Math.random() * 0.16 - 0.08);
+                newOddsVal = Math.max(1.2, Math.min(3.5, newOddsVal));
+                game.baseOdds = parseFloat(newOddsVal.toFixed(2));
+                game.odds = game.baseOdds + "x";
+                return game;
+            });
+            if(document.getElementById('sportsGrid').style.display !== 'none') {
+                renderSportsGrid();
+            }
+        }, 5000);
+    }
+
+    // Helper functions
+    function updateUI() {
+        document.getElementById('pointsBalance').innerText = userPoints;
+    }
+
+    function addPoints(amount, bonusMessage = "") {
+        userPoints += amount;
+        updateUI();
+        alert(`✅ ${bonusMessage || amount + " demo points added!"} New balance: ${userPoints} points`);
+    }
+
+    // QR Code generation using QRCode.js library
+    function generateQRCode() {
+        const canvas = document.getElementById('qrCodeCanvas');
+        if(canvas) {
+            const upiString = "upi://pay?pa=thalaexch@okhdfcbank&pn=Thalaexch&am=";
+            let amount = document.getElementById('rechargeAmount') ? document.getElementById('rechargeAmount').value : "100";
+            let upiFull = upiString + amount + "&cu=INR";
+            try {
+                // Clear previous
+                if(window.qrCodeInstance) {
+                    // optional
+                }
+                new QRCode(canvas, {
+                    text: upiFull,
+                    width: 140,
+                    height: 140,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch(e) {
+                console.warn(e);
+                let ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0,0,140,140);
+                ctx.fillStyle = "#000";
+                ctx.font = "12px monospace";
+                ctx.fillText("QR Ready", 40,70);
+            }
+        }
+    }
+
+    // Payment handlers (Simulated real-time)
+    function processRecharge(amountINR) {
+        if(amountINR < 50) {
+            alert("Minimum recharge ₹50");
+            return false;
+        }
+        let pointsToAdd = amountINR * 20;  // 1 INR = 20 demo points
+        let bonus = 0;
+        if(amountINR >= 200) bonus = Math.floor(pointsToAdd * 0.2);
+        let totalAdd = pointsToAdd + bonus;
+        userPoints += totalAdd;
+        updateUI();
+        alert(`💰 Payment Success! ₹${amountINR} added.\n✅ +${pointsToAdd} points + ${bonus} bonus points = ${totalAdd} points total.\nNew Balance: ${userPoints}`);
+        return true;
+    }
+
+    // Selected game & betting logic
+    let selectedGame = null;
+
+    function openBetModal(game) {
+        if (userPoints < 10) {
+            alert("❌ Insufficient points! Use QR top-up or +Add Demo Points.");
+            return;
+        }
+        selectedGame = { ...game };
+        let oddsDisplay = game.odds;
+        document.getElementById('modalGameName').innerHTML = `${game.name} | ${oddsDisplay} (Live)`;
+        document.getElementById('betAmount').value = 100;
+        document.getElementById('betModal').style.display = 'flex';
+    }
+
+    function placeBet() {
+        if (!selectedGame) return;
+        let betAmount = parseInt(document.getElementById('betAmount').value);
+        if (isNaN(betAmount) || betAmount < 10) {
+            alert("Min bet is 10 virtual points.");
+            return;
+        }
+        if (betAmount > userPoints) {
+            alert("Not enough points! Use QR deposit or Demo Points.");
+            return;
+        }
+
+        userPoints -= betAmount;
+        updateUI();
+        let isWin = false;
+        let winAmount = 0;
+        let resultMsg = "";
+
+        if (selectedGame.type === "sports") {
+            let currentOdds = selectedGame.baseOdds || 1.85;
+            if(selectedGame.name.includes("IND")) currentOdds = sportsGames[0].baseOdds;
+            else if(selectedGame.name.includes("Manchester")) currentOdds = sportsGames[1].baseOdds;
+            else if(selectedGame.name.includes("Australian")) currentOdds = sportsGames[2].baseOdds;
+            else currentOdds = sportsGames[3].baseOdds;
+            // real dynamic win probability 48%
+            let winChance = 0.48;
+            isWin = Math.random() < winChance;
+            if (isWin) {
+                winAmount = Math.floor(betAmount * currentOdds);
+                userPoints += winAmount;
+                resultMsg = `🎉 SPORTS WIN! ${winAmount} points (${currentOdds}x)`;
+            } else {
+                resultMsg = `😞 Sports lost ${betAmount} points. Live odds were ${currentOdds}x.`;
+            }
+        } 
+        else {
+            let multiplier = 0;
+            if (selectedGame.name.includes("Slots")) multiplier = Math.random() < 0.28 ? (Math.random() * 2 + 1.5).toFixed(1) : 0;
+            else if (selectedGame.name.includes("Andar Bahar")) multiplier = Math.random() < 0.45 ? 1.9 : 0;
+            else if (selectedGame.name.includes("Teen Patti")) multiplier = Math.random() < 0.42 ? 2.0 : 0;
+            else multiplier = Math.random() < 0.35 ? 2.5 : 0;
+            
+            if (multiplier > 0) {
+                winAmount = Math.floor(betAmount * parseFloat(multiplier));
+                userPoints += winAmount;
+                isWin = true;
+                resultMsg = `✨ CASINO WIN! ${winAmount} points (${multiplier}x) ✨`;
+            } else {
+                resultMsg = `💔 Casino lost ${betAmount} points. Try again!`;
+            }
+        }
+
+        updateUI();
+        alert(`${resultMsg}\n💰 New Balance: ${userPoints} points`);
+        closeModal();
+        selectedGame = null;
+    }
+
+    function closeModal() {
+        document.getElementById('betModal').style.display = 'none';
+        selectedGame = null;
+    }
+
+    // Rendering engine with real-time updates
+    function renderSportsGrid() {
+        const sportsContainer = document.getElementById('sportsGrid');
+        sportsContainer.innerHTML = '';
+        sportsGames.forEach(game => {
+            const card = createGameCard(game);
+            sportsContainer.appendChild(card);
+        });
+    }
+
+    function renderCasinoGrid() {
+        const casinoContainer = document.getElementById('casinoGrid');
+        casinoContainer.innerHTML = '';
+        casinoGames.forEach(game => {
+            const card = createGameCard(game);
+            casinoContainer.appendChild(card);
+        });
+    }
+
+    function createGameCard(game) {
+        const div = document.createElement('div');
+        div.className = 'game-card';
+        let oddsLabel = game.odds;
+        let descText = game.desc;
+        div.innerHTML = `
+            <div class="card-img">${game.name.charAt(0)+ (game.name.charAt(1)||'🎲')}</div>
+            <div class="card-info">
+                <h3>${game.name} ${game.type === 'sports' ? '<span class="live-badge">LIVE</span>' : ''}</h3>
+                <p>${descText} | <strong style="color:#fbbf24;">${oddsLabel}</strong></p>
+                <button class="bet-btn">⚡ Place ${game.type === 'sports' ? 'Exchange' : 'Casino'} Bet</button>
+            </div>
+        `;
+        const btn = div.querySelector('.bet-btn');
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let freshGame = { ...game };
+            if(game.type === 'sports') {
+                let found = sportsGames.find(g => g.name === game.name);
+                if(found) {
+                    freshGame.baseOdds = found.baseOdds;
+                    freshGame.odds = found.odds;
+                }
+            }
+            openBetModal(freshGame);
+        });
+        return div;
+    }
+
+    // Tab navigation & UI realtime sync
+    function showSports() {
+        document.getElementById('sportsGrid').style.display = 'grid';
+        document.getElementById('casinoGrid').style.display = 'none';
+        document.getElementById('dynamicTitle').innerHTML = '🔥 Live Sports Exchange (Odds update every 5s)';
+        renderSportsGrid();
+    }
+    function showCasino() {
+        document.getElementById('sportsGrid').style.display = 'none';
+        document.getElementById('casinoGrid').style.display = 'grid';
+        document.getElementById('dynamicTitle').innerHTML = '🎰 Casino Tables — Real RNG Payouts';
+        renderCasinoGrid();
+    }
+    function scrollToPayment() {
+        document.getElementById('qrPaymentBlock').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Event listeners + QR initial load
+    document.getElementById('addPointsBtn').addEventListener('click', () => addPoints(5000, "5000 FREE DEMO POINTS"));
+    document.getElementById('confirmBetBtn').addEventListener('click', placeBet);
+    document.getElementById('cancelBetBtn').addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('betModal')) closeModal();
+    });
+    
+    // QR payment simulation
+    document.getElementById('simulateQrPayment').addEventListener('click', () => {
+        let amount = parseInt(document.getElementById('rechargeAmount').value);
+        if(isNaN(amount) || amount < 50) alert("Enter valid amount (min ₹50)");
+        else processRecharge(amount);
+        generateQRCode();  // refresh QR with new amount
+    });
+    document.getElementById('quickAdd100').addEventListener('click', () => processRecharge(100));
+    document.getElementById('quickAdd500').addEventListener('click', () => processRecharge(500));
+    
+    // Nav real time
+    document.getElementById('navSports').addEventListener('click', (e) => { e.preventDefault(); showSports(); });
+    document.getElementById('navCasino').addEventListener('click', (e) => { e.preventDefault(); showCasino(); });
+    document.getElementById('navPayments').addEventListener('click', (e) => { e.preventDefault(); scrollToPayment(); });
+    
+    // initial QR generation and live updater
+    generateQRCode();
+    document.getElementById('rechargeAmount').addEventListener('input', function() { generateQRCode(); });
+    startLiveOddsUpdater();
+    showSports(); // default sports
+    updateUI();
+</script>
+</body>
+</html>

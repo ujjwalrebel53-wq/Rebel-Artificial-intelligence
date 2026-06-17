@@ -1,0 +1,37 @@
+{
+    "keys": {
+        "RBW-9AB504-CC2CF0": {
+            "created": 1781427222,
+            "expires": 1784019222,
+            "active": false,
+            "used": true,
+            "revoked": false,
+            "uses": 1,
+            "type": "web",
+            "label": "web-tg-14Jun-1053",
+            "used_at": 1781427259
+        },
+        "RBW-EF33AA-A194F9": {
+            "created": 1781458148,
+            "expires": 1784050148,
+            "active": false,
+            "used": true,
+            "revoked": true,
+            "uses": 1,
+            "type": "web",
+            "label": "web-tg-14Jun-1929",
+            "used_at": 1781458550,
+            "revoked_at": 1781459347
+        }
+    },
+    "sessions": {
+        "f59abe6c67fdd024f5c355954bf694388f4fe086fc915ac4ebdf2e863e8d9597": {
+            "created": 1781427259,
+            "expires": 1784177078,
+            "ttl": 2592000,
+            "key_ref": "RBW-9AB504-CC2CF0",
+            "remember": true,
+            "last_seen": 1781585078
+        }
+    }
+}
