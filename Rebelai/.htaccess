@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# API routes → api/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ api/index.php?route=api/$1 [QSA,L]
+
+# Default index
+DirectoryIndex index.html index.php
