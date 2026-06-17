@@ -1278,7 +1278,7 @@ And the HTML:
     container.classList.add('message-container', `${sender}-container`);
     if(sender==='bot'){
       const avatar = document.createElement('img');
-      avatar.src='rebel-avatar.jpg';
+      avatar.src='https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg';
       avatar.alt='Rebel AI'; avatar.classList.add('message-avatar');
       container.appendChild(avatar);
     }

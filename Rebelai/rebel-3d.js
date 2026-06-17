@@ -124,12 +124,6 @@
     const particles = new THREE.Points(pGeo, pMat);
     scene.add(particles);
 
-    const ringGeo = new THREE.RingGeometry(14, 14.3, low ? 32 : 48);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x8a2be2, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.position.set(0, 0, -25);
-    scene.add(ring);
-
     let running = true;
     let visible = true;
     let animId = 0;
@@ -150,7 +144,6 @@
       sphere.rotation.x -= 0.002;
       sphere.rotation.y += 0.004;
       particles.rotation.y += 0.0005;
-      ring.rotation.z += 0.001;
 
       camera.position.x += (ptr.mx * 4 - camera.position.x) * 0.03;
       camera.position.y += (-ptr.my * 3 - camera.position.y) * 0.03;

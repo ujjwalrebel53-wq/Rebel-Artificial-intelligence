@@ -94,25 +94,15 @@ body {
   text-align: center;
   padding: 40px;
 }
-.splash-logo-ring {
+.splash-avatar {
   width: 100px;
   height: 100px;
   margin: 0 auto 24px;
   border-radius: 50%;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-teal));
-  animation: splashSpin 3s linear infinite;
-}
-.splash-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
   object-fit: cover;
   display: block;
-}
-@keyframes splashSpin {
-  from { filter: hue-rotate(0deg); }
-  to   { filter: hue-rotate(360deg); }
+  border: 2px solid rgba(138, 43, 226, 0.45);
+  box-shadow: 0 0 24px rgba(138, 43, 226, 0.25);
 }
 .splash-title {
   font-family: var(--font-display);

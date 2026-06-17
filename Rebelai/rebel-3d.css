@@ -111,67 +111,11 @@
 @media (max-width: 768px) {
   .rebel-3d-canvas { opacity: 0.4; }
   .card-3d-tilt:hover { transform: none; }
+  .ambient-glow { filter: blur(80px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-3d-tilt, .avatar-3d-wrap, .terminal-window { animation: none !important; transform: none !important; }
-}
-
-/* ── Ultra visual layer (GPU-friendly) ── */
-.scanline-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.04;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 206, 209, 0.15) 2px,
-    rgba(0, 206, 209, 0.15) 3px
-  );
-}
-
-.hero-power-ring {
-  position: absolute;
-  inset: -18%;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-    conic-gradient(from 0deg, #8a2be2, #00ced1, #ec4899, #8a2be2) border-box;
-  animation: powerRingSpin 8s linear infinite;
-  opacity: 0.55;
-  filter: blur(0.5px);
-  pointer-events: none;
-}
-
-.hero-power-ring::after {
-  content: '';
-  position: absolute;
-  inset: 12%;
-  border-radius: 50%;
-  border: 1px dashed rgba(0, 206, 209, 0.35);
-  animation: powerRingSpin 14s linear infinite reverse;
-}
-
-@keyframes powerRingSpin {
-  to { transform: rotate(360deg); }
-}
-
-.hero-visual {
-  position: relative;
-}
-
-.hero-badge {
-  animation: badgePulse 2.5s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.35);
-}
-
-@keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(138, 43, 226, 0.3); }
-  50% { box-shadow: 0 0 28px rgba(0, 206, 209, 0.45), 0 0 40px rgba(138, 43, 226, 0.25); }
 }
 
 .feature-card.card-3d-tilt,
@@ -210,8 +154,7 @@ body.is-scrolling .particle-canvas {
   opacity: 0.35 !important;
 }
 
-body.is-scrolling .ambient-glow,
-body.is-scrolling .scanline-overlay {
+body.is-scrolling .ambient-glow {
   animation-play-state: paused;
 }
 
@@ -225,15 +168,4 @@ body.rebel-3d-fallback .rebel-3d-canvas {
 
 body.rebel-3d-fallback .particle-canvas {
   opacity: 0.65;
-}
-
-@media (max-width: 768px) {
-  .scanline-overlay { display: none; }
-  .hero-power-ring { inset: -8%; opacity: 0.35; }
-  .ambient-glow { filter: blur(80px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scanline-overlay, .hero-power-ring { display: none; }
-  .hero-badge { animation: none; }
 }
