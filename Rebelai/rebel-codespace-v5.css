@@ -1,0 +1,397 @@
+/* Rebel Codespace v5 — Device preview + Pro UI */
+
+.ide-preview-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 16px;
+  background: radial-gradient(ellipse at center, rgba(138,43,226,0.08) 0%, rgba(0,0,0,0.4) 70%);
+  min-height: 0;
+}
+
+.ide-device-switch {
+  display: flex;
+  gap: 4px;
+  margin-right: 8px;
+}
+.ide-device-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.65rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ide-device-btn.active {
+  background: rgba(0,206,209,0.2);
+  border-color: rgba(0,206,209,0.5);
+  color: #fff;
+}
+
+.ide-preview-stage {
+  transition: transform 0.35s ease;
+  transform-origin: center top;
+}
+.ide-preview-stage.device-full .device-shell { display: none; }
+.ide-preview-stage.device-full .device-screen-full {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.device-screen-full { display: none; }
+.device-screen-full iframe { width: 100%; height: 100%; border: none; min-height: 320px; }
+
+/* ── MacBook Pro frame ── */
+.device-macbook-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 24px 48px rgba(0,0,0,0.55));
+}
+.device-macbook-lid {
+  background: linear-gradient(180deg, #3d3d40 0%, #1c1c1e 8%, #2c2c2e 100%);
+  border-radius: 14px 14px 0 0;
+  padding: 10px 10px 6px;
+  border: 2px solid #48484a;
+  border-bottom: none;
+  position: relative;
+}
+.device-macbook-lid::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+.macbook-camera-bar {
+  width: 52px;
+  height: 5px;
+  background: #0a0a0a;
+  border-radius: 0 0 6px 6px;
+  margin: 0 auto 6px;
+}
+.device-macbook-screen {
+  width: min(720px, 72vw);
+  aspect-ratio: 16 / 10;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #111;
+  position: relative;
+}
+.device-macbook-screen iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.device-macbook-base {
+  width: min(780px, 78vw);
+  height: 14px;
+  background: linear-gradient(180deg, #3a3a3c, #1a1a1c);
+  border-radius: 0 0 12px 12px;
+  border: 2px solid #48484a;
+  border-top: 1px solid #222;
+  position: relative;
+}
+.device-macbook-base::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: #555;
+  border-radius: 0 0 4px 4px;
+}
+.device-macbook-keyboard {
+  width: min(760px, 76vw);
+  height: 8px;
+  background: linear-gradient(180deg, #2a2a2c, #151517);
+  border-radius: 0 0 8px 8px;
+  margin-top: -1px;
+}
+
+/* ── iPhone 17 Pro Max frame ── */
+.device-iphone-shell {
+  position: relative;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+}
+.device-iphone17 {
+  width: 290px;
+  background: linear-gradient(145deg, #5a5a5e 0%, #2a2a2c 25%, #3d3d40 50%, #1a1a1c 100%);
+  border-radius: 54px;
+  padding: 10px;
+  border: 3px solid #6e6e73;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.12),
+    0 0 0 1px rgba(0,0,0,0.5);
+  position: relative;
+}
+.device-iphone17::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 120px;
+  width: 3px;
+  height: 28px;
+  background: #3a3a3c;
+  border-radius: 2px 0 0 2px;
+  box-shadow: 0 44px 0 #3a3a3c, 0 88px 0 #3a3a3c;
+}
+.device-iphone17::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 160px;
+  width: 3px;
+  height: 56px;
+  background: #3a3a3c;
+  border-radius: 0 2px 2px 0;
+}
+.device-iphone-screen {
+  background: #000;
+  border-radius: 46px;
+  overflow: hidden;
+  aspect-ratio: 430 / 932;
+  width: 100%;
+  position: relative;
+  border: 1px solid #111;
+}
+.device-iphone-screen iframe { position: relative; z-index: 1; }
+
+.ide-preview-panel { overflow: hidden; }
+.ide-preview-header { flex-wrap: wrap; }
+
+.iphone-dynamic-island {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 118px;
+  height: 34px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 10;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+}
+.iphone-dynamic-island::after {
+  content: '';
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1a3a4a 30%, #0a1520 100%);
+}
+.iphone-home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: rgba(255,255,255,0.35);
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+.device-iphone-label {
+  text-align: center;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 8px;
+  letter-spacing: 0.04em;
+}
+
+.ide-preview-stage.device-iphone17 .device-macbook-shell { display: none; }
+.ide-preview-stage.device-iphone17 .device-iphone-shell { display: block; }
+.ide-preview-stage.device-macbook .device-iphone-shell { display: none; }
+.ide-preview-stage.device-macbook .device-macbook-shell { display: flex; }
+.ide-preview-stage.device-full .device-macbook-shell,
+.ide-preview-stage.device-full .device-iphone-shell { display: none !important; }
+
+/* Monaco editor */
+#ide-monaco-root {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+.ide-editor-pro.monaco-active .ide-textarea,
+.ide-editor-pro.monaco-active .ide-highlight-layer,
+.ide-editor-pro.monaco-active .ide-gutter,
+.ide-editor-pro.monaco-active .ide-minimap { display: none !important; }
+
+/* Split editor */
+.ide-editor-split-wrap {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.ide-editor-area.split-open .ide-editor-split-wrap { display: flex; flex-direction: column; }
+.ide-editor-area.split-open .ide-editor.ide-editor-pro { max-height: 50%; }
+#ide-monaco-split { flex: 1; min-height: 120px; }
+
+/* Inline AI */
+.ide-inline-ai {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15%;
+  background: rgba(0,0,0,0.5);
+}
+.ide-inline-ai.open { display: flex; }
+.ide-inline-ai-box {
+  width: min(560px, 94%);
+  background: #1a1a24;
+  border: 1px solid rgba(138,43,226,0.5);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.ide-inline-ai-box textarea {
+  width: 100%;
+  min-height: 80px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px;
+  font-family: inherit;
+  resize: vertical;
+}
+.ide-inline-ai-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+.ide-inline-ai-actions button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+}
+.ide-inline-ai-run { background: linear-gradient(135deg, #8a2be2, #00ced1); color: #fff; }
+.ide-inline-ai-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* AI diff modal */
+.ide-diff-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 250;
+  display: none;
+  background: rgba(0,0,0,0.65);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.ide-diff-modal.open { display: flex; }
+.ide-diff-modal-box {
+  width: min(720px, 96%);
+  max-height: 80%;
+  background: #1a1a24;
+  border-radius: 12px;
+  border: 1px solid rgba(0,206,209,0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ide-diff-modal-head { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
+.ide-diff-modal-body { flex: 1; overflow: auto; padding: 12px; font-family: monospace; font-size: 0.72rem; }
+.ide-diff-modal-foot { padding: 10px 16px; display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.08); }
+
+/* Agent mode */
+.ide-agent-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.68rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+}
+.ide-agent-toggle input { accent-color: #8a2be2; }
+
+/* Snippets / Snapshots sidebar */
+.ide-snippet-item, .ide-snapshot-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-family: inherit;
+}
+.ide-snippet-item:hover, .ide-snapshot-item:hover { background: rgba(138,43,226,0.15); }
+
+/* Onboarding */
+.ide-onboard-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.ide-onboard-overlay.open { display: flex; }
+.ide-onboard-card {
+  max-width: 400px;
+  padding: 24px;
+  background: #1a1a24;
+  border-radius: 16px;
+  border: 1px solid rgba(138,43,226,0.4);
+  text-align: center;
+}
+.ide-onboard-card h3 { color: #00ced1; margin: 0 0 10px; }
+.ide-onboard-card p { font-size: 0.85rem; opacity: 0.8; line-height: 1.5; }
+.ide-onboard-card button {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8a2be2, #00ced1);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.ide-title-badge-v5 {
+  font-size: 0.55rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #00ced1, #8a2be2);
+  margin-left: 4px;
+  font-weight: 800;
+}
+
+.ide-search-options {
+  display: flex;
+  gap: 10px;
+  padding: 0 10px 6px;
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.5);
+}
+.ide-search-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }

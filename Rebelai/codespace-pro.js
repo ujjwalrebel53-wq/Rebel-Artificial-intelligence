@@ -254,6 +254,7 @@
     updateGitPanel();
     updateLangLabel();
     updateCursorPosition();
+    document.dispatchEvent(new CustomEvent('rebel-editor-refresh', { detail: { file: currentFile, content: files[currentFile] ?? '' } }));
   }
 
   function setSaveStatus(saved, synced) {
@@ -1611,6 +1612,9 @@ Rebel AI:`;
     openFile,
     syncEditor: syncEditorToFile,
     refresh: () => { renderFileTree(); renderTabs(); refreshEditor(); },
+    refreshEditor,
+    getEditorText: () => ($('ide-textarea')?.value ?? ''),
+    setEditorText: (v) => { const ta = $('ide-textarea'); if (ta) { ta.value = v; ta.dispatchEvent(new Event('input')); } },
     setFiles: (next) => {
       files = { ...next };
       openTabs = Object.keys(files).slice(0, 8);
