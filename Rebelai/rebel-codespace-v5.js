@@ -57,34 +57,19 @@
   }
 
   function setPreviewDevice(device) {
+    if (window.RebelCodespace?.setPreviewDevice) {
+      window.RebelCodespace.setPreviewDevice(device);
+      return;
+    }
     const stage = $('ide-preview-stage');
     if (!stage) return;
     stage.className = 'ide-preview-stage device-' + device;
     document.querySelectorAll('.ide-device-btn').forEach(b => b.classList.toggle('active', b.dataset.device === device));
-    localStorage.setItem('rebel_preview_device', device);
-    const iframe = $('ide-preview-frame');
-    const targets = {
-      macbook: $('device-macbook-screen'),
-      iphone17: $('device-iphone-screen'),
-      full: $('device-full-screen'),
-    };
-    const target = targets[device] || targets.macbook;
-    if (iframe && target) {
-      iframe.style.display = 'block';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = 'none';
-      target.appendChild(iframe);
-    }
-    const labels = { iphone17: 'iPhone 17 Pro Max', macbook: 'MacBook', full: 'Full width' };
-    toast(labels[device] + ' preview');
+    document.querySelectorAll('.ide-device-quick').forEach(b => b.classList.toggle('active', b.dataset.device === device));
   }
 
   function initDevicePreview() {
-    document.querySelectorAll('.ide-device-btn').forEach(btn => {
-      btn.addEventListener('click', () => setPreviewDevice(btn.dataset.device));
-    });
-    setPreviewDevice(localStorage.getItem('rebel_preview_device') || 'macbook');
+    if (CS?.initPreviewDevices) CS.initPreviewDevices();
   }
 
   function initMonaco() {
@@ -278,10 +263,6 @@
     if (!CS) return;
     initDevicePreview();
     loadMonacoScript();
-    renderSnippets();
-    renderSnapshots();
-    injectExtraTemplates();
-    interceptAiApply();
 
     const agentEl = $('ide-agent-mode');
     if (agentEl) agentEl.addEventListener('change', e => { agentMode = e.target.checked; toast(agentMode ? 'Agent ON' : 'Agent OFF'); });
@@ -304,9 +285,6 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 'k' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); openInlineAi(); }
       if ((e.ctrlKey || e.metaKey) && e.key === '\\') { e.preventDefault(); toggleSplit(); }
     });
-
-    const origRun = CS.runPreview;
-    CS.runPreview = () => { origRun(); setTimeout(() => setPreviewDevice(localStorage.getItem('rebel_preview_device') || 'macbook'), 50); };
 
     $('codespaceBtn')?.addEventListener('click', () => setTimeout(showOnboard, 900));
   }

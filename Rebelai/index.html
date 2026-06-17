@@ -636,6 +636,8 @@
           <button class="ide-topbtn ide-toolbar-btn" id="ide-save-btn" title="Save (Ctrl+S)"><i class="fas fa-save"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-new-file-btn" title="New File"><i class="fas fa-file-medical"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-preview-btn" title="Live Preview"><i class="fas fa-eye"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn ide-device-quick" data-device="macbook" title="MacBook Preview"><i class="fas fa-laptop"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn ide-device-quick" data-device="iphone17" title="iPhone 17 Pro Max Preview"><i class="fas fa-mobile-alt"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-download-btn" title="Download Project"><i class="fas fa-download"></i></button>
           <button class="ide-topbtn" id="ide-run-btn" title="Run (F5)"><i class="fas fa-play"></i></button>
           <button class="ide-topbtn" id="ide-git-btn" title="Git Status"><i class="fas fa-code-branch"></i></button>
@@ -818,20 +820,24 @@
           <!-- Live Preview Panel -->
           <div class="ide-preview-panel" id="ide-preview-panel" style="display:none;">
             <div class="ide-preview-header">
-              <span class="ide-preview-title"><i class="fas fa-eye"></i> Live Preview <span id="ide-preview-status" class="ide-preview-status">Ready</span></span>
-              <div class="ide-device-switch">
-                <button type="button" class="ide-device-btn active" data-device="macbook" title="MacBook Pro preview"><i class="fas fa-laptop"></i> MacBook</button>
-                <button type="button" class="ide-device-btn" data-device="iphone17" title="iPhone 17 Pro Max preview"><i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max</button>
-                <button type="button" class="ide-device-btn" data-device="full" title="Full width"><i class="fas fa-expand"></i> Full</button>
+              <div class="ide-preview-header-row">
+                <span class="ide-preview-title"><i class="fas fa-eye"></i> Live Preview <span id="ide-preview-status" class="ide-preview-status">Ready</span></span>
+                <div class="ide-preview-actions">
+                  <label class="ide-preview-live-toggle" title="Auto-refresh while typing">
+                    <input type="checkbox" id="ide-preview-live" checked> Live
+                  </label>
+                  <button type="button" id="ide-preview-refresh" title="Refresh preview"><i class="fas fa-sync-alt"></i></button>
+                  <button type="button" id="ide-preview-newtab" title="Open in new tab"><i class="fas fa-external-link-alt"></i></button>
+                  <button type="button" id="ide-preview-close" title="Close preview"><i class="fas fa-times"></i></button>
+                </div>
               </div>
-              <div class="ide-preview-actions">
-                <label class="ide-preview-live-toggle" title="Auto-refresh while typing">
-                  <input type="checkbox" id="ide-preview-live" checked> Live
-                </label>
-                <button type="button" id="ide-preview-refresh" title="Refresh preview"><i class="fas fa-sync-alt"></i></button>
-                <button type="button" id="ide-preview-newtab" title="Open in new tab"><i class="fas fa-external-link-alt"></i></button>
-                <button type="button" id="ide-preview-close" title="Close preview"><i class="fas fa-times"></i></button>
-              </div>
+            </div>
+            <!-- Device picker — always visible when preview open -->
+            <div class="ide-device-toolbar" id="ide-device-toolbar">
+              <span class="ide-device-toolbar-label"><i class="fas fa-tablet-alt"></i> Device:</span>
+              <button type="button" class="ide-device-btn active" data-device="macbook" title="MacBook Pro preview"><i class="fas fa-laptop"></i> MacBook</button>
+              <button type="button" class="ide-device-btn" data-device="iphone17" title="iPhone 17 Pro Max preview"><i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max</button>
+              <button type="button" class="ide-device-btn" data-device="full" title="Full width preview"><i class="fas fa-expand"></i> Full Screen</button>
             </div>
             <div class="ide-preview-body">
               <div class="ide-preview-stage device-macbook" id="ide-preview-stage">

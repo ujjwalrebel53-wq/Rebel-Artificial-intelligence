@@ -503,6 +503,54 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     runLinter();
   }
 
+  function setPreviewDevice(device) {
+    const stage = $('ide-preview-stage');
+    if (!stage) return;
+    const d = device || 'macbook';
+    stage.className = 'ide-preview-stage device-' + d;
+    document.querySelectorAll('.ide-device-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.device === d);
+    });
+    document.querySelectorAll('.ide-device-quick').forEach(b => {
+      b.classList.toggle('active', b.dataset.device === d);
+    });
+    const iframe = $('ide-preview-frame');
+    const targets = {
+      macbook: $('device-macbook-screen'),
+      iphone17: $('device-iphone-screen'),
+      full: $('device-full-screen'),
+    };
+    const target = targets[d] || targets.macbook;
+    if (iframe && target) {
+      iframe.style.display = 'block';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      target.appendChild(iframe);
+    }
+    try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
+    const labels = { iphone17: 'iPhone 17 Pro Max', macbook: 'MacBook', full: 'Full width' };
+    toast(labels[d] || d);
+  }
+
+  function initPreviewDevices() {
+    document.querySelectorAll('.ide-device-btn').forEach(btn => {
+      if (btn._deviceBound) return;
+      btn._deviceBound = true;
+      btn.addEventListener('click', () => setPreviewDevice(btn.dataset.device));
+    });
+    document.querySelectorAll('.ide-device-quick').forEach(btn => {
+      if (btn._deviceQuickBound) return;
+      btn._deviceQuickBound = true;
+      btn.addEventListener('click', () => {
+        const device = btn.dataset.device;
+        try { localStorage.setItem('rebel_preview_device', device); } catch (e) {}
+        if (!previewOpen) runPreview();
+        else setPreviewDevice(device);
+      });
+    });
+  }
+
   function runPreview() {
     syncEditorToFile();
     const panel = $('ide-preview-panel');
@@ -513,7 +561,9 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     }
     $('ide-preview-btn')?.classList.add('active');
     $('ide-run-btn')?.classList.add('active');
+    initPreviewDevices();
     applyPreviewToFrame();
+    setPreviewDevice(localStorage.getItem('rebel_preview_device') || 'macbook');
     termLog('Live preview opened.', 'out');
     trackCodespace('preview');
     runLinter();
@@ -1448,6 +1498,7 @@ Rebel AI:`;
     $('ide-toggle-terminal-menu')?.addEventListener('click', e => { e.stopPropagation(); toggleDropdown('ide-menu-terminal'); });
 
     logOutput('Rebel Codespace Pro ready.', 'info');
+    initPreviewDevices();
     runLinter();
     $('ide-save-btn')?.addEventListener('click', () => saveProject({ manual: true }));
     $('ide-new-file-btn')?.addEventListener('click', newFile);
@@ -1596,6 +1647,8 @@ Rebel AI:`;
   window.RebelCodespace = {
     saveProject: (opts) => saveProject(opts || {}),
     runPreview,
+    setPreviewDevice,
+    initPreviewDevices,
     runLinter,
     fixWithAi,
     fixAllQuick,
