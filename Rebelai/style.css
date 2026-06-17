@@ -3385,7 +3385,17 @@ select.admin-config-input option {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 55%;
+  overflow: visible;
 }
+.ide-device-quick {
+  color: #00ced1 !important;
+  border: 1px solid rgba(0,206,209,0.35);
+  background: rgba(0,206,209,0.12);
+}
+.ide-device-quick:hover { background: rgba(0,206,209,0.28) !important; color: #fff !important; }
 
 .ide-topbtn {
   background: transparent;

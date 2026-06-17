@@ -64,8 +64,7 @@
     const stage = $('ide-preview-stage');
     if (!stage) return;
     stage.className = 'ide-preview-stage device-' + device;
-    document.querySelectorAll('.ide-device-btn').forEach(b => b.classList.toggle('active', b.dataset.device === device));
-    document.querySelectorAll('.ide-device-quick').forEach(b => b.classList.toggle('active', b.dataset.device === device));
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick').forEach(b => b.classList.toggle('active', b.dataset.device === device));
   }
 
   function initDevicePreview() {

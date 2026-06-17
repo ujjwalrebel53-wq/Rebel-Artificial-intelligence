@@ -674,7 +674,12 @@
         <div class="ide-menu-wrap">
           <span class="ide-menu-item" data-menu="view" id="ide-toggle-preview-menu">View</span>
           <div class="ide-dropdown" id="ide-menu-view">
-            <button data-action="preview"><i class="fas fa-eye"></i> Live Preview</button>
+            <button data-action="preview"><i class="fas fa-eye"></i> Live Preview <kbd>F5</kbd></button>
+            <div class="ide-dropdown-divider"></div>
+            <button data-action="preview-macbook"><i class="fas fa-laptop"></i> MacBook Preview</button>
+            <button data-action="preview-iphone17"><i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max</button>
+            <button data-action="preview-full"><i class="fas fa-expand"></i> Full Screen Preview</button>
+            <div class="ide-dropdown-divider"></div>
             <button data-action="toggle-terminal"><i class="fas fa-terminal"></i> Toggle Terminal</button>
             <button data-action="explorer"><i class="fas fa-folder"></i> Explorer</button>
             <button data-action="search-panel"><i class="fas fa-search"></i> Search Panel</button>
@@ -700,6 +705,24 @@
         <div class="ide-menu-spacer"></div>
         <span class="ide-save-status" id="ide-save-status"><i class="fas fa-check-circle"></i> Saved</span>
         <span class="ide-menu-status"><span class="ide-status-dot-green"></span> Rebel AI Connected</span>
+      </div>
+
+      <!-- Device preview bar — always visible (not inside hidden preview panel) -->
+      <div class="ide-device-bar-sticky" id="ide-device-bar-sticky">
+        <span class="ide-device-bar-title"><i class="fas fa-tablet-alt"></i> Preview Device</span>
+        <button type="button" class="ide-device-btn ide-device-bar-btn active" data-device="macbook" title="MacBook Pro frame">
+          <i class="fas fa-laptop"></i> MacBook
+        </button>
+        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="iphone17" title="iPhone 17 Pro Max frame">
+          <i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max
+        </button>
+        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="full" title="Full width preview">
+          <i class="fas fa-expand"></i> Full Screen
+        </button>
+        <span class="ide-device-bar-spacer"></span>
+        <button type="button" class="ide-device-open-btn" id="ide-device-open-preview" title="Open live preview (F5)">
+          <i class="fas fa-eye"></i> Open Preview
+        </button>
       </div>
 
       <!-- ── Main IDE Body ── -->

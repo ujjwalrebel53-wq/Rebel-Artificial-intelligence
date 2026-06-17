@@ -503,17 +503,26 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     runLinter();
   }
 
+  function syncDeviceButtonState(device) {
+    const d = device || 'macbook';
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick').forEach(b => {
+      b.classList.toggle('active', b.dataset.device === d);
+    });
+  }
+
+  function choosePreviewDevice(device) {
+    const d = device || 'macbook';
+    try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
+    if (!previewOpen) runPreview();
+    else setPreviewDevice(d);
+  }
+
   function setPreviewDevice(device) {
     const stage = $('ide-preview-stage');
     if (!stage) return;
     const d = device || 'macbook';
     stage.className = 'ide-preview-stage device-' + d;
-    document.querySelectorAll('.ide-device-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.device === d);
-    });
-    document.querySelectorAll('.ide-device-quick').forEach(b => {
-      b.classList.toggle('active', b.dataset.device === d);
-    });
+    syncDeviceButtonState(d);
     const iframe = $('ide-preview-frame');
     const targets = {
       macbook: $('device-macbook-screen'),
@@ -534,21 +543,21 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
   }
 
   function initPreviewDevices() {
-    document.querySelectorAll('.ide-device-btn').forEach(btn => {
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn').forEach(btn => {
       if (btn._deviceBound) return;
       btn._deviceBound = true;
-      btn.addEventListener('click', () => setPreviewDevice(btn.dataset.device));
+      btn.addEventListener('click', () => choosePreviewDevice(btn.dataset.device));
     });
     document.querySelectorAll('.ide-device-quick').forEach(btn => {
       if (btn._deviceQuickBound) return;
       btn._deviceQuickBound = true;
-      btn.addEventListener('click', () => {
-        const device = btn.dataset.device;
-        try { localStorage.setItem('rebel_preview_device', device); } catch (e) {}
-        if (!previewOpen) runPreview();
-        else setPreviewDevice(device);
-      });
+      btn.addEventListener('click', () => choosePreviewDevice(btn.dataset.device));
     });
+    const openPreviewBtn = $('ide-device-open-preview');
+    if (openPreviewBtn && !openPreviewBtn._previewOpenBound) {
+      openPreviewBtn._previewOpenBound = true;
+      openPreviewBtn.addEventListener('click', runPreview);
+    }
   }
 
   function runPreview() {
@@ -1121,6 +1130,9 @@ Rebel AI:`;
       'fix-all-ai': () => fixWithAi(),
       'find': () => { showPanel('search'); $('ide-search-input')?.focus(); },
       'preview': runPreview,
+      'preview-macbook': () => choosePreviewDevice('macbook'),
+      'preview-iphone17': () => choosePreviewDevice('iphone17'),
+      'preview-full': () => choosePreviewDevice('full'),
       'toggle-terminal': () => { const p = $('ide-terminal-panel'); p.style.display = p.style.display === 'none' ? '' : 'none'; },
       'explorer': () => showPanel('explorer'),
       'search-panel': () => showPanel('search'),
@@ -1499,6 +1511,7 @@ Rebel AI:`;
 
     logOutput('Rebel Codespace Pro ready.', 'info');
     initPreviewDevices();
+    syncDeviceButtonState(localStorage.getItem('rebel_preview_device') || 'macbook');
     runLinter();
     $('ide-save-btn')?.addEventListener('click', () => saveProject({ manual: true }));
     $('ide-new-file-btn')?.addEventListener('click', newFile);
@@ -1648,6 +1661,7 @@ Rebel AI:`;
     saveProject: (opts) => saveProject(opts || {}),
     runPreview,
     setPreviewDevice,
+    choosePreviewDevice,
     initPreviewDevices,
     runLinter,
     fixWithAi,

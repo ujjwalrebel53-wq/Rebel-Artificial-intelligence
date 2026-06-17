@@ -255,6 +255,56 @@
   box-shadow: 0 0 10px rgba(0,206,209,0.4);
 }
 .ide-device-quick.active { color: #00ced1 !important; }
+
+/* Always-visible device bar (outside hidden preview panel) */
+.ide-device-bar-sticky {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, rgba(138,43,226,0.45), rgba(0,206,209,0.22));
+  border-bottom: 2px solid rgba(0,206,209,0.5);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  z-index: 20;
+  min-height: 48px;
+}
+.ide-device-bar-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ide-device-bar-title i { color: #00ced1; }
+.ide-device-bar-spacer { flex: 1; min-width: 8px; }
+.ide-device-bar-btn {
+  font-weight: 600;
+  min-height: 34px;
+}
+.ide-device-open-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,206,209,0.6);
+  background: rgba(0,206,209,0.25);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.ide-device-open-btn:hover {
+  background: rgba(0,206,209,0.4);
+  box-shadow: 0 0 12px rgba(0,206,209,0.35);
+}
+
 .ide-preview-live-toggle {
   display: inline-flex;
   align-items: center;
@@ -345,6 +395,11 @@
 }
 .ide-dropdown button:hover { background: rgba(138,43,226,0.15); color: #fff; }
 .ide-dropdown button kbd { margin-left: auto; font-size: 0.65rem; color: rgba(255,255,255,0.3); }
+.ide-dropdown-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(255,255,255,0.1);
+}
 
 /* ── Terminal panels ── */
 .ide-term-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
