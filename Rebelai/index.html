@@ -13,19 +13,50 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <!-- FIX: Correct relative path (no /assets/ prefix) -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="advanced.css">
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
+  <!-- Advanced: Loading Splash -->
+  <div id="rebelSplash" class="rebel-splash">
+    <div class="splash-inner">
+      <div class="splash-logo-ring">
+        <img src="rebel-avatar.jpg" alt="Rebel Ai" class="splash-avatar">
+      </div>
+      <div class="splash-title">REBEL AI</div>
+      <div class="splash-sub">Neural Interface Initializing…</div>
+      <div class="splash-bar"><div class="splash-bar-fill" id="splashBarFill"></div></div>
+      <div class="splash-status" id="splashStatus">Loading core modules</div>
+    </div>
+  </div>
+
+  <!-- Advanced: Scroll Progress -->
+  <div id="scrollProgress" class="scroll-progress"></div>
+
+  <!-- Advanced: Particle Canvas -->
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  <div class="cyber-grid" aria-hidden="true"></div>
+  <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
+
   <!-- Header -->
   <header class="header">
     <div class="container">
-      <div class="logo">Rebel Ai</div>
-      <nav>
-        <a href="#about" class="nav-link">About</a>
+      <div class="logo-wrap">
+        <div class="logo">Rebel Ai</div>
+        <span class="live-badge"><span class="live-dot"></span> ONLINE</span>
+      </div>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+      <nav class="main-nav" id="mainNav">
+        <a href="#about" class="nav-link">Features</a>
+        <a href="#stats" class="nav-link">Stats</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <button class="nav-cmd-btn" id="openCmdPaletteBtn" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i> ⌘K</button>
         <a href="#" id="adminPanelBtn" class="nav-link admin-nav-btn"><i class="fas fa-shield-alt"></i> Admin</a>
       </nav>
     </div>
@@ -36,11 +67,12 @@
     <div class="container">
       <div class="hero-layout">
         <div class="hero-content animate">
+          <div class="hero-badge"><i class="fas fa-bolt"></i> Next-Gen AI Platform · v2.0</div>
           <h1>
-            Rebel Ai<br><span>Unleash the Code.</span>
+            Rebel Ai<br><span id="heroTyping">Unleash the Code.</span><span class="typing-cursor">|</span>
           </h1>
           <p class="hero-subtitle">
-            An advanced AI assistant designed for those who dare to think differently. Powered by cutting-edge technology and a rebellious spirit.
+            An advanced AI assistant designed for those who dare to think differently. Chat, voice, codespace & automation — all in one neural interface.
           </p>
           <div class="hero-buttons">
             <a href="#" id="aboutDevBtn" class="btn btn-primary telegram-btn">
@@ -66,7 +98,7 @@
         
         <div class="hero-visual animate">
           <div class="ai-avatar">
-            <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="AI Assistant">
+            <img src="rebel-avatar.jpg" alt="AI Assistant">
             <div class="pulse-ring"></div>
             <div class="pulse-ring-2"></div>
           </div>
@@ -127,7 +159,173 @@
       </div>
     </div>
   </section>
-  
+
+  <!-- Advanced: Live Stats -->
+  <section id="stats" class="stats-section">
+    <div class="container">
+      <h2 class="section-title animate">Platform at a Glance</h2>
+      <p class="section-sub animate">Real-time metrics from the Rebel AI ecosystem</p>
+      <div class="stats-grid">
+        <div class="stat-card animate">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-value" data-target="12500" data-suffix="+">0</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card animate">
+          <div class="stat-icon teal"><i class="fas fa-comments"></i></div>
+          <div class="stat-value" data-target="890000" data-suffix="+">0</div>
+          <div class="stat-label">Messages Processed</div>
+        </div>
+        <div class="stat-card animate">
+          <div class="stat-icon green"><i class="fas fa-bolt"></i></div>
+          <div class="stat-value" data-target="99.9" data-suffix="%" data-decimal="1">0</div>
+          <div class="stat-label">Uptime</div>
+        </div>
+        <div class="stat-card animate">
+          <div class="stat-icon purple"><i class="fas fa-microchip"></i></div>
+          <div class="stat-value" data-target="12" data-suffix="">0</div>
+          <div class="stat-label">AI Models</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Advanced: How It Works -->
+  <section id="how-it-works" class="how-section">
+    <div class="container">
+      <h2 class="section-title animate">How Rebel AI Works</h2>
+      <div class="timeline">
+        <div class="timeline-item animate">
+          <div class="timeline-num">01</div>
+          <div class="timeline-content">
+            <h3><i class="fas fa-user-plus"></i> Create Account</h3>
+            <p>Sign up with email OTP verification. Secure, fast, and free forever.</p>
+          </div>
+        </div>
+        <div class="timeline-item animate">
+          <div class="timeline-num">02</div>
+          <div class="timeline-content">
+            <h3><i class="fas fa-robot"></i> Choose Your Mode</h3>
+            <p>Chat with Rebel Gpt, talk via Voice Assistant, or code in Rebel Codespace.</p>
+          </div>
+        </div>
+        <div class="timeline-item animate">
+          <div class="timeline-num">03</div>
+          <div class="timeline-content">
+            <h3><i class="fas fa-brain"></i> AI Does the Work</h3>
+            <p>Multi-model AI with memory, image analysis, and real-time responses.</p>
+          </div>
+        </div>
+        <div class="timeline-item animate">
+          <div class="timeline-num">04</div>
+          <div class="timeline-content">
+            <h3><i class="fas fa-rocket"></i> Scale & Automate</h3>
+            <p>Integrate bots, automate workflows, and grow your business 10x faster.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Advanced: Tech Stack Marquee -->
+  <section class="marquee-section">
+    <div class="marquee-track">
+      <div class="marquee-content">
+        <span><i class="fab fa-node-js"></i> Node.js</span>
+        <span><i class="fab fa-python"></i> Python</span>
+        <span><i class="fas fa-brain"></i> GPT-5</span>
+        <span><i class="fas fa-robot"></i> Claude</span>
+        <span><i class="fas fa-gem"></i> Gemini</span>
+        <span><i class="fab fa-js"></i> JavaScript</span>
+        <span><i class="fab fa-php"></i> PHP</span>
+        <span><i class="fas fa-cloud"></i> Vercel Edge</span>
+        <span><i class="fas fa-microphone"></i> Voice AI</span>
+        <span><i class="fas fa-code"></i> Codespace IDE</span>
+        <span><i class="fab fa-telegram"></i> Telegram Bots</span>
+        <span><i class="fas fa-shield-alt"></i> OSINT</span>
+      </div>
+      <div class="marquee-content" aria-hidden="true">
+        <span><i class="fab fa-node-js"></i> Node.js</span>
+        <span><i class="fab fa-python"></i> Python</span>
+        <span><i class="fas fa-brain"></i> GPT-5</span>
+        <span><i class="fas fa-robot"></i> Claude</span>
+        <span><i class="fas fa-gem"></i> Gemini</span>
+        <span><i class="fab fa-js"></i> JavaScript</span>
+        <span><i class="fab fa-php"></i> PHP</span>
+        <span><i class="fas fa-cloud"></i> Vercel Edge</span>
+        <span><i class="fas fa-microphone"></i> Voice AI</span>
+        <span><i class="fas fa-code"></i> Codespace IDE</span>
+        <span><i class="fab fa-telegram"></i> Telegram Bots</span>
+        <span><i class="fas fa-shield-alt"></i> OSINT</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Advanced: Terminal Showcase -->
+  <section class="terminal-section">
+    <div class="container">
+      <div class="terminal-showcase animate">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <span class="t-dot red"></span><span class="t-dot yellow"></span><span class="t-dot green"></span>
+            <span class="terminal-title">rebel@neural-core ~ bash</span>
+          </div>
+          <div class="terminal-body" id="demoTerminal">
+            <div class="t-line"><span class="t-prompt">rebel@ai:~$</span> rebel init --mode advanced</div>
+            <div class="t-line t-out">✓ Neural core online</div>
+            <div class="t-line t-out">✓ Voice engine: Callum TTS ready</div>
+            <div class="t-line t-out">✓ Codespace IDE loaded</div>
+            <div class="t-line"><span class="t-prompt">rebel@ai:~$</span> <span class="t-cursor" id="demoCursor">▌</span></div>
+          </div>
+        </div>
+        <div class="terminal-info">
+          <h2>Built for Developers</h2>
+          <p>Rebel Codespace gives you a full Cursor-style IDE with AI pair programming, live terminal, and multi-file editing — right in your browser.</p>
+          <a href="#" id="terminalCodespaceBtn" class="btn btn-primary"><i class="fas fa-code"></i> Open Codespace</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Advanced: FAQ -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <h2 class="section-title animate">Frequently Asked Questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item animate">
+          <button class="faq-q"><span>Is Rebel AI completely free?</span><i class="fas fa-chevron-down"></i></button>
+          <div class="faq-a"><p>Yes! Rebel AI is 100% free to use. Create an account and access chat, voice, and codespace without any subscription.</p></div>
+        </div>
+        <div class="faq-item animate">
+          <button class="faq-q"><span>Which AI models are supported?</span><i class="fas fa-chevron-down"></i></button>
+          <div class="faq-a"><p>Rebel Gpt supports GPT-5, Claude Opus/Sonnet, CursorLM, Gemini, and Qwen — switch models from the chat dropdown.</p></div>
+        </div>
+        <div class="faq-item animate">
+          <button class="faq-q"><span>How does the Voice Assistant work?</span><i class="fas fa-chevron-down"></i></button>
+          <div class="faq-a"><p>Say "Hey Rebel" or tap the mic. Uses advanced TTS with lip-sync avatar, persistent memory, and multi-API fallback for reliability.</p></div>
+        </div>
+        <div class="faq-item animate">
+          <button class="faq-q"><span>Can I upload images in chat?</span><i class="fas fa-chevron-down"></i></button>
+          <div class="faq-a"><p>Absolutely. Click the image icon in chat to upload photos. Rebel Gpt analyzes images using vision-capable AI models.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Advanced: CTA Banner -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-banner animate">
+        <div class="cta-glow"></div>
+        <h2>Ready to Rebel?</h2>
+        <p>Join thousands of developers, hackers, and creators using Rebel AI every day.</p>
+        <div class="cta-btns">
+          <a href="#" id="ctaAccessBtn" class="btn btn-primary btn-lg"><i class="fas fa-unlock-alt"></i> Get Started Free</a>
+          <a href="#" id="ctaVoiceBtn" class="btn btn-secondary btn-lg"><i class="fas fa-microphone"></i> Try Voice AI</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Footer -->
   <footer class="footer">
@@ -143,7 +341,7 @@
       <span class="close-modal">&times;</span>
       <div class="dev-profile">
         <div class="dev-avatar-container">
-          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Bhaiya" class="dev-avatar">
+          <img src="rebel-avatar.jpg" alt="Rebel Bhaiya" class="dev-avatar">
           <div class="dev-pulse"></div>
         </div>
         <h2>About Developer</h2>
@@ -167,7 +365,7 @@
       <button class="auth-close-x" id="closeAccessModal">✕</button>
       <div class="access-rebel-inner">
         <div class="access-rebel-logo">
-          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <img src="rebel-avatar.jpg" alt="Rebel Ai" class="auth-logo-img">
           <h2 class="auth-title">Access <span>Rebel Ai</span></h2>
           <p class="auth-subtitle">Choose your experience</p>
         </div>
@@ -208,7 +406,7 @@
       <!-- ── STEP: Login ── -->
       <div class="auth-step" id="authStepLogin">
         <div class="auth-brand">
-          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <img src="rebel-avatar.jpg" alt="Rebel Ai" class="auth-logo-img">
           <h2 class="auth-title">Welcome to <span>Rebel Ai</span></h2>
           <p class="auth-subtitle" id="loginSubtitle">Sign in to continue</p>
         </div>
@@ -331,25 +529,10 @@
           </div>
         </div>
         <h2 style="position:absolute;left:50%;transform:translateX(-50%);">Rebel Gpt</h2>
-        <!-- Model Selector -->
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-          <select id="modelSelector" style="
-            background: rgba(138,43,226,0.15);
-            border: 1px solid rgba(138,43,226,0.4);
-            color: #fff;
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path fill=%22%23aaa%22 d=%22M0 0l5 6 5-6z%22/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 28px;
-            max-width: 180px;
-          ">
+        <!-- Model Selector + Chat Tools -->
+        <div class="chat-header-tools">
+          <button id="clearChatBtn" class="chat-tool-btn" title="Clear chat"><i class="fas fa-trash-alt"></i></button>
+          <select id="modelSelector" class="model-selector">
             <option value="claude-sonnet-4-20250514">Sonnet 4 (Default)</option>
             <option value="claude-opus-4.6">Claude Opus 4.6</option>
             <option value="claude-opus-4-6">Claude Opus 4-6</option>
@@ -1218,7 +1401,34 @@
     </div>
   </div>
 
+  <!-- Advanced: Command Palette -->
+  <div id="cmdPalette" class="cmd-palette">
+    <div class="cmd-backdrop" id="cmdBackdrop"></div>
+    <div class="cmd-box">
+      <div class="cmd-search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="cmdInput" placeholder="Type a command or search…" autocomplete="off" spellcheck="false">
+        <kbd class="cmd-kbd">ESC</kbd>
+      </div>
+      <div class="cmd-list" id="cmdList">
+        <div class="cmd-group-label">Actions</div>
+        <button class="cmd-item" data-action="access"><i class="fas fa-unlock-alt"></i><span>Access Rebel Ai</span><kbd>⌘A</kbd></button>
+        <button class="cmd-item" data-action="chat"><i class="fas fa-robot"></i><span>Open Chat</span><kbd>⌘C</kbd></button>
+        <button class="cmd-item" data-action="voice"><i class="fas fa-microphone"></i><span>Voice Assistant</span><kbd>⌘V</kbd></button>
+        <button class="cmd-item" data-action="codespace"><i class="fas fa-code"></i><span>Rebel Codespace</span><kbd>⌘D</kbd></button>
+        <button class="cmd-item" data-action="admin"><i class="fas fa-shield-alt"></i><span>Admin Panel</span></button>
+        <button class="cmd-item" data-action="dev"><i class="fas fa-user-secret"></i><span>About Developer</span></button>
+        <div class="cmd-group-label">Navigate</div>
+        <button class="cmd-item" data-action="features"><i class="fas fa-th-large"></i><span>Features</span></button>
+        <button class="cmd-item" data-action="stats"><i class="fas fa-chart-bar"></i><span>Platform Stats</span></button>
+        <button class="cmd-item" data-action="faq"><i class="fas fa-question-circle"></i><span>FAQ</span></button>
+      </div>
+      <div class="cmd-footer">↑↓ navigate · Enter select · Ctrl+K toggle</div>
+    </div>
+  </div>
+
   <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
+  <script src="advanced.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

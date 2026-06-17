@@ -1279,11 +1279,12 @@ And the HTML:
     container.classList.add('message-container', `${sender}-container`);
     if(sender==='bot'){
       const avatar = document.createElement('img');
-      avatar.src='https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg';
+      avatar.src='rebel-avatar.jpg';
       avatar.alt='Rebel AI'; avatar.classList.add('message-avatar');
       container.appendChild(avatar);
     }
     const div=document.createElement('div'); div.classList.add('message',`${sender}-message`);
+    div.style.position = 'relative';
     if(imageData && sender==='user'){
       const img=document.createElement('img'); img.src=imageData;
       img.style.cssText='max-width:200px;max-height:150px;border-radius:10px;display:block;margin-bottom:8px;border:2px solid rgba(255,255,255,0.2);';
@@ -1292,8 +1293,37 @@ And the HTML:
     if(isLoading){
       div.textContent=text; div.id='loading-'+Date.now();
     } else if(sender==='bot'){
-      const span=document.createElement('span'); span.textContent=''; div.appendChild(span);
-      let i=0; (function tw(){ if(i<text.length){ span.textContent+=text.charAt(i++); chatMessages.scrollTop=chatMessages.scrollHeight; setTimeout(tw,18); }})();
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'msg-copy-btn';
+      copyBtn.title = 'Copy message';
+      copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+      copyBtn.addEventListener('click', () => {
+        if (window.RebelAdvanced) RebelAdvanced.copyMessage(text);
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+      });
+      div.appendChild(copyBtn);
+
+      const span = document.createElement('span');
+      div.appendChild(span);
+      if (window.RebelAdvanced && window.RebelAdvanced.renderMarkdown) {
+        let i = 0;
+        const plain = text;
+        (function tw() {
+          if (i < plain.length) {
+            i += Math.min(3, plain.length - i);
+            const partial = plain.slice(0, i);
+            span.innerHTML = RebelAdvanced.renderMarkdown(partial);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            setTimeout(tw, 12);
+          } else {
+            span.innerHTML = RebelAdvanced.renderMarkdown(plain);
+          }
+        })();
+      } else {
+        let i = 0;
+        (function tw(){ if(i<text.length){ span.textContent+=text.charAt(i++); chatMessages.scrollTop=chatMessages.scrollHeight; setTimeout(tw,18); }})();
+      }
     } else {
       if(text){ const sp=document.createElement('span'); sp.textContent=text; div.appendChild(sp); }
     }
