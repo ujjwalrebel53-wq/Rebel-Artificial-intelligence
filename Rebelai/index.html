@@ -45,6 +45,7 @@
 
   <!-- Advanced: Particle Canvas -->
   <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  <div class="scanline-overlay" aria-hidden="true"></div>
   <div class="cyber-grid" aria-hidden="true"></div>
   <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
   <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
@@ -103,6 +104,7 @@
         </div>
         
         <div class="hero-visual animate card-3d-tilt" id="hero3dVisual">
+          <div class="hero-power-ring" aria-hidden="true"></div>
           <div class="ai-avatar avatar-3d-wrap">
             <img src="rebel-avatar.jpg" alt="AI Assistant">
             <div class="pulse-ring"></div>
@@ -1547,7 +1549,6 @@
   <script src="advanced.js"></script>
   <script src="main.js"></script>
   <input type="file" id="ide-import-input" accept=".json" style="display:none;">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="rebel-3d.js"></script>
   <script src="codespace-pro.js"></script>
   <script src="admin-control.js"></script>

@@ -47,6 +47,7 @@ body {
   pointer-events: none;
   z-index: 0;
   animation: ambientDrift 12s ease-in-out infinite alternate;
+  will-change: transform;
 }
 .ambient-glow-1 {
   width: 500px; height: 500px;
@@ -69,6 +70,8 @@ body {
 .faq-section, .cta-section, .marquee-section {
   position: relative;
   z-index: 1;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
 }
 
 /* ── Splash Screen ── */

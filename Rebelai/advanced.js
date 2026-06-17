@@ -46,80 +46,174 @@
     document.body.style.overflow = 'hidden';
   }
 
-  // ── Particle Network ──────────────────────────────────────
+  // ── Particle Network (lite when WebGL 3D is active) ───────
   function initParticles() {
     const canvas = document.getElementById('particleCanvas');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      canvas.style.display = 'none';
+      return;
+    }
+
+    const ctx = canvas.getContext('2d', { alpha: true });
     let particles = [];
-    let animId;
-    const COUNT = window.innerWidth < 768 ? 40 : 80;
-    const CONNECT_DIST = 140;
+    let animId = 0;
+    let running = true;
+    const isMobile = window.innerWidth < 768;
+    let useLite = false;
+
+    function particleConfig() {
+      useLite = document.body.classList.contains('rebel-3d-active') || window.__REBEL_3D_ACTIVE__;
+      return {
+        count: useLite ? (isMobile ? 18 : 28) : (isMobile ? 32 : 55),
+        connect: useLite ? 0 : 120,
+        maxLinks: useLite ? 0 : 3,
+      };
+    }
+
+    let cfg = particleConfig();
+    let CONNECT_DIST = cfg.connect;
+    let CONNECT_DIST_SQ = CONNECT_DIST * CONNECT_DIST;
+    let MAX_LINKS = cfg.maxLinks;
+
+    function syncMode() {
+      const next = particleConfig();
+      if (next.count !== cfg.count || next.connect !== cfg.connect) {
+        cfg = next;
+        CONNECT_DIST = cfg.connect;
+        CONNECT_DIST_SQ = CONNECT_DIST * CONNECT_DIST;
+        MAX_LINKS = cfg.maxLinks;
+        createParticles();
+      }
+      canvas.classList.toggle('particle-lite', !!useLite);
+    }
 
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.25);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     function createParticles() {
       particles = [];
-      for (let i = 0; i < COUNT; i++) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      for (let i = 0; i < cfg.count; i++) {
         particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          r: Math.random() * 1.5 + 0.5,
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * (useLite ? 0.25 : 0.35),
+          vy: (Math.random() - 0.5) * (useLite ? 0.25 : 0.35),
+          r: Math.random() * 1.2 + 0.4,
         });
       }
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!running) return;
+      animId = requestAnimationFrame(draw);
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      ctx.clearRect(0, 0, w, h);
 
       particles.forEach((p, i) => {
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(138, 43, 226, 0.6)';
+        ctx.fillStyle = useLite ? 'rgba(138, 43, 226, 0.45)' : 'rgba(138, 43, 226, 0.55)';
         ctx.fill();
 
-        for (let j = i + 1; j < particles.length; j++) {
+        if (!CONNECT_DIST) return;
+
+        let links = 0;
+        for (let j = i + 1; j < particles.length && links < MAX_LINKS; j++) {
           const q = particles[j];
           const dx = p.x - q.x;
           const dy = p.y - q.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECT_DIST) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < CONNECT_DIST_SQ) {
+            links++;
+            const alpha = 0.12 * (1 - Math.sqrt(distSq) / CONNECT_DIST);
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(0, 206, 209, ${0.15 * (1 - dist / CONNECT_DIST)})`;
+            ctx.strokeStyle = `rgba(0, 206, 209, ${alpha})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
       });
+    }
 
-      animId = requestAnimationFrame(draw);
+    function start() {
+      if (running) return;
+      running = true;
+      draw();
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(animId);
     }
 
     resize();
     createParticles();
     draw();
 
+    const modeObs = new MutationObserver(syncMode);
+    modeObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    syncMode();
+
+    let resizeTimer;
     window.addEventListener('resize', () => {
-      resize();
-      createParticles();
-    });
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        resize();
+        createParticles();
+      }, 150);
+    }, { passive: true });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) cancelAnimationFrame(animId);
-      else draw();
+      if (document.hidden) stop();
+      else start();
     });
+
+    document.addEventListener('rebel:scroll-active', () => {
+      canvas.style.opacity = useLite ? '0.25' : '0.35';
+    });
+    document.addEventListener('rebel:scroll-idle', () => {
+      canvas.style.opacity = '';
+    });
+  }
+
+  // ── Scroll perf: throttle paints while scrolling ──────────
+  function initScrollPerf() {
+    let timer;
+    let scrolling = false;
+
+    window.addEventListener('scroll', () => {
+      if (!scrolling) {
+        scrolling = true;
+        document.body.classList.add('is-scrolling');
+        document.dispatchEvent(new Event('rebel:scroll-active'));
+      }
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        scrolling = false;
+        document.body.classList.remove('is-scrolling');
+        document.dispatchEvent(new Event('rebel:scroll-idle'));
+      }, 120);
+    }, { passive: true });
   }
 
   // ── Scroll Progress ───────────────────────────────────────
@@ -473,7 +567,7 @@
   // ── Init ──────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     initSplash();
-    initParticles();
+    initScrollPerf();
     initScrollProgress();
     initHeroTyping();
     initStatsCounters();
@@ -481,8 +575,12 @@
     initMobileMenu();
     initCommandPalette();
     initCTAButtons();
-    initTerminalDemo();
     initClearChat();
+
+    requestAnimationFrame(() => {
+      initParticles();
+      initTerminalDemo();
+    });
   });
 
   window.RebelAdvanced = { renderMarkdown, copyCode, copyMessage };
