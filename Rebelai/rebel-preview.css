@@ -1,0 +1,377 @@
+/* Rebel Codespace — clean preview panel (no overlap, minimal device frames) */
+
+.ide-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ide-workspace-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ide-editor-area.preview-open .ide-workspace-editor {
+  flex: 1 1 58%;
+  max-width: 58%;
+  border-right: 1px solid #2d2d2d;
+}
+
+.ide-preview-panel {
+  display: none;
+  flex: 1 1 42%;
+  min-width: 280px;
+  max-width: 42%;
+  flex-direction: column;
+  background: #181818;
+  border-left: 1px solid #2d2d2d;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ide-editor-area.preview-open .ide-preview-panel:not([hidden]) {
+  display: flex;
+}
+
+.ide-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  height: 40px;
+  flex-shrink: 0;
+  background: #252526;
+  border-bottom: 1px solid #1e1e1e;
+  color: #cccccc;
+  font-size: 0.72rem;
+}
+
+.ide-preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.ide-preview-title {
+  font-weight: 600;
+  color: #e8e8e8;
+  white-space: nowrap;
+}
+
+.ide-preview-status {
+  font-size: 0.62rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ide-preview-status.loading { color: #d4a017; background: rgba(212, 160, 23, 0.12); }
+.ide-preview-status.ready { color: #4ec994; background: rgba(78, 201, 148, 0.12); }
+.ide-preview-status.error { color: #f07070; background: rgba(240, 112, 112, 0.12); }
+
+.ide-preview-device-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: #1e1e1e;
+  border-radius: 6px;
+  border: 1px solid #333;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.ide-preview-device-tabs .ide-device-btn {
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 0.68rem !important;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.ide-preview-device-tabs .ide-device-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+}
+
+.ide-preview-device-tabs .ide-device-btn.active {
+  background: #37373d !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.ide-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ide-preview-live-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  user-select: none;
+  margin-right: 4px;
+}
+
+.ide-preview-live-toggle input { accent-color: #007acc; }
+
+.ide-preview-actions button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ide-preview-actions button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.ide-preview-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: #1a1a1a;
+}
+
+.ide-preview-stage {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-device {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ide-preview-stage.device-macbook .preview-device-macbook { display: flex; }
+.ide-preview-stage.device-iphone17 .preview-device-phone { display: flex; }
+.ide-preview-stage.device-full .preview-device-full { display: flex; width: 100%; height: 100%; }
+
+.preview-device-meta {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.02em;
+}
+
+/* MacBook — flat bezel */
+.preview-device-screen {
+  position: relative;
+}
+
+.preview-device-macbook .preview-device-screen {
+  width: min(100%, 640px);
+  aspect-ratio: 16 / 10;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 8px solid #2b2b2b;
+  outline: 1px solid #3c3c3c;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+}
+
+/* iPhone — minimal frame */
+.preview-device-phone .preview-device-screen-phone {
+  width: min(100%, 280px);
+  aspect-ratio: 430 / 932;
+  background: #fff;
+  border-radius: 36px;
+  overflow: hidden;
+  border: 3px solid #333;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.preview-phone-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 28px;
+  background: #0a0a0a;
+  border-radius: 16px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.preview-device-screen-phone::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Full width */
+.preview-device-full {
+  height: 100%;
+  min-height: 280px;
+}
+
+.preview-device-screen-full {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #333;
+  position: relative;
+}
+
+.preview-device-screen iframe,
+.preview-device-screen-full iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #fff;
+}
+
+#ide-preview-frame[hidden] {
+  display: none !important;
+}
+
+/* Sticky device bar — clean VS Code style */
+.ide-device-bar-sticky {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #252526;
+  border-bottom: 1px solid #1e1e1e;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-height: 36px;
+}
+
+.ide-device-bar-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ide-device-bar-title i { color: rgba(255, 255, 255, 0.35); }
+
+.ide-device-bar-btn {
+  padding: 4px 12px !important;
+  border-radius: 4px !important;
+  border: 1px solid #3c3c3c !important;
+  background: #2d2d2d !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.68rem !important;
+  font-weight: 500;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.ide-device-bar-btn:hover {
+  background: #37373d !important;
+  border-color: #4a4a4a !important;
+}
+
+.ide-device-bar-btn.active {
+  background: #094771 !important;
+  border-color: #007acc !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.ide-device-open-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid #007acc;
+  background: #0e639c;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ide-device-open-btn:hover {
+  background: #1177bb;
+}
+
+.ide-device-bar-spacer { flex: 1; min-width: 8px; }
+
+.ide-device-btn {
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 960px) {
+  .ide-editor-area.preview-open .ide-workspace {
+    flex-direction: column;
+  }
+
+  .ide-editor-area.preview-open .ide-workspace-editor {
+    max-width: none;
+    flex: 1 1 55%;
+    border-right: none;
+    border-bottom: 1px solid #2d2d2d;
+  }
+
+  .ide-editor-area.preview-open .ide-preview-panel:not([hidden]) {
+    max-width: none;
+    flex: 1 1 45%;
+    border-left: none;
+  }
+}

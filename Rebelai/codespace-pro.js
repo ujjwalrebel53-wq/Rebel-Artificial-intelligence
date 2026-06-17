@@ -505,7 +505,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
 
   function syncDeviceButtonState(device) {
     const d = device || 'macbook';
-    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick').forEach(b => {
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick, .ide-preview-device-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.device === d);
     });
   }
@@ -531,6 +531,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     };
     const target = targets[d] || targets.macbook;
     if (iframe && target) {
+      iframe.removeAttribute('hidden');
       iframe.style.display = 'block';
       iframe.style.width = '100%';
       iframe.style.height = '100%';
@@ -543,7 +544,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
   }
 
   function initPreviewDevices() {
-    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn').forEach(btn => {
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-preview-device-tab').forEach(btn => {
       if (btn._deviceBound) return;
       btn._deviceBound = true;
       btn.addEventListener('click', () => choosePreviewDevice(btn.dataset.device));
@@ -564,10 +565,8 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     syncEditorToFile();
     const panel = $('ide-preview-panel');
     previewOpen = true;
-    if (panel) {
-      panel.style.display = 'flex';
-      $('ide-editor-area')?.classList.add('preview-open');
-    }
+    panel?.removeAttribute('hidden');
+    $('ide-editor-area')?.classList.add('preview-open');
     $('ide-preview-btn')?.classList.add('active');
     $('ide-run-btn')?.classList.add('active');
     initPreviewDevices();
@@ -586,7 +585,8 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
 
   function closePreview() {
     previewOpen = false;
-    $('ide-preview-panel').style.display = 'none';
+    const panel = $('ide-preview-panel');
+    panel?.setAttribute('hidden', '');
     $('ide-editor-area')?.classList.remove('preview-open');
     $('ide-preview-btn')?.classList.remove('active');
     $('ide-run-btn')?.classList.remove('active');

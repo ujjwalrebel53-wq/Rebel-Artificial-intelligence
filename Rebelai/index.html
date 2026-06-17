@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="codespace-pro.css">
   <link rel="stylesheet" href="rebel-codespace-advanced.css">
   <link rel="stylesheet" href="rebel-codespace-v5.css">
+  <link rel="stylesheet" href="rebel-preview.css">
   <link rel="stylesheet" href="admin-control.css">
   <link rel="stylesheet" href="rebel-3d.css">
   <link rel="stylesheet" href="rebel-perf.css">
@@ -827,24 +828,33 @@
           </div>
           <div class="ide-tabbar" id="ide-tabbar"></div>
 
-          <!-- Code Editor (Pro) -->
-          <div class="ide-editor ide-editor-pro" id="ide-editor">
-            <div class="ide-gutter" id="ide-gutter"></div>
-            <div class="ide-editor-wrap">
-              <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
-              <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          <!-- Editor + Preview side-by-side (no overlap) -->
+          <div class="ide-workspace" id="ide-workspace">
+            <div class="ide-workspace-editor" id="ide-workspace-editor">
+              <div class="ide-editor ide-editor-pro" id="ide-editor">
+                <div class="ide-gutter" id="ide-gutter"></div>
+                <div class="ide-editor-wrap">
+                  <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
+                  <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                </div>
+                <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
+              </div>
+              <div class="ide-editor-split-wrap">
+                <div id="ide-monaco-split"></div>
+              </div>
             </div>
-            <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
-          </div>
-          <div class="ide-editor-split-wrap">
-            <div id="ide-monaco-split"></div>
-          </div>
 
-          <!-- Live Preview Panel -->
-          <div class="ide-preview-panel" id="ide-preview-panel" style="display:none;">
-            <div class="ide-preview-header">
-              <div class="ide-preview-header-row">
-                <span class="ide-preview-title"><i class="fas fa-eye"></i> Live Preview <span id="ide-preview-status" class="ide-preview-status">Ready</span></span>
+            <aside class="ide-preview-panel" id="ide-preview-panel" hidden aria-label="Live preview">
+              <header class="ide-preview-header">
+                <div class="ide-preview-header-left">
+                  <span class="ide-preview-title">Live Preview</span>
+                  <span id="ide-preview-status" class="ide-preview-status">Ready</span>
+                </div>
+                <div class="ide-preview-device-tabs" role="tablist" aria-label="Preview device">
+                  <button type="button" class="ide-device-btn ide-preview-device-tab active" data-device="macbook" title="MacBook">MacBook</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="iphone17" title="iPhone 17 Pro Max">iPhone 17 Pro Max</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="full" title="Full width">Full</button>
+                </div>
                 <div class="ide-preview-actions">
                   <label class="ide-preview-live-toggle" title="Auto-refresh while typing">
                     <input type="checkbox" id="ide-preview-live" checked> Live
@@ -853,38 +863,26 @@
                   <button type="button" id="ide-preview-newtab" title="Open in new tab"><i class="fas fa-external-link-alt"></i></button>
                   <button type="button" id="ide-preview-close" title="Close preview"><i class="fas fa-times"></i></button>
                 </div>
-              </div>
-            </div>
-            <!-- Device picker — always visible when preview open -->
-            <div class="ide-device-toolbar" id="ide-device-toolbar">
-              <span class="ide-device-toolbar-label"><i class="fas fa-tablet-alt"></i> Device:</span>
-              <button type="button" class="ide-device-btn active" data-device="macbook" title="MacBook Pro preview"><i class="fas fa-laptop"></i> MacBook</button>
-              <button type="button" class="ide-device-btn" data-device="iphone17" title="iPhone 17 Pro Max preview"><i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max</button>
-              <button type="button" class="ide-device-btn" data-device="full" title="Full width preview"><i class="fas fa-expand"></i> Full Screen</button>
-            </div>
-            <div class="ide-preview-body">
-              <div class="ide-preview-stage device-macbook" id="ide-preview-stage">
-                <div class="device-macbook-shell">
-                  <div class="device-macbook-lid">
-                    <div class="macbook-camera-bar"></div>
-                    <div class="device-macbook-screen" id="device-macbook-screen"></div>
+              </header>
+              <div class="ide-preview-viewport">
+                <div class="ide-preview-stage device-macbook" id="ide-preview-stage">
+                  <div class="preview-device preview-device-macbook">
+                    <span class="preview-device-meta">MacBook · 1440 × 900</span>
+                    <div class="preview-device-screen" id="device-macbook-screen"></div>
                   </div>
-                  <div class="device-macbook-base"></div>
-                  <div class="device-macbook-keyboard"></div>
-                </div>
-                <div class="device-iphone-shell">
-                  <div class="device-iphone17">
-                    <div class="device-iphone-screen" id="device-iphone-screen">
-                      <div class="iphone-dynamic-island"></div>
-                      <div class="iphone-home-indicator"></div>
+                  <div class="preview-device preview-device-phone">
+                    <span class="preview-device-meta">iPhone 17 Pro Max · 430 × 932</span>
+                    <div class="preview-device-screen preview-device-screen-phone" id="device-iphone-screen">
+                      <span class="preview-phone-island" aria-hidden="true"></span>
                     </div>
                   </div>
-                  <div class="device-iphone-label">iPhone 17 Pro Max · 6.9″</div>
+                  <div class="preview-device preview-device-full">
+                    <div class="preview-device-screen preview-device-screen-full" id="device-full-screen"></div>
+                  </div>
                 </div>
-                <div class="device-screen-full" id="device-full-screen"></div>
               </div>
-            </div>
-            <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview" style="display:none;"></iframe>
+              <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview" hidden></iframe>
+            </aside>
           </div>
 
           <!-- Terminal panel (bottom split) -->

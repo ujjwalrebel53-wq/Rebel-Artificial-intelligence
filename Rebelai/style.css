@@ -3391,11 +3391,12 @@ select.admin-config-input option {
   overflow: visible;
 }
 .ide-device-quick {
-  color: #00ced1 !important;
-  border: 1px solid rgba(0,206,209,0.35);
-  background: rgba(0,206,209,0.12);
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid #3c3c3c;
+  background: transparent;
 }
-.ide-device-quick:hover { background: rgba(0,206,209,0.28) !important; color: #fff !important; }
+.ide-device-quick:hover { background: rgba(255, 255, 255, 0.08) !important; color: #fff !important; }
+.ide-device-quick.active { color: #4fc3f7 !important; border-color: #007acc !important; background: rgba(0, 122, 204, 0.15) !important; }
 
 .ide-topbtn {
   background: transparent;
