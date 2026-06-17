@@ -424,11 +424,19 @@
       .replace(/\n/g, '<br>');
 
     codeBlocks.forEach((block, idx) => {
-      const escaped = block.code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      const blockHtml = `<div class="msg-code-block"><div class="msg-code-header"><span>${block.lang}</span><button class="msg-code-copy" onclick="RebelAdvanced.copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>${escaped}</pre></div>`;
+      const langMap = { js: 'app.js', javascript: 'app.js', ts: 'app.ts', html: 'index.html', css: 'style.css', md: 'README.md', python: 'app.py', php: 'index.php' };
+      const langKey = (block.lang || 'code').toLowerCase();
+      const fakeFile = langMap[langKey] || ('snippet.' + (langKey === 'code' ? 'txt' : langKey));
+      let body;
+      if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+        body = window.RebelSyntax.highlightCode(block.code, fakeFile);
+      } else {
+        body = block.code
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+      const blockHtml = `<div class="msg-code-block"><div class="msg-code-header"><span>${block.lang || 'code'}</span><button class="msg-code-copy" onclick="RebelAdvanced.copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>${body}</pre></div>`;
       html = html.replace(`%%CODEBLOCK_${idx}%%`, blockHtml);
     });
 

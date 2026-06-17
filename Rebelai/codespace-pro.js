@@ -100,6 +100,8 @@
     updateGutter();
     setSaveStatus(!dirty[currentFile]);
     updateGitPanel();
+    updateLangLabel();
+    updateCursorPosition();
   }
 
   function setSaveStatus(saved) {
@@ -353,14 +355,98 @@
   function updateStatusBarCounts() {
     const errs = problemsList.filter(p => p.sev === 'error').length;
     const warns = problemsList.filter(p => p.sev === 'warn').length;
-    document.querySelectorAll('.ide-sb-item').forEach(el => {
-      if (el.innerHTML.includes('fa-check-circle')) el.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
-      if (el.innerHTML.includes('fa-exclamation-triangle') && el.classList.contains('ide-sb-warn')) el.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
-    });
-    const warnEl = document.querySelector('.ide-sb-item:nth-child(3)');
+    const errEl = $('ide-sb-errors');
+    const warnEl = $('ide-sb-warnings');
+    if (errEl) errEl.innerHTML = `<i class="fas fa-${errs ? 'times-circle' : 'check-circle'}"></i> ${errs} errors`;
     if (warnEl) warnEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
-    const errEl = document.querySelector('.ide-sb-item:nth-child(2)');
-    if (errEl) errEl.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
+  }
+
+  function updateCursorPosition() {
+    const ta = $('ide-textarea');
+    const el = $('ide-sb-position');
+    if (!ta || !el) return;
+    const before = ta.value.slice(0, ta.selectionStart);
+    const lines = before.split('\n');
+    el.textContent = `Ln ${lines.length}, Col ${(lines[lines.length - 1].length) + 1}`;
+  }
+
+  function updateLangLabel() {
+    const el = $('ide-sb-lang');
+    if (!el || !currentFile) return;
+    const ext = currentFile.split('.').pop();
+    const names = { js: 'JavaScript', html: 'HTML', css: 'CSS', md: 'Markdown', ts: 'TypeScript', json: 'JSON' };
+    el.textContent = names[ext] || ext.toUpperCase();
+  }
+
+  function toggleLineComment() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    pushUndo();
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    const lineEndIdx = val.indexOf('\n', end);
+    const block = val.slice(lineStart, lineEndIdx === -1 ? val.length : lineEndIdx);
+    const lines = block.split('\n');
+    const allCommented = lines.every(l => /^\s*\/\//.test(l));
+    const newLines = lines.map(l => {
+      if (allCommented) return l.replace(/^(\s*)\/\/ ?/, '$1');
+      return /^\s*\/\//.test(l) ? l : l.replace(/^(\s*)/, '$1// ');
+    });
+    ta.value = val.slice(0, lineStart) + newLines.join('\n') + val.slice(lineEndIdx === -1 ? val.length : lineEndIdx);
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function duplicateLine() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    pushUndo();
+    const pos = ta.selectionStart;
+    const val = ta.value;
+    const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+    const lineEnd = val.indexOf('\n', pos);
+    const line = val.slice(lineStart, lineEnd === -1 ? val.length : lineEnd);
+    const at = lineEnd === -1 ? val.length : lineEnd;
+    ta.value = val.slice(0, at) + (lineEnd === -1 ? '\n' : '') + line + val.slice(at);
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function goToLine() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const n = parseInt(prompt('Go to line number:'), 10);
+    if (!n || n < 1) return;
+    const lines = ta.value.split('\n');
+    if (n > lines.length) return;
+    let pos = 0;
+    for (let i = 0; i < n - 1; i++) pos += lines[i].length + 1;
+    ta.focus();
+    ta.setSelectionRange(pos, pos);
+    updateCursorPosition();
+  }
+
+  const SNIPPETS = {
+    log: "console.log('');\n",
+    fn: "function name() {\n  \n}\n",
+    fetch: "const res = await fetch(url);\nconst data = await res.json();\n",
+    html5: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Document</title>\n</head>\n<body>\n  \n</body>\n</html>\n",
+  };
+
+  function insertSnippet(key) {
+    const ta = $('ide-textarea');
+    const snippet = SNIPPETS[key];
+    if (!ta || !snippet) return;
+    pushUndo();
+    const s = ta.selectionStart;
+    ta.value = ta.value.slice(0, s) + snippet + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = s + snippet.length;
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function pickSnippet() {
+    const choice = prompt('Snippet: log, fn, fetch, html5');
+    if (choice && SNIPPETS[choice.trim().toLowerCase()]) insertSnippet(choice.trim().toLowerCase());
   }
 
   function showTermPanel(name) {
@@ -641,9 +727,12 @@
         setSaveStatus(false);
         renderTabs();
         renderFileTree();
+        updateCursorPosition();
         clearTimeout(inputTimer);
         inputTimer = setTimeout(runLinter, 800);
       });
+      ta.addEventListener('click', updateCursorPosition);
+      ta.addEventListener('keyup', updateCursorPosition);
       ta.addEventListener('scroll', () => {
         const hl = $('ide-highlight-layer');
         if (hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; }
@@ -742,6 +831,10 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject(); }
       if (e.key === 'F5') { e.preventDefault(); runPreview(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); showPanel('search'); $('ide-search-input')?.focus(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); toggleLineComment(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); duplicateLine(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); goToLine(); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); pickSnippet(); }
       if (e.key === 'Escape') closeModal();
     });
 

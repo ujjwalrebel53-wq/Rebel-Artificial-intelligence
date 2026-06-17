@@ -1,0 +1,335 @@
+/* Rebel AI v3 — Advanced UI (performance-safe, CSS-first) */
+
+html[data-rebel-theme="midnight"] {
+  --accent-purple: #6366f1;
+  --accent-teal: #22d3ee;
+  --glass-bg: rgba(8, 10, 24, 0.82);
+}
+
+html[data-rebel-theme="neon"] {
+  --accent-purple: #c026d3;
+  --accent-teal: #2dd4bf;
+  --glass-bg: rgba(12, 8, 20, 0.8);
+}
+
+.rebel-mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 20%, rgba(138, 43, 226, 0.14), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(0, 206, 209, 0.1), transparent 55%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(236, 72, 153, 0.05), transparent 50%);
+}
+
+.main-nav .nav-theme-btn,
+.main-nav .nav-help-btn {
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .api-status-pill { display: none; }
+  .main-nav .nav-theme-btn,
+  .main-nav .nav-help-btn { display: none; }
+}
+
+.nav-theme-btn,
+.nav-help-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.nav-theme-btn:hover,
+.nav-help-btn:hover {
+  color: var(--accent-teal);
+  border-color: rgba(0, 206, 209, 0.35);
+  background: rgba(0, 206, 209, 0.08);
+}
+
+.api-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+
+.api-status-pill.online {
+  color: #2ecc71;
+  border-color: rgba(46, 204, 113, 0.35);
+  background: rgba(46, 204, 113, 0.08);
+}
+
+.api-status-pill.offline {
+  color: #e74c3c;
+  border-color: rgba(231, 76, 60, 0.35);
+}
+
+.api-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.main-nav .nav-link.active {
+  color: var(--accent-teal);
+}
+
+.main-nav .nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* ── Capabilities ── */
+.capabilities-section {
+  padding: 80px 0;
+}
+
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 36px;
+}
+
+.cap-card {
+  text-align: left;
+  background: var(--glass-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 22px 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cap-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.08), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.cap-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(138, 43, 226, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.cap-card:hover::before { opacity: 1; }
+
+.cap-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  margin-bottom: 14px;
+  background: rgba(138, 43, 226, 0.15);
+  color: var(--accent-purple);
+  border: 1px solid rgba(138, 43, 226, 0.25);
+}
+
+.cap-icon.teal { background: rgba(0, 206, 209, 0.12); color: var(--accent-teal); border-color: rgba(0, 206, 209, 0.25); }
+.cap-icon.green { background: rgba(46, 204, 113, 0.12); color: #2ecc71; border-color: rgba(46, 204, 113, 0.25); }
+.cap-icon.orange { background: rgba(255, 149, 0, 0.12); color: #ff9500; border-color: rgba(255, 149, 0, 0.25); }
+
+.cap-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+}
+
+.cap-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+.cap-tag {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent-teal);
+  opacity: 0.85;
+}
+
+/* ── Glass upgrade on existing cards ── */
+html.rebel-v3 .feature-card,
+html.rebel-v3 .stat-card,
+html.rebel-v3 .faq-item,
+html.rebel-v3 .cta-banner {
+  background: var(--glass-bg);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html.rebel-perf-mode.rebel-v3 .feature-card,
+html.rebel-perf-mode.rebel-v3 .stat-card,
+html.rebel-perf-mode.rebel-v3 .faq-item,
+html.rebel-perf-mode.rebel-v3 .cta-banner {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── Back to top ── */
+.back-to-top {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 9000;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 43, 226, 0.4);
+  background: rgba(15, 15, 20, 0.9);
+  color: var(--accent-teal);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  border-color: var(--accent-teal);
+  color: #fff;
+}
+
+/* ── Shortcuts modal ── */
+.shortcuts-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+
+.shortcuts-modal.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.shortcuts-box {
+  width: min(560px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #12121a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.shortcuts-box h2 {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 1.1rem;
+  margin: 0 0 4px;
+}
+
+.shortcuts-box .sub {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.shortcut-group { margin-bottom: 18px; }
+
+.shortcut-group h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent-purple);
+  margin: 0 0 10px;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.88rem;
+}
+
+.shortcut-row kbd {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--accent-teal);
+}
+
+.shortcuts-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.shortcuts-box { position: relative; }
+
+/* Chat highlighted code */
+.msg-code-block pre .hl-cmt,
+.msg-code-block pre .hl-kw,
+.msg-code-block pre .hl-fn,
+.msg-code-block pre .hl-str,
+.msg-code-block pre .hl-num,
+.msg-code-block pre .hl-tag,
+.msg-code-block pre .hl-sel,
+.msg-code-block pre .hl-prop {
+  font-family: inherit;
+}
+
+/* Marquee subtle on v3 desktop */
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  html.rebel-v3 .marquee-track {
+    animation: marqueeScroll 35s linear infinite !important;
+  }
+}

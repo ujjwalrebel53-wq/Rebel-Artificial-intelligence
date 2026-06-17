@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="admin-control.css">
   <link rel="stylesheet" href="rebel-3d.css">
   <link rel="stylesheet" href="rebel-perf.css">
+  <link rel="stylesheet" href="rebel-v3.css">
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 </head>
@@ -41,6 +42,7 @@
   <div id="scrollProgress" class="scroll-progress"></div>
 
   <!-- Static background (no WebGL / particle loops) -->
+  <div class="rebel-mesh-bg" aria-hidden="true"></div>
   <div class="cyber-grid" aria-hidden="true"></div>
 
   <!-- Header -->
@@ -49,13 +51,17 @@
       <div class="logo-wrap">
         <div class="logo">Rebel Ai</div>
         <span class="live-badge"><span class="live-dot"></span> ONLINE</span>
+        <span class="api-status-pill" id="apiStatusPill"><span class="api-status-dot"></span> Checking…</span>
       </div>
       <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
       <nav class="main-nav" id="mainNav">
         <a href="#about" class="nav-link">Features</a>
+        <a href="#capabilities" class="nav-link">Capabilities</a>
         <a href="#stats" class="nav-link">Stats</a>
         <a href="#how-it-works" class="nav-link">How It Works</a>
         <a href="#faq" class="nav-link">FAQ</a>
+        <button class="nav-theme-btn" id="themeToggleBtn" title="Cycle theme"><i class="fas fa-moon"></i></button>
+        <button class="nav-help-btn" id="openShortcutsBtn" title="Shortcuts (?)"><i class="fas fa-keyboard"></i></button>
         <button class="nav-cmd-btn" id="openCmdPaletteBtn" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i> ⌘K</button>
         <a href="#" id="adminPanelBtn" class="nav-link admin-nav-btn"><i class="fas fa-shield-alt"></i> Admin</a>
       </nav>
@@ -67,7 +73,7 @@
     <div class="container">
       <div class="hero-layout">
         <div class="hero-content animate card-3d-tilt">
-          <div class="hero-badge"><i class="fas fa-bolt"></i> Next-Gen AI Platform · v2.0</div>
+          <div class="hero-badge"><i class="fas fa-bolt"></i> Next-Gen AI Platform · v3.0 Pro</div>
           <h1>
             Rebel Ai<br><span id="heroTyping">Unleash the Code.</span><span class="typing-cursor">|</span>
           </h1>
@@ -115,6 +121,40 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v3: Platform Capabilities -->
+  <section id="capabilities" class="capabilities-section scene-3d">
+    <div class="container">
+      <h2 class="section-title animate">Platform Capabilities</h2>
+      <p class="section-sub animate">Chat, voice, code & control — one rebel interface</p>
+      <div class="cap-grid">
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="chat">
+          <div class="cap-icon"><i class="fas fa-robot"></i></div>
+          <h3>Rebel Gpt Chat</h3>
+          <p>Multi-model AI with memory, markdown, image vision, and code blocks with syntax highlight.</p>
+          <span class="cap-tag">GPT-5 · Claude · Gemini</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="voice">
+          <div class="cap-icon teal"><i class="fas fa-microphone-alt"></i></div>
+          <h3>Voice Assistant</h3>
+          <p>3D lip-sync avatar, ElevenLabs TTS, speech recognition, and natural conversation flow.</p>
+          <span class="cap-tag">Callum · Edge TTS</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="codespace">
+          <div class="cap-icon green"><i class="fas fa-code"></i></div>
+          <h3>Rebel Codespace</h3>
+          <p>Full IDE — tabs, terminal, git, AI pair programming, live preview, and project export.</p>
+          <span class="cap-tag">Ctrl+S · F5 Run</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="admin">
+          <div class="cap-icon orange"><i class="fas fa-shield-alt"></i></div>
+          <h3>Admin Control</h3>
+          <p>User management, API keys, broadcast banners, feature toggles, and system logs.</p>
+          <span class="cap-tag">Control Center</span>
+        </button>
       </div>
     </div>
   </section>
@@ -796,10 +836,11 @@
       <!-- Status Bar (bottom, like VS Code) -->
       <div class="ide-statusbar">
         <span class="ide-sb-item"><i class="fas fa-code-branch"></i> main</span>
-        <span class="ide-sb-item"><i class="fas fa-check-circle"></i> 0 errors</span>
-        <span class="ide-sb-item"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
+        <span class="ide-sb-item" id="ide-sb-errors"><i class="fas fa-check-circle"></i> 0 errors</span>
+        <span class="ide-sb-item" id="ide-sb-warnings"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
         <div class="ide-sb-spacer"></div>
-        <span class="ide-sb-item">JavaScript</span>
+        <span class="ide-sb-item" id="ide-sb-position">Ln 1, Col 1</span>
+        <span class="ide-sb-item" id="ide-sb-lang">JavaScript</span>
         <span class="ide-sb-item">UTF-8</span>
         <span class="ide-sb-item ide-sb-ai"><i class="fas fa-robot"></i> Rebel AI Ready</span>
       </div>
@@ -1534,6 +1575,33 @@
   <!-- Broadcast banner (admin controlled) -->
   <div id="broadcastBanner" class="broadcast-banner" style="display:none;"></div>
 
+  <button type="button" id="backToTop" class="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- v3: Keyboard Shortcuts -->
+  <div id="shortcutsModal" class="shortcuts-modal" aria-hidden="true">
+    <div class="shortcuts-box">
+      <button type="button" class="shortcuts-close" id="closeShortcutsBtn" aria-label="Close">✕</button>
+      <h2>Keyboard Shortcuts</h2>
+      <p class="sub">Press <kbd>?</kbd> anytime to toggle this panel</p>
+      <div class="shortcut-group">
+        <h3>Global</h3>
+        <div class="shortcut-row"><span>Command palette</span><kbd>Ctrl K</kbd></div>
+        <div class="shortcut-row"><span>Shortcuts help</span><kbd>?</kbd></div>
+        <div class="shortcut-row"><span>Cycle theme</span><kbd>Header moon icon</kbd></div>
+      </div>
+      <div class="shortcut-group">
+        <h3>Codespace IDE</h3>
+        <div class="shortcut-row"><span>Save project</span><kbd>Ctrl S</kbd></div>
+        <div class="shortcut-row"><span>Run / Preview</span><kbd>F5</kbd></div>
+        <div class="shortcut-row"><span>Search files</span><kbd>Ctrl F</kbd></div>
+        <div class="shortcut-row"><span>Toggle comment</span><kbd>Ctrl /</kbd></div>
+        <div class="shortcut-row"><span>Duplicate line</span><kbd>Ctrl D</kbd></div>
+        <div class="shortcut-row"><span>Go to line</span><kbd>Ctrl G</kbd></div>
+        <div class="shortcut-row"><span>Insert snippet</span><kbd>Ctrl Shift S</kbd></div>
+      </div>
+    </div>
+  </div>
+
   <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
   <script>window.__REBEL_USE_CODESPACE_PRO__ = true;</script>
   <script src="syntax-highlight.js"></script>
@@ -1541,6 +1609,7 @@
   <script src="main.js"></script>
   <input type="file" id="ide-import-input" accept=".json" style="display:none;">
   <script src="rebel-3d.js"></script>
+  <script src="rebel-v3.js"></script>
   <script src="codespace-pro.js"></script>
   <script src="admin-control.js"></script>
 </body>
