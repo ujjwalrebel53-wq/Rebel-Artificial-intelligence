@@ -23,6 +23,13 @@
   let termHistory = [];
   let termIdx = -1;
   let npmInstalled = false;
+  let undoStack = [];
+  let redoStack = [];
+  let outputLog = [];
+  let gitStaged = [];
+  let problemsList = [];
+  let termPanel = 'terminal';
+  let importInputBound = false;
 
   const $ = id => document.getElementById(id);
 
@@ -219,6 +226,7 @@
     $('ide-preview-btn')?.classList.add('active');
     termLog('Preview updated.', 'out');
     trackCodespace('preview');
+    runLinter();
   }
 
   function closePreview() {
@@ -235,6 +243,233 @@
     a.download = 'rebel-codespace-project.json';
     a.click();
     termLog('Project downloaded.', 'out');
+  }
+
+  function logOutput(msg, type) {
+    outputLog.push({ msg, type, ts: new Date().toLocaleTimeString() });
+    const el = $('ide-output-body');
+    if (el) {
+      el.innerHTML = outputLog.map(o => `<div class="ide-output-line ${o.type || ''}"><span class="ide-output-ts">[${o.ts}]</span> ${o.msg}</div>`).join('');
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+
+  function pushUndo() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    undoStack.push({ file: currentFile, value: ta.value });
+    if (undoStack.length > 50) undoStack.shift();
+    redoStack = [];
+  }
+
+  function undoEdit() {
+    if (!undoStack.length) return;
+    const ta = $('ide-textarea');
+    redoStack.push({ file: currentFile, value: ta.value });
+    const prev = undoStack.pop();
+    if (prev.file !== currentFile) openFile(prev.file);
+    ta.value = prev.value;
+    ta.dispatchEvent(new Event('input'));
+    toast('Undo');
+  }
+
+  function redoEdit() {
+    if (!redoStack.length) return;
+    const ta = $('ide-textarea');
+    undoStack.push({ file: currentFile, value: ta.value });
+    const next = redoStack.pop();
+    if (next.file !== currentFile) openFile(next.file);
+    ta.value = next.value;
+    ta.dispatchEvent(new Event('input'));
+    toast('Redo');
+  }
+
+  function formatDocument() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    pushUndo();
+    let code = ta.value;
+    const ext = (currentFile || '').split('.').pop();
+    if (ext === 'js') {
+      code = code.replace(/\s*\{\s*/g, ' {\n  ').replace(/;\s*/g, ';\n').replace(/\n\s*\n/g, '\n');
+    } else if (ext === 'css') {
+      code = code.replace(/\{\s*/g, ' {\n  ').replace(/;\s*/g, ';\n').replace(/\}\s*/g, '\n}\n');
+    } else if (ext === 'html') {
+      code = code.replace(/>\s*</g, '>\n<');
+    }
+    ta.value = code.trim() + '\n';
+    ta.dispatchEvent(new Event('input'));
+    logOutput('Formatted ' + currentFile, 'info');
+    toast('Formatted!');
+  }
+
+  function exportCurrentFile() {
+    syncEditorToFile();
+    const blob = new Blob([files[currentFile] || ''], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = currentFile;
+    a.click();
+    logOutput('Exported ' + currentFile, 'info');
+  }
+
+  function importProject(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.files) {
+          files = data.files;
+          openTabs = Object.keys(files).slice(0, 5);
+          currentFile = openTabs[0];
+          Object.keys(files).forEach(f => { dirty[f] = true; savedSnapshot[f] = ''; });
+          renderFileTree(); renderTabs(); refreshEditor();
+          saveProject();
+          logOutput('Project imported: ' + (data.name || 'unknown'), 'success');
+          toast('Project imported!');
+        }
+      } catch (err) { alert('Invalid project file'); }
+    };
+    reader.readAsText(file);
+  }
+
+  function runLinter() {
+    syncEditorToFile();
+    problemsList = [];
+    Object.entries(files).forEach(([name, code]) => {
+      const lines = code.split('\n');
+      lines.forEach((line, i) => {
+        if (name.endsWith('.js')) {
+          if (line.includes('console.log') && !line.trim().startsWith('//')) problemsList.push({ file: name, line: i + 1, msg: 'Avoid console.log in production', sev: 'warn' });
+          if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length && line.includes('(')) problemsList.push({ file: name, line: i + 1, msg: 'Possible unbalanced parentheses', sev: 'error' });
+        }
+        if (line.includes('TODO') || line.includes('FIXME')) problemsList.push({ file: name, line: i + 1, msg: 'TODO/FIXME found', sev: 'info' });
+      });
+    });
+    renderProblems();
+    updateStatusBarCounts();
+  }
+
+  function renderProblems() {
+    const el = $('ide-problems-body');
+    const cnt = $('ide-problems-count');
+    if (cnt) cnt.textContent = problemsList.length ? `(${problemsList.length})` : '';
+    if (!el) return;
+    el.innerHTML = problemsList.length ? problemsList.map(p =>
+      `<div class="ide-problem ide-problem-${p.sev}" data-file="${p.file}" data-line="${p.line}"><i class="fas fa-${p.sev === 'error' ? 'times-circle' : p.sev === 'warn' ? 'exclamation-triangle' : 'info-circle'}"></i> <strong>${p.file}:${p.line}</strong> ${p.msg}</div>`
+    ).join('') : '<div class="ide-no-problems"><i class="fas fa-check-circle"></i> No problems detected</div>';
+    el.querySelectorAll('.ide-problem').forEach(row => {
+      row.addEventListener('click', () => openFile(row.dataset.file));
+    });
+  }
+
+  function updateStatusBarCounts() {
+    const errs = problemsList.filter(p => p.sev === 'error').length;
+    const warns = problemsList.filter(p => p.sev === 'warn').length;
+    document.querySelectorAll('.ide-sb-item').forEach(el => {
+      if (el.innerHTML.includes('fa-check-circle')) el.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
+      if (el.innerHTML.includes('fa-exclamation-triangle') && el.classList.contains('ide-sb-warn')) el.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
+    });
+    const warnEl = document.querySelector('.ide-sb-item:nth-child(3)');
+    if (warnEl) warnEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
+    const errEl = document.querySelector('.ide-sb-item:nth-child(2)');
+    if (errEl) errEl.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
+  }
+
+  function showTermPanel(name) {
+    termPanel = name;
+    document.querySelectorAll('.ide-term-tab').forEach(t => t.classList.toggle('active', t.dataset.term === name));
+    document.querySelectorAll('.ide-term-panel').forEach(p => p.classList.remove('active'));
+    $('ide-term-panel-' + name)?.classList.add('active');
+    $('ide-terminal-panel').style.display = '';
+    if (name === 'problems') runLinter();
+  }
+
+  function gitStageAll() {
+    gitStaged = Object.keys(files).filter(f => dirty[f] || files[f] !== savedSnapshot[f]);
+    updateGitPanel();
+    logOutput('Staged: ' + (gitStaged.join(', ') || 'nothing'), 'info');
+    toast('Staged ' + gitStaged.length + ' file(s)');
+  }
+
+  function gitCommit() {
+    if (!gitStaged.length) gitStaged = Object.keys(files).filter(f => dirty[f]);
+    if (!gitStaged.length) { toast('Nothing to commit'); return; }
+    const msg = prompt('Commit message:', 'Update ' + gitStaged.join(', '));
+    if (!msg) return;
+    gitStaged.forEach(f => { savedSnapshot[f] = files[f]; dirty[f] = false; });
+    gitStaged = [];
+    saveProject();
+    updateGitPanel();
+    termLog('[' + new Date().toLocaleTimeString() + '] Committed: ' + msg, 'out');
+    logOutput('Git commit: ' + msg, 'success');
+    toast('Committed!');
+  }
+
+  function toast(msg) {
+    let t = document.querySelector('.ide-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.className = 'ide-toast';
+      $('codespaceModal')?.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function toggleDropdown(menuId) {
+    document.querySelectorAll('.ide-dropdown').forEach(d => {
+      if (d.id !== menuId) d.classList.remove('open');
+    });
+    $(menuId)?.classList.toggle('open');
+  }
+
+  function closeDropdowns() {
+    document.querySelectorAll('.ide-dropdown').forEach(d => d.classList.remove('open'));
+  }
+
+  function handleMenuAction(action) {
+    closeDropdowns();
+    const map = {
+      'new-file': newFile,
+      'save': saveProject,
+      'import': () => $('ide-import-input')?.click(),
+      'download': downloadProject,
+      'export-file': exportCurrentFile,
+      'close-ide': () => { syncEditorToFile(); saveProject(); $('codespaceModal')?.classList.remove('show'); document.body.style.overflow = ''; },
+      'undo': undoEdit,
+      'redo': redoEdit,
+      'copy': () => { const ta = $('ide-textarea'); navigator.clipboard.writeText(ta?.value.slice(ta.selectionStart, ta.selectionEnd) || ta?.value || ''); toast('Copied'); },
+      'paste': async () => { const ta = $('ide-textarea'); try { const t = await navigator.clipboard.readText(); if (ta) { pushUndo(); const s = ta.selectionStart; ta.value = ta.value.slice(0, s) + t + ta.value.slice(ta.selectionEnd); ta.dispatchEvent(new Event('input')); } } catch(e) {} },
+      'format': formatDocument,
+      'find': () => { showPanel('search'); $('ide-search-input')?.focus(); },
+      'preview': runPreview,
+      'toggle-terminal': () => { const p = $('ide-terminal-panel'); p.style.display = p.style.display === 'none' ? '' : 'none'; },
+      'explorer': () => showPanel('explorer'),
+      'search-panel': () => showPanel('search'),
+      'term-terminal': () => showTermPanel('terminal'),
+      'term-problems': () => showTermPanel('problems'),
+      'term-output': () => showTermPanel('output'),
+      'term-clear': () => { $('ide-terminal-output').innerHTML = ''; termLog('', 'out'); },
+      'shortcuts': () => alert('Ctrl+S Save · Ctrl+F Find · F5 Preview · Ctrl+Z Undo · Ctrl+Y Redo · Esc Close'),
+      'docs': () => { openFile('README.md'); showPanel('explorer'); },
+      'ai-help': () => { $('ide-ai-input').value = 'Explain this project and how to run it'; $('ide-ai-input')?.focus(); },
+    };
+    map[action]?.();
+  }
+
+  function minimizeIDE() {
+    const shell = document.querySelector('.ide-shell');
+    shell?.classList.toggle('ide-minimized');
+    toast(shell?.classList.contains('ide-minimized') ? 'Minimized' : 'Restored');
+  }
+
+  function clearAiChat() {
+    const msgs = $('ide-ai-messages');
+    if (msgs) msgs.innerHTML = '<div class="ide-ai-msg bot"><div class="ide-ai-avatar"><i class="fas fa-robot"></i></div><div class="ide-ai-bubble">Chat cleared. How can I help?</div></div>';
+    aiHistory = [];
+    toast('AI chat cleared');
   }
 
   // ── Terminal ──────────────────────────────────────────────
@@ -275,6 +510,10 @@
     if (lc === 'rebel help') { termLog('Commands: ls, cat, npm install, npm run dev, git status, clear, preview', 'out'); return; }
     if (lc === 'preview') { runPreview(); return; }
     if (lc === 'save') { saveProject(); return; }
+    if (lc === 'format') { formatDocument(); return; }
+    if (lc === 'git add .') { gitStageAll(); termLog('Staged all changes.', 'out'); return; }
+    if (lc.startsWith('git commit')) { gitCommit(); return; }
+    if (lc === 'npm run build') { logOutput('Build successful ✓', 'success'); termLog('Build completed.', 'out'); return; }
     termLog('bash: ' + c + ': command not found', 'err');
   }
 
@@ -406,6 +645,7 @@
 
     const ta = $('ide-textarea');
     if (ta) {
+      let inputTimer;
       ta.addEventListener('input', () => {
         files[currentFile] = ta.value;
         dirty[currentFile] = true;
@@ -414,8 +654,8 @@
         setSaveStatus(false);
         renderTabs();
         renderFileTree();
-        ta.parentElement.scrollTop = ta.scrollTop;
-        ta.parentElement.scrollLeft = ta.scrollLeft;
+        clearTimeout(inputTimer);
+        inputTimer = setTimeout(runLinter, 800);
       });
       ta.addEventListener('scroll', () => {
         const hl = $('ide-highlight-layer');
@@ -423,10 +663,49 @@
         $('ide-gutter').scrollTop = ta.scrollTop;
       });
       ta.addEventListener('keydown', e => {
-        if (e.key === 'Tab') { e.preventDefault(); const s = ta.selectionStart; ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + 2; ta.dispatchEvent(new Event('input')); }
+        if (e.key === 'Tab') { e.preventDefault(); pushUndo(); const s = ta.selectionStart; ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + 2; ta.dispatchEvent(new Event('input')); }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoEdit(); }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redoEdit(); }
       });
     }
 
+    $('ide-format-btn')?.addEventListener('click', formatDocument);
+    $('ide-import-btn')?.addEventListener('click', () => $('ide-import-input')?.click());
+    if (!importInputBound) {
+      $('ide-import-input')?.addEventListener('change', e => { if (e.target.files[0]) importProject(e.target.files[0]); e.target.value = ''; });
+      importInputBound = true;
+    }
+    $('ide-git-add')?.addEventListener('click', gitStageAll);
+    $('ide-git-commit')?.addEventListener('click', gitCommit);
+    $('ide-ai-clear-btn')?.addEventListener('click', clearAiChat);
+    $('ide-minimize-btn')?.addEventListener('click', minimizeIDE);
+    $('ide-maximize-btn')?.addEventListener('click', () => { showTermPanel('terminal'); $('ide-terminal-panel').style.height = '45%'; toast('Terminal expanded'); });
+
+    document.querySelectorAll('.ide-menu-wrap .ide-menu-item').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        const menu = item.dataset.menu || item.id?.replace('ide-toggle-', '').replace('-menu', '');
+        const id = 'ide-menu-' + (menu === 'terminal' ? 'terminal' : menu);
+        if ($(id)) toggleDropdown(id);
+        else if (item.id === 'ide-toggle-preview-menu') handleMenuAction('preview');
+        else if (item.id === 'ide-toggle-terminal-menu') showTermPanel('terminal');
+      });
+    });
+    document.querySelectorAll('.ide-dropdown button[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => handleMenuAction(btn.dataset.action));
+    });
+    document.addEventListener('click', closeDropdowns);
+    $('codespaceModal')?.addEventListener('click', e => { if (e.target === $('codespaceModal')) closeDropdowns(); });
+
+    document.querySelectorAll('.ide-term-tab[data-term]').forEach(tab => {
+      tab.addEventListener('click', () => showTermPanel(tab.dataset.term));
+    });
+
+    $('ide-toggle-preview-menu')?.addEventListener('click', e => { e.stopPropagation(); toggleDropdown('ide-menu-view'); });
+    $('ide-toggle-terminal-menu')?.addEventListener('click', e => { e.stopPropagation(); toggleDropdown('ide-menu-terminal'); });
+
+    logOutput('Rebel Codespace Pro ready.', 'info');
+    runLinter();
     $('ide-save-btn')?.addEventListener('click', saveProject);
     $('ide-new-file-btn')?.addEventListener('click', newFile);
     $('ide-add-file-btn')?.addEventListener('click', newFile);
@@ -482,8 +761,14 @@
     const fontSize = $('ide-font-size');
     if (fontSize) fontSize.addEventListener('input', () => {
       const sz = fontSize.value + 'px';
-      ta.style.fontSize = sz;
+      if (ta) ta.style.fontSize = sz;
       $('ide-highlight-layer').style.fontSize = sz;
+    });
+    $('ide-word-wrap')?.addEventListener('change', e => {
+      if (ta) { ta.style.whiteSpace = e.target.checked ? 'pre-wrap' : 'pre'; ta.style.wordWrap = e.target.checked ? 'break-word' : 'normal'; }
+    });
+    $('ide-tab-size')?.addEventListener('change', e => {
+      if (ta) ta.style.tabSize = e.target.value;
     });
   }
 
