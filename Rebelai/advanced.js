@@ -21,10 +21,16 @@
     const status = document.getElementById('splashStatus');
     if (!splash) return;
 
+    if (sessionStorage.getItem('rebel_splash_ok')) {
+      splash.classList.add('hidden');
+      document.body.style.overflow = '';
+      return;
+    }
+
     let progress = 0;
     let step = 0;
     const interval = setInterval(() => {
-      progress += Math.random() * 18 + 8;
+      progress += Math.random() * 28 + 14;
       if (progress > 100) progress = 100;
       if (bar) bar.style.width = progress + '%';
 
@@ -36,183 +42,30 @@
 
       if (progress >= 100) {
         clearInterval(interval);
+        sessionStorage.setItem('rebel_splash_ok', '1');
         setTimeout(() => {
           splash.classList.add('hidden');
           document.body.style.overflow = '';
-        }, 400);
+        }, 180);
       }
-    }, 180);
+    }, 110);
 
     document.body.style.overflow = 'hidden';
   }
 
-  // ── Particle Network (lite when WebGL 3D is active) ───────
+  // ── Particle Network — disabled for performance ───────────
   function initParticles() {
     const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) {
-      canvas.style.display = 'none';
-      return;
-    }
-
-    const ctx = canvas.getContext('2d', { alpha: true });
-    let particles = [];
-    let animId = 0;
-    let running = true;
-    const isMobile = window.innerWidth < 768;
-    let useLite = false;
-
-    function particleConfig() {
-      useLite = document.body.classList.contains('rebel-3d-active') || window.__REBEL_3D_ACTIVE__;
-      return {
-        count: useLite ? (isMobile ? 18 : 28) : (isMobile ? 32 : 55),
-        connect: useLite ? 0 : 120,
-        maxLinks: useLite ? 0 : 3,
-      };
-    }
-
-    let cfg = particleConfig();
-    let CONNECT_DIST = cfg.connect;
-    let CONNECT_DIST_SQ = CONNECT_DIST * CONNECT_DIST;
-    let MAX_LINKS = cfg.maxLinks;
-
-    function syncMode() {
-      const next = particleConfig();
-      if (next.count !== cfg.count || next.connect !== cfg.connect) {
-        cfg = next;
-        CONNECT_DIST = cfg.connect;
-        CONNECT_DIST_SQ = CONNECT_DIST * CONNECT_DIST;
-        MAX_LINKS = cfg.maxLinks;
-        createParticles();
-      }
-      canvas.classList.toggle('particle-lite', !!useLite);
-    }
-
-    function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.25);
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    function createParticles() {
-      particles = [];
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      for (let i = 0; i < cfg.count; i++) {
-        particles.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vx: (Math.random() - 0.5) * (useLite ? 0.25 : 0.35),
-          vy: (Math.random() - 0.5) * (useLite ? 0.25 : 0.35),
-          r: Math.random() * 1.2 + 0.4,
-        });
-      }
-    }
-
-    function draw() {
-      if (!running) return;
-      animId = requestAnimationFrame(draw);
-
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      ctx.clearRect(0, 0, w, h);
-
-      particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = useLite ? 'rgba(138, 43, 226, 0.45)' : 'rgba(138, 43, 226, 0.55)';
-        ctx.fill();
-
-        if (!CONNECT_DIST) return;
-
-        let links = 0;
-        for (let j = i + 1; j < particles.length && links < MAX_LINKS; j++) {
-          const q = particles[j];
-          const dx = p.x - q.x;
-          const dy = p.y - q.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < CONNECT_DIST_SQ) {
-            links++;
-            const alpha = 0.12 * (1 - Math.sqrt(distSq) / CONNECT_DIST);
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(0, 206, 209, ${alpha})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      });
-    }
-
-    function start() {
-      if (running) return;
-      running = true;
-      draw();
-    }
-
-    function stop() {
-      running = false;
-      cancelAnimationFrame(animId);
-    }
-
-    resize();
-    createParticles();
-    draw();
-
-    const modeObs = new MutationObserver(syncMode);
-    modeObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    syncMode();
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        resize();
-        createParticles();
-      }, 150);
-    }, { passive: true });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stop();
-      else start();
-    });
-
-    document.addEventListener('rebel:scroll-active', () => {
-      canvas.style.opacity = useLite ? '0.25' : '0.35';
-    });
-    document.addEventListener('rebel:scroll-idle', () => {
-      canvas.style.opacity = '';
-    });
+    if (canvas) canvas.style.display = 'none';
   }
 
   // ── Scroll perf: throttle paints while scrolling ──────────
   function initScrollPerf() {
     let timer;
-    let scrolling = false;
-
     window.addEventListener('scroll', () => {
-      if (!scrolling) {
-        scrolling = true;
-        document.body.classList.add('is-scrolling');
-        document.dispatchEvent(new Event('rebel:scroll-active'));
-      }
+      document.body.classList.add('is-scrolling');
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        scrolling = false;
-        document.body.classList.remove('is-scrolling');
-        document.dispatchEvent(new Event('rebel:scroll-idle'));
-      }, 120);
+      timer = setTimeout(() => document.body.classList.remove('is-scrolling'), 140);
     }, { passive: true });
   }
 
@@ -456,6 +309,9 @@
     const terminal = document.getElementById('demoTerminal');
     if (!terminal) return;
 
+    let running = false;
+    let timerId = null;
+
     const commands = [
       { cmd: 'rebel status --all', out: ['API: online ✓', 'Voice: ready ✓', 'Codespace: active ✓'] },
       { cmd: 'rebel chat "Explain quantum computing"', out: ['Rebel Gpt: Quantum computing uses qubits…'] },
@@ -463,7 +319,8 @@
     ];
     let cmdIdx = 0;
 
-    setInterval(() => {
+    function tick() {
+      if (!running) return;
       const c = commands[cmdIdx % commands.length];
       cmdIdx++;
 
@@ -477,6 +334,7 @@
 
       c.out.forEach((line, i) => {
         setTimeout(() => {
+          if (!running) return;
           const outLine = document.createElement('div');
           outLine.className = 't-line t-out';
           outLine.textContent = line;
@@ -486,6 +344,7 @@
       });
 
       setTimeout(() => {
+        if (!running) return;
         const newCursor = document.createElement('div');
         newCursor.className = 't-line';
         newCursor.innerHTML = '<span class="t-prompt">rebel@ai:~$</span> <span class="t-cursor">▌</span>';
@@ -495,7 +354,32 @@
           terminal.removeChild(terminal.firstChild);
         }
       }, c.out.length * 400 + 300);
-    }, 6000);
+    }
+
+    function startDemo() {
+      if (running) return;
+      running = true;
+      tick();
+      timerId = setInterval(tick, 8000);
+    }
+
+    function stopDemo() {
+      running = false;
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+    }
+
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) startDemo();
+          else stopDemo();
+        });
+      }, { threshold: 0.15 });
+      obs.observe(terminal);
+    } else {
+      startDemo();
+    }
   }
 
   // ── Clear Chat Button ─────────────────────────────────────

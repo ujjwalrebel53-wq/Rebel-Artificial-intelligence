@@ -19,10 +19,12 @@
   <link rel="stylesheet" href="codespace-pro.css">
   <link rel="stylesheet" href="admin-control.css">
   <link rel="stylesheet" href="rebel-3d.css">
+  <link rel="stylesheet" href="rebel-perf.css">
   <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 </head>
-<body>
+<body class="rebel-perf-mode">
+<script>document.documentElement.classList.add('rebel-perf-mode');</script>
 
   <!-- Advanced: Loading Splash -->
   <div id="rebelSplash" class="rebel-splash">
@@ -38,14 +40,8 @@
   <!-- Advanced: Scroll Progress -->
   <div id="scrollProgress" class="scroll-progress"></div>
 
-  <!-- 3D WebGL Background -->
-  <canvas id="rebel3dCanvas" class="rebel-3d-canvas"></canvas>
-
-  <!-- Advanced: Particle Canvas -->
-  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  <!-- Static background (no WebGL / particle loops) -->
   <div class="cyber-grid" aria-hidden="true"></div>
-  <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
-  <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
 
   <!-- Header -->
   <header class="header">

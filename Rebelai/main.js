@@ -857,6 +857,10 @@ And the HTML:
   }
 
   function openVoiceAssistant() {
+    if (typeof window.__REBEL_OPEN_VOICE__ === 'function') {
+      window.__REBEL_OPEN_VOICE__();
+      return;
+    }
     const vaModal = document.getElementById('voiceAvatarModal');
     if (vaModal) { vaModal.classList.add('show'); document.body.style.overflow='hidden'; }
   }
@@ -2787,15 +2791,10 @@ And the HTML:
 
       wakeRecognition.onend = () => {
         wakeActive = false;
-        // Restart after 1s if modal is not open
-        if (!modal.classList.contains('show')) {
-          setTimeout(startWakeWordListener, 1000);
-        }
       };
 
       wakeRecognition.onerror = () => {
         wakeActive = false;
-        setTimeout(startWakeWordListener, 3000);
       };
 
       wakeRecognition.start();
@@ -2804,8 +2803,41 @@ And the HTML:
     }
   }
 
-  // Start wake word listener after 2s
-  setTimeout(startWakeWordListener, 2000);
+  // Wake word disabled on idle page load — saves CPU/mic on landing
+  function stopWakeWordListener() {
+    wakeActive = false;
+    try { wakeRecognition && wakeRecognition.stop(); } catch (e) {}
+    wakeRecognition = null;
+  }
+
+  let avatarDrawActive = false;
+  let avatarAnimId = null;
+
+  function startAvatarDraw() {
+    avatarDrawActive = true;
+    if (!avatarAnimId) avatarAnimId = requestAnimationFrame(draw);
+  }
+
+  function stopAvatarDraw() {
+    avatarDrawActive = false;
+    if (avatarAnimId) cancelAnimationFrame(avatarAnimId);
+    avatarAnimId = null;
+  }
+
+  const modalObs = new MutationObserver(() => {
+    if (modal.classList.contains('show')) startAvatarDraw();
+    else {
+      stopAvatarDraw();
+      stopWakeWordListener();
+    }
+  });
+  modalObs.observe(modal, { attributes: true, attributeFilter: ['class'] });
+
+  window.__REBEL_OPEN_VOICE__ = () => {
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    startAvatarDraw();
+  };
 
   const ctx  = canvas.getContext('2d');
   const wCtx = waveCanvas?.getContext('2d');
@@ -2956,7 +2988,11 @@ And the HTML:
 
   // ── Main Draw Loop ───────────────────────────────────────
   function draw(ts) {
-    requestAnimationFrame(draw);
+    if (!avatarDrawActive) {
+      avatarAnimId = null;
+      return;
+    }
+    avatarAnimId = requestAnimationFrame(draw);
 
     breathe    = Math.sin(ts / 1400) * 3;
     blinkT    += 0.02;
@@ -3690,8 +3726,6 @@ RULES — strictly follow:
     mouthTarget = 0;
     gestureType = 0;
     gestureTimer = 0;
-    // Restart wake word listener after modal closes
-    setTimeout(startWakeWordListener, 1500);
   };
 
   closeBtn && closeBtn.addEventListener('click', closeModal);
@@ -3714,9 +3748,6 @@ RULES — strictly follow:
       if (cmd && !isListening) callAI(cmd);
     });
   });
-
-  // ── Start animation ──────────────────────────────────────
-  requestAnimationFrame(draw);
 
 })();
 

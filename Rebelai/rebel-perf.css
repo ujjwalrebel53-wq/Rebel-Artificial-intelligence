@@ -1,0 +1,68 @@
+/* Rebel AI — landing page performance mode (CSS-only visuals) */
+
+html.rebel-perf-mode #rebel3dCanvas,
+html.rebel-perf-mode #particleCanvas,
+html.rebel-perf-mode .ambient-glow {
+  display: none !important;
+}
+
+html.rebel-perf-mode .header,
+html.rebel-perf-mode .cmd-palette,
+html.rebel-perf-mode .cmd-backdrop,
+html.rebel-perf-mode .modal,
+html.rebel-perf-mode .rebel-splash {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.rebel-perf-mode .marquee-track {
+  animation: none !important;
+}
+
+html.rebel-perf-mode .card-3d-tilt,
+html.rebel-perf-mode .hero-visual,
+html.rebel-perf-mode .terminal-window {
+  transform: none !important;
+}
+
+html.rebel-perf-mode .section-3d-in {
+  animation: rebelFadeIn 0.45s ease forwards !important;
+  transform: none !important;
+}
+
+@keyframes rebelFadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+html.rebel-perf-mode .scene-3d,
+html.rebel-perf-mode .hero,
+html.rebel-perf-mode .features,
+html.rebel-perf-mode .stats-section,
+html.rebel-perf-mode .how-section,
+html.rebel-perf-mode .faq-section,
+html.rebel-perf-mode .cta-section {
+  transform-style: flat !important;
+  perspective: none !important;
+}
+
+html.rebel-perf-mode .cyber-grid {
+  opacity: 0.35;
+  animation: none !important;
+}
+
+html.rebel-perf-mode .feature-bubble {
+  animation-play-state: paused;
+}
+
+html.rebel-perf-mode .live-dot {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.rebel-perf-mode * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
