@@ -20,6 +20,57 @@ define('FILE_API_KEYS', DATA_DIR . '/api_keys.json');
 define('FILE_SETTINGS', DATA_DIR . '/settings.json');
 define('FILE_RATE',     DATA_DIR . '/rate_limit.json');
 define('FILE_ADMIN_TOKEN', DATA_DIR . '/admin_token.json');
+define('DIR_CODESPACE',    DATA_DIR . '/codespace');
+
+// ── Codespace project helpers ────────────────────────────────
+function codespaceOwnerKey($email, $guestId = '') {
+    $email = strtolower(trim($email ?? ''));
+    if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'user_' . md5($email);
+    }
+    $guestId = preg_replace('/[^a-zA-Z0-9_-]/', '', $guestId ?? '');
+    if (strlen($guestId) >= 8 && strlen($guestId) <= 64) {
+        return 'guest_' . $guestId;
+    }
+    return null;
+}
+
+function codespaceProjectPath($ownerKey) {
+    if (!$ownerKey || !preg_match('/^(user|guest)_[a-f0-9a-zA-Z_-]+$/', $ownerKey)) return null;
+    if (!is_dir(DIR_CODESPACE)) {
+        @mkdir(DIR_CODESPACE, 0755, true);
+    }
+    return DIR_CODESPACE . '/' . $ownerKey . '.json';
+}
+
+function validateCodespaceProject($project) {
+    if (!is_array($project)) return false;
+    $files = $project['files'] ?? [];
+    if (!is_array($files) || count($files) > 30) return false;
+    $total = 0;
+    foreach ($files as $name => $content) {
+        if (!preg_match('/^[a-zA-Z0-9._-]+$/', (string)$name)) return false;
+        if (!is_string($content)) return false;
+        $total += strlen($content);
+        if (strlen($content) > 100000) return false;
+    }
+    return $total <= 500000;
+}
+
+function readCodespaceProject($ownerKey) {
+    $path = codespaceProjectPath($ownerKey);
+    if (!$path || !file_exists($path)) return null;
+    $data = readJSON($path, null);
+    return is_array($data) ? $data : null;
+}
+
+function writeCodespaceProject($ownerKey, $project) {
+    $path = codespaceProjectPath($ownerKey);
+    if (!$path || !validateCodespaceProject($project)) return false;
+    $project['updated_at'] = time() * 1000;
+    writeJSON($path, $project);
+    return true;
+}
 
 // ── Security Headers ─────────────────────────────────────────
 function setSecurityHeaders() {

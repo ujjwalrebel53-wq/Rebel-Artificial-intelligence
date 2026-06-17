@@ -677,7 +677,7 @@
         <div class="ide-menu-wrap">
           <span class="ide-menu-item" data-menu="terminal" id="ide-toggle-terminal-menu">Terminal</span>
           <div class="ide-dropdown" id="ide-menu-terminal">
-            <button data-action="term-terminal"><i class="fas fa-terminal"></i> Terminal</button>
+            <button data-action="term-terminal"><i class="fas fa-lock"></i> Private Terminal</button>
             <button data-action="term-problems"><i class="fas fa-exclamation-triangle"></i> Problems</button>
             <button data-action="term-output"><i class="fas fa-list"></i> Output</button>
             <button data-action="term-clear"><i class="fas fa-trash"></i> Clear Terminal</button>
@@ -779,20 +779,16 @@
           <!-- Terminal panel (bottom split) -->
           <div class="ide-terminal-panel" id="ide-terminal-panel">
             <div class="ide-terminal-tabs">
-              <span class="ide-term-tab active" data-term="terminal"><i class="fas fa-terminal"></i> Terminal</span>
+              <span class="ide-term-tab active" data-term="terminal"><i class="fas fa-lock"></i> Private Terminal <span class="ide-private-badge">PRIVATE</span></span>
               <span class="ide-term-tab" data-term="problems"><i class="fas fa-exclamation-triangle"></i> Problems <span id="ide-problems-count"></span></span>
               <span class="ide-term-tab" data-term="output"><i class="fas fa-list"></i> Output</span>
               <button class="ide-term-close-btn" id="ide-term-close"><i class="fas fa-times"></i></button>
             </div>
             <div class="ide-term-panel active" id="ide-term-panel-terminal">
-            <div class="ide-terminal-body" id="ide-terminal-output">
-              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcmd">node app.js</span></div>
-              <div class="ide-tout">Server running on port 3000</div>
-              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcursor">▌</span></div>
-            </div>
+            <div class="ide-terminal-body" id="ide-terminal-output"></div>
             <div class="ide-terminal-input-row">
-              <span class="ide-tprompt-inline">$</span>
-              <input class="ide-terminal-input" id="ide-terminal-input" placeholder="Enter command..." autocomplete="off" spellcheck="false">
+              <span class="ide-tprompt-inline" id="ide-term-prompt-inline">$</span>
+              <input class="ide-terminal-input" id="ide-terminal-input" placeholder="Private terminal — type help…" autocomplete="off" spellcheck="false">
             </div>
             </div>
             <div class="ide-term-panel" id="ide-term-panel-problems">

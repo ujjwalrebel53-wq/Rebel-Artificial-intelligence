@@ -305,7 +305,24 @@
 /* ── Terminal panels ── */
 .ide-term-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .ide-term-panel.active { display: flex; }
-.ide-term-tab { cursor: pointer; }
+.ide-save-status.synced { color: var(--accent-teal); }
+.ide-save-status.unsaved { color: #f1c40f; }
+
+.ide-private-badge {
+  font-size: 0.55rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(138,43,226,0.35);
+  color: #fff;
+  letter-spacing: 0.06em;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.ide-term-tab .ide-private-badge { font-weight: 700; }
+
+.ide-tprompt { color: #00ced1; font-family: 'Roboto Mono', monospace; font-size: 0.72rem; }
+
 .ide-term-tab.active { color: var(--accent-teal); border-bottom: 2px solid var(--accent-teal); }
 
 .ide-problems-toolbar {

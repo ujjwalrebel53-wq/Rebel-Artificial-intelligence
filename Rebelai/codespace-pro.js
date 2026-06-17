@@ -4,7 +4,7 @@
 (function RebelCodespacePro() {
   'use strict';
 
-  const STORAGE_KEY = 'rbl_codespace_project_v2';
+  const STORAGE_LEGACY = 'rbl_codespace_project_v2';
   const AI_BASE = 'https://api-rebix.vercel.app/api/gpt-5';
 
   const DEFAULT_FILES = {
@@ -36,32 +36,173 @@
   let previewOpen = false;
   let previewDebounce = null;
   let previewBlobUrl = null;
+  let autoSaveTimer = null;
+  let cloudSaveTimer = null;
+  let cloudSynced = false;
+  let projectSavedAt = 0;
 
   const $ = id => document.getElementById(id);
 
-  function loadProject() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        files = data.files || { ...DEFAULT_FILES };
-        openTabs = data.openTabs || ['app.js', 'index.html', 'style.css'];
-        currentFile = data.currentFile || 'app.js';
-        return;
-      }
-    } catch (e) {}
-    files = { ...DEFAULT_FILES };
-    openTabs = ['app.js', 'index.html', 'style.css'];
-    currentFile = 'app.js';
+  function getCurrentUser() {
+    try { return JSON.parse(localStorage.getItem('rbl_current_user')); } catch (e) { return null; }
   }
 
-  function saveProject() {
+  function getGuestId() {
+    let id = localStorage.getItem('rbl_codespace_guest_id');
+    if (!id) {
+      id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('rbl_codespace_guest_id', id);
+    }
+    return id;
+  }
+
+  function getStorageKey() {
+    const user = getCurrentUser();
+    const owner = user?.email ? 'user_' + user.email.toLowerCase() : 'guest_' + getGuestId();
+    return 'rbl_codespace_v3_' + owner.replace(/[^a-z0-9@._-]/gi, '_');
+  }
+
+  function getOwnerPayload() {
+    const user = getCurrentUser();
+    return user?.email ? { email: user.email } : { guest_id: getGuestId() };
+  }
+
+  function getTermUser() {
+    const u = getCurrentUser();
+    if (u?.name) return u.name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'rebel';
+    return 'rebel';
+  }
+
+  function termPrompt() {
+    return getTermUser() + '@rebel-private:~/rebel-project$';
+  }
+
+  function migrateLegacyStorage() {
+    const key = getStorageKey();
+    if (localStorage.getItem(key)) return;
+    const legacy = localStorage.getItem(STORAGE_LEGACY);
+    if (legacy) localStorage.setItem(key, legacy);
+  }
+
+  function applyProjectData(data) {
+    files = data.files || { ...DEFAULT_FILES };
+    openTabs = data.openTabs || ['app.js', 'index.html', 'style.css'];
+    currentFile = data.currentFile || 'app.js';
+    projectSavedAt = data.savedAt || 0;
+    if (data.terminal?.history?.length) {
+      termHistory = data.terminal.history.slice(-100);
+      termIdx = termHistory.length;
+    }
+  }
+
+  async function loadProject() {
+    migrateLegacyStorage();
+    const key = getStorageKey();
+    let local = null;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) local = JSON.parse(raw);
+    } catch (e) {}
+
+    let server = null;
+    try {
+      const q = new URLSearchParams(getOwnerPayload()).toString();
+      const resp = await fetch('/api/codespace/project?' + q);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.ok && data.project) server = data.project;
+      }
+    } catch (e) {}
+
+    if (server && local) {
+      applyProjectData((server.savedAt || 0) >= (local.savedAt || 0) ? server : local);
+      cloudSynced = (server.savedAt || 0) >= (local.savedAt || 0);
+    } else if (server) {
+      applyProjectData(server);
+      cloudSynced = true;
+    } else if (local) {
+      applyProjectData(local);
+      cloudSynced = false;
+    } else {
+      applyProjectData({ files: { ...DEFAULT_FILES } });
+      cloudSynced = false;
+    }
+  }
+
+  function buildProjectPayload() {
     syncEditorToFile();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ files, openTabs, currentFile, savedAt: Date.now() }));
+    return {
+      files,
+      openTabs,
+      currentFile,
+      savedAt: Date.now(),
+      terminal: { history: termHistory.slice(-100) },
+    };
+  }
+
+  function saveProject(opts = {}) {
+    const payload = buildProjectPayload();
+    projectSavedAt = payload.savedAt;
+    localStorage.setItem(getStorageKey(), JSON.stringify(payload));
     Object.keys(files).forEach(f => { savedSnapshot[f] = files[f]; dirty[f] = false; });
-    setSaveStatus(true);
-    termLog('Project saved to local storage.', 'out');
-    trackCodespace('save');
+    setSaveStatus(true, cloudSynced);
+    if (opts.manual) {
+      termLog('Project saved locally.', 'out');
+      toast('Saved!');
+    }
+    if (!opts.skipCloud) scheduleCloudSave();
+    trackCodespace(opts.manual ? 'save' : 'autosave');
+  }
+
+  function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveProject({ silent: true }), 1500);
+    setSaveStatus(false, cloudSynced);
+  }
+
+  function scheduleCloudSave() {
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(saveProjectToCloud, 2000);
+  }
+
+  async function saveProjectToCloud() {
+    const payload = buildProjectPayload();
+    try {
+      const resp = await fetch('/api/codespace/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...getOwnerPayload(), ...payload }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        cloudSynced = true;
+        projectSavedAt = data.savedAt || payload.savedAt;
+        setSaveStatus(true, true);
+      } else {
+        cloudSynced = false;
+        setSaveStatus(true, false);
+      }
+    } catch (e) {
+      cloudSynced = false;
+      setSaveStatus(true, false);
+    }
+  }
+
+  function writeFileFromTerminal(name, content, append) {
+    if (!name || !/^[a-zA-Z0-9._-]+$/.test(name)) {
+      termLog('Invalid filename', 'err');
+      return false;
+    }
+    syncEditorToFile();
+    files[name] = append ? ((files[name] || '') + content) : content;
+    dirty[name] = true;
+    if (!openTabs.includes(name)) openTabs.push(name);
+    renderFileTree();
+    renderTabs();
+    if (currentFile === name) refreshEditor();
+    scheduleAutoSave();
+    runLinter();
+    return true;
   }
 
   function trackCodespace(action) {
@@ -109,17 +250,23 @@
     ta.value = files[currentFile] ?? '';
     if (hl) hl.innerHTML = highlight(ta.value, currentFile);
     updateGutter();
-    setSaveStatus(!dirty[currentFile]);
+    setSaveStatus(!dirty[currentFile], cloudSynced);
     updateGitPanel();
     updateLangLabel();
     updateCursorPosition();
   }
 
-  function setSaveStatus(saved) {
+  function setSaveStatus(saved, synced) {
     const el = $('ide-save-status');
     if (!el) return;
-    el.className = 'ide-save-status' + (saved ? '' : ' unsaved');
-    el.innerHTML = saved ? '<i class="fas fa-check-circle"></i> Saved' : '<i class="fas fa-circle"></i> Unsaved';
+    el.className = 'ide-save-status' + (saved ? '' : ' unsaved') + (synced ? ' synced' : '');
+    if (!saved) {
+      el.innerHTML = '<i class="fas fa-circle"></i> Unsaved';
+    } else if (synced) {
+      el.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Saved &amp; synced';
+    } else {
+      el.innerHTML = '<i class="fas fa-check-circle"></i> Saved locally';
+    }
   }
 
   function fileIcon(name) {
@@ -909,11 +1056,11 @@ Rebel AI:`;
     closeDropdowns();
     const map = {
       'new-file': newFile,
-      'save': saveProject,
+      'save': () => saveProject({ manual: true }),
       'import': () => $('ide-import-input')?.click(),
       'download': downloadProject,
       'export-file': exportCurrentFile,
-      'close-ide': () => { syncEditorToFile(); saveProject(); $('codespaceModal')?.classList.remove('show'); document.body.style.overflow = ''; },
+      'close-ide': () => { syncEditorToFile(); saveProject({ manual: true }); $('codespaceModal')?.classList.remove('show'); document.body.style.overflow = ''; },
       'undo': undoEdit,
       'redo': redoEdit,
       'copy': () => { const ta = $('ide-textarea'); navigator.clipboard.writeText(ta?.value.slice(ta.selectionStart, ta.selectionEnd) || ta?.value || ''); toast('Copied'); },
@@ -950,7 +1097,7 @@ Rebel AI:`;
     toast('AI chat cleared');
   }
 
-  // ── Terminal ──────────────────────────────────────────────
+  // ── Private Terminal (virtual shell on saved project) ─────
   function termLog(text, type) {
     const out = $('ide-terminal-output');
     if (!out) return;
@@ -959,23 +1106,128 @@ Rebel AI:`;
     const cls = type === 'out' ? 'ide-tout' : type === 'err' ? 'ide-terr' : 'ide-tline';
     const div = document.createElement('div');
     div.className = cls;
-    div.innerHTML = type === 'cmd' ? `<span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcmd">${text}</span>` : text;
+    const prompt = termPrompt();
+    div.innerHTML = type === 'cmd'
+      ? `<span class="ide-tprompt">${prompt}</span> <span class="ide-tcmd">${String(text).replace(/</g, '&lt;')}</span>`
+      : String(text).replace(/</g, '&lt;');
     out.appendChild(div);
-    out.insertAdjacentHTML('beforeend', '<div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcursor">▌</span></div>');
+    out.insertAdjacentHTML('beforeend', `<div class="ide-tline"><span class="ide-tprompt">${prompt}</span> <span class="ide-tcursor">▌</span></div>`);
     out.scrollTop = out.scrollHeight;
+  }
+
+  function termHelp() {
+    termLog([
+      'Private Terminal — changes auto-save to your project:',
+      '  ls [-la]  cat  touch  rm  mv  cp  edit/code',
+      '  echo text > file   echo text >> file',
+      '  grep  save  preview  lint  history  clear',
+    ].join('\n'), 'out');
   }
 
   function runTerminalCmd(cmd) {
     const c = cmd.trim();
+    if (!c) return;
     const lc = c.toLowerCase();
     termLog(c, 'cmd');
-    termHistory.push(c); termIdx = termHistory.length;
+    termHistory.push(c);
+    termIdx = termHistory.length;
 
-    if (lc === 'clear') { $('ide-terminal-output').innerHTML = ''; return; }
-    if (lc === 'ls') { termLog(Object.keys(files).join('  '), 'out'); return; }
+    if (lc === 'clear') { $('ide-terminal-output').innerHTML = ''; termLog('Private terminal ready.', 'out'); return; }
+    if (lc === 'help' || lc === 'rebel help') { termHelp(); return; }
+    if (lc === 'history') { termLog(termHistory.slice(-20).map((h, i) => `${i + 1}  ${h}`).join('\n') || '(empty)', 'out'); return; }
+    if (lc === 'ls' || lc === 'ls -la') {
+      const rows = Object.keys(files).sort().map(f => {
+        const sz = (files[f] || '').length;
+        const mark = dirty[f] ? '*' : ' ';
+        return lc.includes('-la') ? `${mark}${f} (${sz}b)` : f;
+      });
+      termLog(rows.join('  ') || '(empty)', 'out');
+      return;
+    }
     if (lc === 'pwd') { termLog('/home/rebel/rebel-project', 'out'); return; }
-    if (lc === 'whoami') { termLog('rebel', 'out'); return; }
+    if (lc === 'whoami') { termLog(getTermUser(), 'out'); return; }
     if (lc === 'date') { termLog(new Date().toString(), 'out'); return; }
+    if (lc.startsWith('cat ')) {
+      const f = c.slice(4).trim();
+      termLog(files[f] !== undefined ? files[f] : 'cat: ' + f + ': No such file', files[f] !== undefined ? 'out' : 'err');
+      return;
+    }
+    if (lc.startsWith('grep ')) {
+      const m = c.match(/^grep\s+(\S+)\s+(\S+)$/i);
+      if (!m) { termLog('Usage: grep <word> <file>', 'err'); return; }
+      const [, word, f] = m;
+      if (files[f] === undefined) { termLog('grep: ' + f + ': No such file', 'err'); return; }
+      const hits = files[f].split('\n').map((line, i) => ({ line, n: i + 1 })).filter(x => x.line.includes(word));
+      termLog(hits.length ? hits.map(h => `${f}:${h.n}:${h.line}`).join('\n') : '(no matches)', 'out');
+      return;
+    }
+    if (lc.startsWith('touch ')) {
+      const f = c.slice(6).trim();
+      if (!f) { termLog('touch: missing file', 'err'); return; }
+      if (files[f] === undefined) writeFileFromTerminal(f, '// ' + f + '\n', false);
+      termLog('Touched ' + f, 'out');
+      return;
+    }
+    if (lc.startsWith('rm ')) {
+      const f = c.slice(3).trim();
+      if (!files[f]) { termLog('rm: ' + f + ': No such file', 'err'); return; }
+      if (Object.keys(files).length <= 1) { termLog('rm: cannot delete last file', 'err'); return; }
+      delete files[f]; delete dirty[f];
+      openTabs = openTabs.filter(t => t !== f);
+      if (currentFile === f) currentFile = openTabs[0] || Object.keys(files)[0];
+      renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave(); runLinter();
+      termLog('Removed ' + f, 'out');
+      return;
+    }
+    if (lc.startsWith('mv ')) {
+      const parts = c.slice(3).trim().split(/\s+/);
+      if (parts.length < 2) { termLog('Usage: mv <from> <to>', 'err'); return; }
+      const [from, to] = parts;
+      if (files[from] === undefined) { termLog('mv: ' + from + ': No such file', 'err'); return; }
+      files[to] = files[from]; dirty[to] = true;
+      delete files[from]; delete dirty[from];
+      openTabs = openTabs.map(t => t === from ? to : t);
+      if (currentFile === from) currentFile = to;
+      renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave();
+      termLog('Renamed ' + from + ' → ' + to, 'out');
+      return;
+    }
+    if (lc.startsWith('cp ')) {
+      const parts = c.slice(3).trim().split(/\s+/);
+      if (parts.length < 2) { termLog('Usage: cp <from> <to>', 'err'); return; }
+      const [from, to] = parts;
+      if (files[from] === undefined) { termLog('cp: ' + from + ': No such file', 'err'); return; }
+      writeFileFromTerminal(to, files[from], false);
+      termLog('Copied ' + from + ' → ' + to, 'out');
+      return;
+    }
+    if (/^echo\s+.+\s>>\s*\S+/.test(c)) {
+      const m = c.match(/^echo\s+(.+)\s>>\s*(\S+)\s*$/);
+      if (m) {
+        const text = m[1].replace(/^["']|["']$/g, '');
+        writeFileFromTerminal(m[2], text + '\n', true);
+        termLog('Appended to ' + m[2], 'out');
+      }
+      return;
+    }
+    if (/^echo\s+.+\s>\s*\S+/.test(c)) {
+      const m = c.match(/^echo\s+(.+)\s>\s*(\S+)\s*$/);
+      if (m) {
+        const text = m[1].replace(/^["']|["']$/g, '');
+        writeFileFromTerminal(m[2], text + '\n', false);
+        termLog('Written to ' + m[2], 'out');
+      }
+      return;
+    }
+    if (lc.startsWith('edit ') || lc.startsWith('code ') || lc.startsWith('nano ')) {
+      const f = c.split(/\s+/)[1];
+      if (!files[f]) { termLog('No such file: ' + f, 'err'); return; }
+      openFile(f);
+      termLog('Opened ' + f + ' in editor', 'out');
+      return;
+    }
     if (lc === 'git status') { updateGitPanel(); const ch = Object.keys(files).filter(f => dirty[f]); termLog('On branch main\n' + (ch.length ? 'Modified: ' + ch.join(', ') : 'nothing to commit, working tree clean'), 'out'); return; }
     if (lc === 'npm install') { npmInstalled = true; termLog('added 248 packages in 2.1s', 'out'); return; }
     if (lc === 'npm run dev' || lc === 'node app.js' || lc === 'npm start') {
@@ -983,17 +1235,15 @@ Rebel AI:`;
       runPreview();
       return;
     }
-    if (lc.startsWith('cat ')) { const f = c.slice(4).trim(); termLog(files[f] ? files[f].slice(0, 500) : 'No such file', files[f] ? 'out' : 'err'); return; }
     if (lc.startsWith('echo ')) { termLog(c.slice(5), 'out'); return; }
-    if (lc === 'rebel help') { termLog('Commands: ls, cat, npm install, npm run dev, git status, clear, preview', 'out'); return; }
     if (lc === 'preview') { runPreview(); return; }
     if (lc === 'lint' || lc === 'diagnostics') { runLinter(); showTermPanel('problems'); termLog('Found ' + problemsList.length + ' problem(s)', 'out'); return; }
-    if (lc === 'save') { saveProject(); return; }
+    if (lc === 'save') { saveProject({ manual: true }); return; }
     if (lc === 'format') { formatDocument(); return; }
     if (lc === 'git add .') { gitStageAll(); termLog('Staged all changes.', 'out'); return; }
     if (lc.startsWith('git commit')) { gitCommit(); return; }
     if (lc === 'npm run build') { logOutput('Build successful ✓', 'success'); termLog('Build completed.', 'out'); return; }
-    termLog('bash: ' + c + ': command not found', 'err');
+    termLog('bash: ' + c + ': command not found (type help)', 'err');
   }
 
   // ── Search ────────────────────────────────────────────────
@@ -1086,6 +1336,7 @@ Rebel AI:`;
         if (!openTabs.includes(b.file)) openTabs.push(b.file);
       });
       renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave();
       if (previewOpen) schedulePreviewRefresh();
       trackCodespace('ai-write');
     } catch (err) {
@@ -1115,13 +1366,19 @@ Rebel AI:`;
   }
 
   // ── Init ──────────────────────────────────────────────────
-  function init() {
-    loadProject();
+  async function init() {
+    await loadProject();
     Object.keys(files).forEach(f => { savedSnapshot[f] = files[f]; });
 
     renderFileTree();
     renderTabs();
     refreshEditor();
+
+    const termOut = $('ide-terminal-output');
+    if (termOut && !termOut.querySelector('.ide-tout')) {
+      termOut.innerHTML = '';
+      termLog('Welcome to your Private Terminal — type help for commands.', 'out');
+    }
 
     const ta = $('ide-textarea');
     if (ta) {
@@ -1131,12 +1388,13 @@ Rebel AI:`;
         dirty[currentFile] = true;
         $('ide-highlight-layer').innerHTML = highlight(ta.value, currentFile);
         updateGutter();
-        setSaveStatus(false);
+        setSaveStatus(false, cloudSynced);
         renderTabs();
         renderFileTree();
         updateCursorPosition();
         clearTimeout(inputTimer);
         inputTimer = setTimeout(runLinter, 800);
+        scheduleAutoSave();
         schedulePreviewRefresh();
       });
       ta.addEventListener('click', updateCursorPosition);
@@ -1190,7 +1448,7 @@ Rebel AI:`;
 
     logOutput('Rebel Codespace Pro ready.', 'info');
     runLinter();
-    $('ide-save-btn')?.addEventListener('click', saveProject);
+    $('ide-save-btn')?.addEventListener('click', () => saveProject({ manual: true }));
     $('ide-new-file-btn')?.addEventListener('click', newFile);
     $('ide-add-file-btn')?.addEventListener('click', newFile);
     $('ide-download-btn')?.addEventListener('click', downloadProject);
@@ -1227,7 +1485,12 @@ Rebel AI:`;
     $('ide-ai-send-btn')?.addEventListener('click', ideAiSend);
     $('ide-ai-input')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ideAiSend(); } });
     $('ide-search-input')?.addEventListener('input', e => searchFiles(e.target.value));
-    $('ide-reset-project')?.addEventListener('click', () => { if (confirm('Reset project to defaults?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } });
+    $('ide-reset-project')?.addEventListener('click', () => {
+      if (confirm('Reset project to defaults? Your saved code will be cleared.')) {
+        localStorage.removeItem(getStorageKey());
+        location.reload();
+      }
+    });
 
     document.querySelectorAll('.ide-act-btn[data-panel]').forEach(btn => {
       btn.addEventListener('click', () => showPanel(btn.dataset.panel));
@@ -1268,7 +1531,7 @@ Rebel AI:`;
 
     document.addEventListener('keydown', e => {
       if (!$('codespaceModal')?.classList.contains('show')) return;
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject({ manual: true }); }
       if (e.key === 'F5') { e.preventDefault(); runPreview(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); showPanel('search'); $('ide-search-input')?.focus(); }
       if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); toggleLineComment(); }
@@ -1293,6 +1556,6 @@ Rebel AI:`;
     });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => { init().catch(() => {}); });
   window.RebelCodespace = { saveProject, runPreview, getFiles: () => ({ ...files }) };
 })();
