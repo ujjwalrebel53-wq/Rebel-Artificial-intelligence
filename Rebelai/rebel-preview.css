@@ -19,7 +19,7 @@
 .ide-editor-area.preview-open .ide-workspace-editor {
   flex: 0 0 38%;
   max-width: 38%;
-  border-right: 1px solid #2d2d2d;
+  border-left: 1px solid #2d2d2d;
 }
 
 .ide-preview-panel {
@@ -29,7 +29,7 @@
   max-width: none;
   flex-direction: column;
   background: #141414;
-  border-left: 1px solid #2d2d2d;
+  border-right: 1px solid #2d2d2d;
   min-height: 0;
   overflow: hidden;
 }
@@ -469,15 +469,15 @@
   #codespaceModal.preview-focus .ide-editor-area.preview-open .ide-workspace-editor {
     max-width: none;
     flex: 0 0 35%;
-    border-right: none;
-    border-bottom: 1px solid #2d2d2d;
+    border-left: none;
+    border-top: 1px solid #2d2d2d;
   }
 
   .ide-editor-area.preview-open .ide-preview-panel:not([hidden]),
   #codespaceModal.preview-focus .ide-preview-panel:not([hidden]) {
     max-width: none;
     flex: 1 1 65%;
-    border-left: none;
+    border-right: none;
   }
 
   .phone-mockup-screen {

@@ -828,22 +828,8 @@
           </div>
           <div class="ide-tabbar" id="ide-tabbar"></div>
 
-          <!-- Editor + Preview side-by-side (no overlap) -->
+          <!-- Preview left · Editor right -->
           <div class="ide-workspace" id="ide-workspace">
-            <div class="ide-workspace-editor" id="ide-workspace-editor">
-              <div class="ide-editor ide-editor-pro" id="ide-editor">
-                <div class="ide-gutter" id="ide-gutter"></div>
-                <div class="ide-editor-wrap">
-                  <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
-                  <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-                </div>
-                <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
-              </div>
-              <div class="ide-editor-split-wrap">
-                <div id="ide-monaco-split"></div>
-              </div>
-            </div>
-
             <aside class="ide-preview-panel" id="ide-preview-panel" hidden aria-label="Live preview">
               <header class="ide-preview-header">
                 <div class="ide-preview-header-left">
@@ -893,6 +879,20 @@
               </div>
               <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview"></iframe>
             </aside>
+
+            <div class="ide-workspace-editor" id="ide-workspace-editor">
+              <div class="ide-editor ide-editor-pro" id="ide-editor">
+                <div class="ide-gutter" id="ide-gutter"></div>
+                <div class="ide-editor-wrap">
+                  <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
+                  <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                </div>
+                <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
+              </div>
+              <div class="ide-editor-split-wrap">
+                <div id="ide-monaco-split"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Terminal panel (bottom split) -->
