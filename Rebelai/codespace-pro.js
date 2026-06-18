@@ -573,6 +573,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     previewOpen = true;
     panel?.removeAttribute('hidden');
     $('ide-editor-area')?.classList.add('preview-open');
+    $('codespaceModal')?.classList.add('preview-focus');
     $('ide-preview-btn')?.classList.add('active');
     $('ide-run-btn')?.classList.add('active');
     initPreviewDevices();
@@ -594,6 +595,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     const panel = $('ide-preview-panel');
     panel?.setAttribute('hidden', '');
     $('ide-editor-area')?.classList.remove('preview-open');
+    $('codespaceModal')?.classList.remove('preview-focus');
     $('ide-preview-btn')?.classList.remove('active');
     $('ide-run-btn')?.classList.remove('active');
     clearTimeout(previewDebounce);
