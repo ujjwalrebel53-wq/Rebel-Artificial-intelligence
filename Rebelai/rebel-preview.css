@@ -1,4 +1,4 @@
-/* Rebel Codespace — clean preview panel (no overlap, minimal device frames) */
+/* Rebel Codespace — preview panel + phone mockup with live screen */
 
 .ide-workspace {
   display: flex;
@@ -17,18 +17,18 @@
 }
 
 .ide-editor-area.preview-open .ide-workspace-editor {
-  flex: 1 1 58%;
-  max-width: 58%;
+  flex: 1 1 48%;
+  max-width: 48%;
   border-right: 1px solid #2d2d2d;
 }
 
 .ide-preview-panel {
   display: none;
-  flex: 1 1 42%;
-  min-width: 280px;
-  max-width: 42%;
+  flex: 1 1 52%;
+  min-width: 340px;
+  max-width: 52%;
   flex-direction: column;
-  background: #181818;
+  background: #141414;
   border-left: 1px solid #2d2d2d;
   min-height: 0;
   overflow: hidden;
@@ -55,7 +55,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
   flex-shrink: 0;
 }
 
@@ -113,7 +112,6 @@
 .ide-preview-device-tabs .ide-device-btn.active {
   background: #37373d !important;
   color: #fff !important;
-  box-shadow: none !important;
 }
 
 .ide-preview-actions {
@@ -154,6 +152,7 @@
   color: #fff;
 }
 
+/* Preview canvas */
 .ide-preview-viewport {
   flex: 1;
   min-height: 0;
@@ -161,12 +160,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
-  background: #1a1a1a;
+  padding: 16px;
+  background: #0f0f0f;
 }
 
 .ide-preview-stage {
   width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,86 +174,156 @@
 
 .preview-device {
   display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
   width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
-.ide-preview-stage.device-macbook .preview-device-macbook { display: flex; }
+.ide-preview-stage.device-macbook .preview-device-macbook { display: flex; flex-direction: column; }
 .ide-preview-stage.device-iphone17 .preview-device-phone { display: flex; }
-.ide-preview-stage.device-full .preview-device-full { display: flex; width: 100%; height: 100%; }
+.ide-preview-stage.device-full .preview-device-full { display: flex; }
 
 .preview-device-meta {
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.02em;
+  margin-bottom: 10px;
 }
 
-/* MacBook — flat bezel */
-.preview-device-screen {
+/* Shared iframe host — content runs inside device screen */
+.preview-frame-host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  z-index: 1;
+}
+
+.preview-frame-host iframe,
+.preview-frame-host #ide-preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 1;
+  pointer-events: auto;
+  display: block;
+  border: none;
+  background: #fff;
+}
+
+/* Iframe waiting to mount (direct child of panel) */
+.ide-preview-panel > #ide-preview-frame {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* MacBook */
+.preview-device-screen-laptop {
   position: relative;
-}
-
-.preview-device-macbook .preview-device-screen {
-  width: min(100%, 640px);
+  width: min(100%, 600px);
   aspect-ratio: 16 / 10;
   background: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
-  border: 8px solid #2b2b2b;
-  outline: 1px solid #3c3c3c;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 10px solid #2b2b2b;
+  outline: 1px solid #444;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
 }
 
-/* iPhone — minimal frame */
-.preview-device-phone .preview-device-screen-phone {
-  width: min(100%, 280px);
-  aspect-ratio: 430 / 932;
-  background: #fff;
-  border-radius: 36px;
-  overflow: hidden;
-  border: 3px solid #333;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+/* ── iPhone mockup — site runs inside the screen ── */
+.phone-mockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 0;
+}
+
+.phone-mockup-frame {
+  padding: 14px;
+  background: linear-gradient(165deg, #4a4a4e 0%, #2c2c2e 40%, #1a1a1c 100%);
+  border-radius: 52px;
+  box-shadow:
+    0 0 0 2px #555,
+    0 0 0 4px #1a1a1a,
+    0 24px 60px rgba(0, 0, 0, 0.55);
+  max-height: calc(100% - 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-mockup-screen {
   position: relative;
-  box-sizing: border-box;
+  /* iPhone 17 Pro Max ratio — scales to fit preview panel */
+  width: min(320px, 100%, calc((100vh - 280px) * 430 / 932));
+  aspect-ratio: 430 / 932;
+  max-height: min(720px, calc(100vh - 240px));
+  height: auto;
+  border-radius: 44px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: inset 0 0 0 2px #111;
 }
 
-.preview-phone-island {
+.phone-mockup-viewport {
+  border-radius: 44px;
+}
+
+.phone-mockup-island {
   position: absolute;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 96px;
+  width: 32%;
+  min-width: 88px;
+  max-width: 118px;
   height: 28px;
-  background: #0a0a0a;
+  background: #000;
   border-radius: 16px;
-  z-index: 3;
+  z-index: 4;
   pointer-events: none;
 }
 
-.preview-device-screen-phone::after {
-  content: '';
+.phone-mockup-home {
   position: absolute;
-  bottom: 6px;
+  bottom: 7px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 3px;
-  z-index: 3;
+  width: 38%;
+  min-width: 100px;
+  max-width: 130px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  z-index: 4;
   pointer-events: none;
 }
 
-/* Full width */
+.phone-mockup-label {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.03em;
+}
+
+/* Full width preview */
 .preview-device-full {
+  width: 100%;
   height: 100%;
-  min-height: 280px;
+  min-height: 200px;
 }
 
 .preview-device-screen-full {
+  position: relative;
   width: 100%;
   height: 100%;
   min-height: 280px;
@@ -261,25 +331,10 @@
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid #333;
-  position: relative;
+  box-sizing: border-box;
 }
 
-.preview-device-screen iframe,
-.preview-device-screen-full iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-  background: #fff;
-}
-
-#ide-preview-frame[hidden] {
-  display: none !important;
-}
-
-/* Sticky device bar — clean VS Code style */
+/* Sticky device bar */
 .ide-device-bar-sticky {
   display: flex !important;
   align-items: center;
@@ -325,7 +380,6 @@
   background: #094771 !important;
   border-color: #007acc !important;
   color: #fff !important;
-  box-shadow: none !important;
 }
 
 .ide-device-open-btn {
@@ -343,9 +397,7 @@
   gap: 6px;
 }
 
-.ide-device-open-btn:hover {
-  background: #1177bb;
-}
+.ide-device-open-btn:hover { background: #1177bb; }
 
 .ide-device-bar-spacer { flex: 1; min-width: 8px; }
 
@@ -364,14 +416,19 @@
 
   .ide-editor-area.preview-open .ide-workspace-editor {
     max-width: none;
-    flex: 1 1 55%;
+    flex: 1 1 50%;
     border-right: none;
     border-bottom: 1px solid #2d2d2d;
   }
 
   .ide-editor-area.preview-open .ide-preview-panel:not([hidden]) {
     max-width: none;
-    flex: 1 1 45%;
+    flex: 1 1 50%;
     border-left: none;
+  }
+
+  .phone-mockup-screen {
+    width: min(280px, 90vw);
+    max-height: min(620px, 55vh);
   }
 }

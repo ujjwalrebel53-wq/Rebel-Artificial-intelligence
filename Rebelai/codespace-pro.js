@@ -41,6 +41,14 @@
   let cloudSynced = false;
   let projectSavedAt = 0;
 
+  const PREVIEW_DEVICES = {
+    macbook: { viewport: 'device-macbook-viewport', label: 'MacBook' },
+    iphone17: { viewport: 'device-iphone-viewport', label: 'iPhone 17 Pro Max' },
+    full: { viewport: 'device-full-viewport', label: 'Full width' },
+  };
+  const DEFAULT_PREVIEW_DEVICE = 'iphone17';
+  let currentPreviewDevice = DEFAULT_PREVIEW_DEVICE;
+
   const $ = id => document.getElementById(id);
 
   function getCurrentUser() {
@@ -431,9 +439,10 @@
     const cssBundle = [...cssFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
     const jsBundle = [...jsFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
 
+    const phonePreview = currentPreviewDevice === 'iphone17';
     const previewHead = `
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="${phonePreview ? 'width=430, initial-scale=1, viewport-fit=cover' : 'width=device-width, initial-scale=1.0'}">
 <style id="rebel-preview-base">
   #rebel-preview-error-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:#1a0a0a;color:#ff7676;padding:10px 14px;font:12px/1.45 monospace;z-index:2147483647;border-top:2px solid #e74c3c;max-height:35vh;overflow:auto;white-space:pre-wrap}
   #rebel-preview-error-bar.show{display:block}
@@ -495,6 +504,7 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
   function applyPreviewToFrame() {
     const frame = $('ide-preview-frame');
     if (!frame) return;
+    mountPreviewFrame(currentPreviewDevice);
     previewErrors = [];
     const doc = buildPreviewDocument();
     setPreviewStatus('Loading…', 'loading');
@@ -504,43 +514,39 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
   }
 
   function syncDeviceButtonState(device) {
-    const d = device || 'macbook';
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
     document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick, .ide-preview-device-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.device === d);
     });
   }
 
   function choosePreviewDevice(device) {
-    const d = device || 'macbook';
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
     try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
     if (!previewOpen) runPreview();
     else setPreviewDevice(d);
   }
 
+  function mountPreviewFrame(device) {
+    const iframe = $('ide-preview-frame');
+    const cfg = PREVIEW_DEVICES[device] || PREVIEW_DEVICES[DEFAULT_PREVIEW_DEVICE];
+    const target = $(cfg.viewport);
+    if (!iframe || !target) return;
+    if (iframe.parentElement !== target) target.appendChild(iframe);
+    iframe.removeAttribute('hidden');
+    iframe.style.cssText = 'display:block;width:100%;height:100%;border:none;';
+  }
+
   function setPreviewDevice(device) {
     const stage = $('ide-preview-stage');
     if (!stage) return;
-    const d = device || 'macbook';
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
+    currentPreviewDevice = d;
     stage.className = 'ide-preview-stage device-' + d;
     syncDeviceButtonState(d);
-    const iframe = $('ide-preview-frame');
-    const targets = {
-      macbook: $('device-macbook-screen'),
-      iphone17: $('device-iphone-screen'),
-      full: $('device-full-screen'),
-    };
-    const target = targets[d] || targets.macbook;
-    if (iframe && target) {
-      iframe.removeAttribute('hidden');
-      iframe.style.display = 'block';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = 'none';
-      target.appendChild(iframe);
-    }
+    mountPreviewFrame(d);
     try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
-    const labels = { iphone17: 'iPhone 17 Pro Max', macbook: 'MacBook', full: 'Full width' };
-    toast(labels[d] || d);
+    toast(PREVIEW_DEVICES[d].label);
   }
 
   function initPreviewDevices() {
@@ -570,8 +576,8 @@ ${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
     $('ide-preview-btn')?.classList.add('active');
     $('ide-run-btn')?.classList.add('active');
     initPreviewDevices();
+    setPreviewDevice(localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE);
     applyPreviewToFrame();
-    setPreviewDevice(localStorage.getItem('rebel_preview_device') || 'macbook');
     termLog('Live preview opened.', 'out');
     trackCodespace('preview');
     runLinter();
@@ -1511,7 +1517,9 @@ Rebel AI:`;
 
     logOutput('Rebel Codespace Pro ready.', 'info');
     initPreviewDevices();
-    syncDeviceButtonState(localStorage.getItem('rebel_preview_device') || 'macbook');
+    syncDeviceButtonState(localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE);
+    currentPreviewDevice = localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE;
+    if (!PREVIEW_DEVICES[currentPreviewDevice]) currentPreviewDevice = DEFAULT_PREVIEW_DEVICE;
     runLinter();
     $('ide-save-btn')?.addEventListener('click', () => saveProject({ manual: true }));
     $('ide-new-file-btn')?.addEventListener('click', newFile);

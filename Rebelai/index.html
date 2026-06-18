@@ -711,10 +711,10 @@
       <!-- Device preview bar — always visible (not inside hidden preview panel) -->
       <div class="ide-device-bar-sticky" id="ide-device-bar-sticky">
         <span class="ide-device-bar-title"><i class="fas fa-tablet-alt"></i> Preview Device</span>
-        <button type="button" class="ide-device-btn ide-device-bar-btn active" data-device="macbook" title="MacBook Pro frame">
+        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="macbook" title="MacBook Pro frame">
           <i class="fas fa-laptop"></i> MacBook
         </button>
-        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="iphone17" title="iPhone 17 Pro Max frame">
+        <button type="button" class="ide-device-btn ide-device-bar-btn active" data-device="iphone17" title="iPhone 17 Pro Max frame">
           <i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max
         </button>
         <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="full" title="Full width preview">
@@ -851,8 +851,8 @@
                   <span id="ide-preview-status" class="ide-preview-status">Ready</span>
                 </div>
                 <div class="ide-preview-device-tabs" role="tablist" aria-label="Preview device">
-                  <button type="button" class="ide-device-btn ide-preview-device-tab active" data-device="macbook" title="MacBook">MacBook</button>
-                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="iphone17" title="iPhone 17 Pro Max">iPhone 17 Pro Max</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="macbook" title="MacBook">MacBook</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab active" data-device="iphone17" title="iPhone 17 Pro Max">iPhone 17 Pro Max</button>
                   <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="full" title="Full width">Full</button>
                 </div>
                 <div class="ide-preview-actions">
@@ -865,23 +865,33 @@
                 </div>
               </header>
               <div class="ide-preview-viewport">
-                <div class="ide-preview-stage device-macbook" id="ide-preview-stage">
+                <div class="ide-preview-stage device-iphone17" id="ide-preview-stage">
                   <div class="preview-device preview-device-macbook">
                     <span class="preview-device-meta">MacBook · 1440 × 900</span>
-                    <div class="preview-device-screen" id="device-macbook-screen"></div>
+                    <div class="preview-device-screen preview-device-screen-laptop" id="device-macbook-screen">
+                      <div class="preview-frame-host" id="device-macbook-viewport"></div>
+                    </div>
                   </div>
                   <div class="preview-device preview-device-phone">
-                    <span class="preview-device-meta">iPhone 17 Pro Max · 430 × 932</span>
-                    <div class="preview-device-screen preview-device-screen-phone" id="device-iphone-screen">
-                      <span class="preview-phone-island" aria-hidden="true"></span>
+                    <div class="phone-mockup">
+                      <div class="phone-mockup-frame">
+                        <div class="phone-mockup-screen" id="device-iphone-screen">
+                          <div class="phone-mockup-viewport preview-frame-host" id="device-iphone-viewport"></div>
+                          <span class="phone-mockup-island" aria-hidden="true"></span>
+                          <span class="phone-mockup-home" aria-hidden="true"></span>
+                        </div>
+                      </div>
+                      <span class="phone-mockup-label">iPhone 17 Pro Max · 430 × 932</span>
                     </div>
                   </div>
                   <div class="preview-device preview-device-full">
-                    <div class="preview-device-screen preview-device-screen-full" id="device-full-screen"></div>
+                    <div class="preview-device-screen preview-device-screen-full" id="device-full-screen">
+                      <div class="preview-frame-host" id="device-full-viewport"></div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview" hidden></iframe>
+              <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview"></iframe>
             </aside>
           </div>
 
