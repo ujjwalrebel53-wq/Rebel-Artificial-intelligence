@@ -20,6 +20,106 @@ define('FILE_API_KEYS', DATA_DIR . '/api_keys.json');
 define('FILE_SETTINGS', DATA_DIR . '/settings.json');
 define('FILE_RATE',     DATA_DIR . '/rate_limit.json');
 define('FILE_ADMIN_TOKEN', DATA_DIR . '/admin_token.json');
+define('DIR_CODESPACE',    DATA_DIR . '/codespace');
+
+// ── Codespace project helpers ────────────────────────────────
+function codespaceOwnerKey($email, $guestId = '') {
+    $email = strtolower(trim($email ?? ''));
+    if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'user_' . md5($email);
+    }
+    $guestId = preg_replace('/[^a-zA-Z0-9_-]/', '', $guestId ?? '');
+    if (strlen($guestId) >= 8 && strlen($guestId) <= 64) {
+        return 'guest_' . $guestId;
+    }
+    return null;
+}
+
+function codespaceProjectPath($ownerKey) {
+    if (!$ownerKey || !preg_match('/^(user|guest)_[a-f0-9a-zA-Z_-]+$/', $ownerKey)) return null;
+    if (!is_dir(DIR_CODESPACE)) {
+        @mkdir(DIR_CODESPACE, 0755, true);
+    }
+    return DIR_CODESPACE . '/' . $ownerKey . '.json';
+}
+
+function validateCodespaceProject($project) {
+    if (!is_array($project)) return false;
+    $files = $project['files'] ?? [];
+    if (!is_array($files) || count($files) > 30) return false;
+    $total = 0;
+    foreach ($files as $name => $content) {
+        if (!preg_match('/^[a-zA-Z0-9._-]+$/', (string)$name)) return false;
+        if (!is_string($content)) return false;
+        $total += strlen($content);
+        if (strlen($content) > 100000) return false;
+    }
+    return $total <= 500000;
+}
+
+function readCodespaceProject($ownerKey) {
+    $path = codespaceProjectPath($ownerKey);
+    if (!$path || !file_exists($path)) return null;
+    $data = readJSON($path, null);
+    return is_array($data) ? $data : null;
+}
+
+function writeCodespaceProject($ownerKey, $project) {
+    $path = codespaceProjectPath($ownerKey);
+    if (!$path || !validateCodespaceProject($project)) return false;
+    $project['updated_at'] = time() * 1000;
+    writeJSON($path, $project);
+    return true;
+}
+
+function codespaceSnapshotDir($ownerKey) {
+    if (!$ownerKey || !preg_match('/^(user|guest)_[a-f0-9a-zA-Z_-]+$/', $ownerKey)) return null;
+    $dir = DIR_CODESPACE . '/snapshots/' . $ownerKey;
+    if (!is_dir($dir)) @mkdir($dir, 0755, true);
+    return $dir;
+}
+
+function listCodespaceSnapshots($ownerKey) {
+    $dir = codespaceSnapshotDir($ownerKey);
+    if (!$dir) return [];
+    $list = [];
+    foreach (glob($dir . '/*.json') ?: [] as $f) {
+        $data = readJSON($f, null);
+        if (!$data) continue;
+        $list[] = [
+            'id' => basename($f, '.json'),
+            'name' => $data['name'] ?? basename($f, '.json'),
+            'savedAt' => $data['savedAt'] ?? 0,
+        ];
+    }
+    usort($list, fn($a, $b) => ($b['savedAt'] - $a['savedAt']));
+    return array_slice($list, 0, 20);
+}
+
+function saveCodespaceSnapshot($ownerKey, $project, $name = '') {
+    $dir = codespaceSnapshotDir($ownerKey);
+    if (!$dir || !validateCodespaceProject($project)) return null;
+    $id = (string)(time() * 1000);
+    $project['name'] = sanitize($name ?: ('Snapshot ' . date('M j H:i')), 80);
+    $project['savedAt'] = (int)($project['savedAt'] ?? time() * 1000);
+    writeJSON($dir . '/' . $id . '.json', $project);
+    $all = glob($dir . '/*.json') ?: [];
+    if (count($all) > 20) {
+        usort($all, fn($a, $b) => filemtime($a) - filemtime($b));
+        @unlink($all[0]);
+    }
+    return $id;
+}
+
+function readCodespaceSnapshot($ownerKey, $id) {
+    $dir = codespaceSnapshotDir($ownerKey);
+    if (!$dir) return null;
+    $id = preg_replace('/[^0-9]/', '', $id);
+    if (!$id) return null;
+    $path = $dir . '/' . $id . '.json';
+    if (!file_exists($path)) return null;
+    return readJSON($path, null);
+}
 
 // ── Security Headers ─────────────────────────────────────────
 function setSecurityHeaders() {
@@ -27,7 +127,7 @@ function setSecurityHeaders() {
     header('X-Frame-Options: DENY');
     header('X-XSS-Protection: 1; mode=block');
     header('Referrer-Policy: strict-origin-when-cross-origin');
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com fonts.gstatic.com; img-src * data: blob:; font-src * data:; connect-src *; media-src *;");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; worker-src 'self' blob: cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com fonts.gstatic.com cdn.jsdelivr.net; img-src * data: blob:; font-src * data:; connect-src *; media-src *;");
 }
 
 // ── CORS ─────────────────────────────────────────────────────

@@ -4,13 +4,13 @@
 (function RebelCodespacePro() {
   'use strict';
 
-  const STORAGE_KEY = 'rbl_codespace_project_v2';
+  const STORAGE_LEGACY = 'rbl_codespace_project_v2';
   const AI_BASE = 'https://api-rebix.vercel.app/api/gpt-5';
 
   const DEFAULT_FILES = {
-    'app.js': `// Rebel Codespace — AI-powered editor\n// Ctrl+S save · F5 run · Ctrl+/ AI\n\nconst express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.send('<h1>Hello from Rebel Codespace!</h1>');\n});\n\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});`,
-    'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Rebel App</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Hello Rebel!</h1>\n  <p>Edit me in Codespace and press F5 to preview.</p>\n  <script src="app.js"><\/script>\n</body>\n</html>`,
-    'style.css': `body {\n  font-family: 'Roboto', sans-serif;\n  background: linear-gradient(135deg, #121212, #1a0a2e);\n  color: #fff;\n  margin: 0;\n  min-height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n}\nh1 { color: #8a2be2; font-size: 2.5rem; }`,
+    'app.js': `// Rebel Codespace — runs in Live Preview (browser)\n// Press F5 or enable Live toggle to refresh\n\ndocument.addEventListener('DOMContentLoaded', () => {\n  console.log('%c Rebel Preview Active ', 'background:#8a2be2;color:#fff;padding:4px 8px;border-radius:4px');\n\n  const btn = document.getElementById('demoBtn');\n  if (btn) {\n    btn.addEventListener('click', () => {\n      const out = document.getElementById('demoOutput');\n      if (out) out.textContent = 'Preview working! Edited at ' + new Date().toLocaleTimeString();\n      btn.textContent = 'Clicked ✓';\n    });\n  }\n\n  document.querySelectorAll('.feature-chip').forEach(chip => {\n    chip.addEventListener('click', () => chip.classList.toggle('active'));\n  });\n});`,
+    'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Rebel App</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <main class="app">\n    <h1>Hello Rebel!</h1>\n    <p>Edit HTML, CSS &amp; JS — press <strong>F5</strong> for live preview.</p>\n    <button id="demoBtn" type="button">Test Preview</button>\n    <p id="demoOutput" class="demo-output"></p>\n    <div class="chips">\n      <span class="feature-chip">Chat AI</span>\n      <span class="feature-chip">Voice</span>\n      <span class="feature-chip">Codespace</span>\n    </div>\n  </main>\n  <script src="app.js"><\/script>\n</body>\n</html>`,
+    'style.css': `* { box-sizing: border-box; }\nbody {\n  font-family: 'Roboto', sans-serif;\n  background: linear-gradient(135deg, #121212, #1a0a2e);\n  color: #fff;\n  margin: 0;\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.app {\n  text-align: center;\n  padding: 32px 24px;\n  max-width: 480px;\n}\nh1 { color: #8a2be2; font-size: 2.5rem; margin: 0 0 12px; }\np { color: rgba(255,255,255,0.75); line-height: 1.6; }\n#demoBtn {\n  margin-top: 20px;\n  padding: 12px 28px;\n  border: none;\n  border-radius: 10px;\n  background: linear-gradient(135deg, #8a2be2, #00ced1);\n  color: #fff;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: transform 0.15s, box-shadow 0.15s;\n}\n#demoBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(138,43,226,0.4); }\n.demo-output { min-height: 1.4em; color: #00ced1; font-size: 0.9rem; margin-top: 12px; }\n.chips { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }\n.feature-chip {\n  padding: 6px 14px;\n  border-radius: 999px;\n  border: 1px solid rgba(138,43,226,0.4);\n  background: rgba(138,43,226,0.12);\n  font-size: 0.82rem;\n  cursor: pointer;\n  transition: background 0.2s, border-color 0.2s;\n}\n.feature-chip.active, .feature-chip:hover {\n  background: rgba(0,206,209,0.2);\n  border-color: rgba(0,206,209,0.5);\n}`,
     'README.md': `# Rebel Codespace\n\n- **Ctrl+S** Save\n- **F5** Run Preview\n- **Ctrl+F** Search\n\nAsk Rebel AI in the right panel for help!`,
   };
 
@@ -28,34 +28,189 @@
   let outputLog = [];
   let gitStaged = [];
   let problemsList = [];
+  let previewErrors = [];
+  let selectedProblemId = null;
   let termPanel = 'terminal';
   let importInputBound = false;
+  let previewLive = true;
+  let previewOpen = false;
+  let previewDebounce = null;
+  let previewBlobUrl = null;
+  let autoSaveTimer = null;
+  let cloudSaveTimer = null;
+  let cloudSynced = false;
+  let projectSavedAt = 0;
+
+  const PREVIEW_DEVICES = {
+    macbook: { viewport: 'device-macbook-viewport', label: 'MacBook' },
+    iphone17: { viewport: 'device-iphone-viewport', label: 'iPhone 17 Pro Max' },
+    full: { viewport: 'device-full-viewport', label: 'Full width' },
+  };
+  const DEFAULT_PREVIEW_DEVICE = 'iphone17';
+  let currentPreviewDevice = DEFAULT_PREVIEW_DEVICE;
 
   const $ = id => document.getElementById(id);
 
-  function loadProject() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        files = data.files || { ...DEFAULT_FILES };
-        openTabs = data.openTabs || ['app.js', 'index.html', 'style.css'];
-        currentFile = data.currentFile || 'app.js';
-        return;
-      }
-    } catch (e) {}
-    files = { ...DEFAULT_FILES };
-    openTabs = ['app.js', 'index.html', 'style.css'];
-    currentFile = 'app.js';
+  function getCurrentUser() {
+    try { return JSON.parse(localStorage.getItem('rbl_current_user')); } catch (e) { return null; }
   }
 
-  function saveProject() {
+  function getGuestId() {
+    let id = localStorage.getItem('rbl_codespace_guest_id');
+    if (!id) {
+      id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('rbl_codespace_guest_id', id);
+    }
+    return id;
+  }
+
+  function getStorageKey() {
+    const user = getCurrentUser();
+    const owner = user?.email ? 'user_' + user.email.toLowerCase() : 'guest_' + getGuestId();
+    return 'rbl_codespace_v3_' + owner.replace(/[^a-z0-9@._-]/gi, '_');
+  }
+
+  function getOwnerPayload() {
+    const user = getCurrentUser();
+    return user?.email ? { email: user.email } : { guest_id: getGuestId() };
+  }
+
+  function getTermUser() {
+    const u = getCurrentUser();
+    if (u?.name) return u.name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'rebel';
+    return 'rebel';
+  }
+
+  function termPrompt() {
+    return getTermUser() + '@rebel-private:~/rebel-project$';
+  }
+
+  function migrateLegacyStorage() {
+    const key = getStorageKey();
+    if (localStorage.getItem(key)) return;
+    const legacy = localStorage.getItem(STORAGE_LEGACY);
+    if (legacy) localStorage.setItem(key, legacy);
+  }
+
+  function applyProjectData(data) {
+    files = data.files || { ...DEFAULT_FILES };
+    openTabs = data.openTabs || ['app.js', 'index.html', 'style.css'];
+    currentFile = data.currentFile || 'app.js';
+    projectSavedAt = data.savedAt || 0;
+    if (data.terminal?.history?.length) {
+      termHistory = data.terminal.history.slice(-100);
+      termIdx = termHistory.length;
+    }
+  }
+
+  async function loadProject() {
+    migrateLegacyStorage();
+    const key = getStorageKey();
+    let local = null;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) local = JSON.parse(raw);
+    } catch (e) {}
+
+    let server = null;
+    try {
+      const q = new URLSearchParams(getOwnerPayload()).toString();
+      const resp = await fetch('/api/codespace/project?' + q);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.ok && data.project) server = data.project;
+      }
+    } catch (e) {}
+
+    if (server && local) {
+      applyProjectData((server.savedAt || 0) >= (local.savedAt || 0) ? server : local);
+      cloudSynced = (server.savedAt || 0) >= (local.savedAt || 0);
+    } else if (server) {
+      applyProjectData(server);
+      cloudSynced = true;
+    } else if (local) {
+      applyProjectData(local);
+      cloudSynced = false;
+    } else {
+      applyProjectData({ files: { ...DEFAULT_FILES } });
+      cloudSynced = false;
+    }
+  }
+
+  function buildProjectPayload() {
     syncEditorToFile();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ files, openTabs, currentFile, savedAt: Date.now() }));
+    return {
+      files,
+      openTabs,
+      currentFile,
+      savedAt: Date.now(),
+      terminal: { history: termHistory.slice(-100) },
+    };
+  }
+
+  function saveProject(opts = {}) {
+    const payload = buildProjectPayload();
+    projectSavedAt = payload.savedAt;
+    localStorage.setItem(getStorageKey(), JSON.stringify(payload));
     Object.keys(files).forEach(f => { savedSnapshot[f] = files[f]; dirty[f] = false; });
-    setSaveStatus(true);
-    termLog('Project saved to local storage.', 'out');
-    trackCodespace('save');
+    setSaveStatus(true, cloudSynced);
+    if (opts.manual) {
+      termLog('Project saved locally.', 'out');
+      toast('Saved!');
+    }
+    if (!opts.skipCloud) scheduleCloudSave();
+    trackCodespace(opts.manual ? 'save' : 'autosave');
+  }
+
+  function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveProject({ silent: true }), 1500);
+    setSaveStatus(false, cloudSynced);
+  }
+
+  function scheduleCloudSave() {
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(saveProjectToCloud, 2000);
+  }
+
+  async function saveProjectToCloud() {
+    const payload = buildProjectPayload();
+    try {
+      const resp = await fetch('/api/codespace/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...getOwnerPayload(), ...payload }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        cloudSynced = true;
+        projectSavedAt = data.savedAt || payload.savedAt;
+        setSaveStatus(true, true);
+      } else {
+        cloudSynced = false;
+        setSaveStatus(true, false);
+      }
+    } catch (e) {
+      cloudSynced = false;
+      setSaveStatus(true, false);
+    }
+  }
+
+  function writeFileFromTerminal(name, content, append) {
+    if (!name || !/^[a-zA-Z0-9._-]+$/.test(name)) {
+      termLog('Invalid filename', 'err');
+      return false;
+    }
+    syncEditorToFile();
+    files[name] = append ? ((files[name] || '') + content) : content;
+    dirty[name] = true;
+    if (!openTabs.includes(name)) openTabs.push(name);
+    renderFileTree();
+    renderTabs();
+    if (currentFile === name) refreshEditor();
+    scheduleAutoSave();
+    runLinter();
+    return true;
   }
 
   function trackCodespace(action) {
@@ -63,24 +218,11 @@
   }
 
   function highlight(code, filename) {
-    const ext = (filename || '').split('.').pop();
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    let h = esc(code);
-    if (ext === 'js') {
-      h = h.replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
-        .replace(/\b(const|let|var|function|return|async|await|if|else|for|while|require)\b/g, '<span class="tok-kw">$1</span>')
-        .replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/g, '<span class="tok-str">$1</span>');
-    } else if (ext === 'html') {
-      h = h.replace(/(&lt;\/?[a-zA-Z][^&]*&gt;)/g, '<span class="tok-fn">$1</span>')
-        .replace(/("(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    } else if (ext === 'css') {
-      h = h.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>')
-        .replace(/([.#]?[\w-]+)\s*\{/g, '<span class="tok-var">$1</span> {');
-    } else if (ext === 'md') {
-      h = h.replace(/(#{1,6} .+)/g, '<span class="tok-comment">$1</span>');
+    if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+      return window.RebelSyntax.highlightCode(code, filename) + '\n';
     }
-    return h + '\n';
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc(code) + '\n';
   }
 
   function syncEditorToFile() {
@@ -96,10 +238,15 @@
     const ta = $('ide-textarea');
     if (!gutter || !ta) return;
     const lines = (ta.value.match(/\n/g) || []).length + 1;
+    const fileProblems = problemsList.filter(p => p.file === currentFile);
+    const errorLines = new Set(fileProblems.filter(p => p.sev === 'error').map(p => p.line));
+    const warnLines = new Set(fileProblems.filter(p => p.sev === 'warn').map(p => p.line));
     gutter.innerHTML = '';
     for (let i = 1; i <= lines; i++) {
       const s = document.createElement('span');
       s.textContent = i;
+      if (errorLines.has(i)) s.className = 'gutter-error';
+      else if (warnLines.has(i)) s.className = 'gutter-warn';
       gutter.appendChild(s);
     }
   }
@@ -111,15 +258,24 @@
     ta.value = files[currentFile] ?? '';
     if (hl) hl.innerHTML = highlight(ta.value, currentFile);
     updateGutter();
-    setSaveStatus(!dirty[currentFile]);
+    setSaveStatus(!dirty[currentFile], cloudSynced);
     updateGitPanel();
+    updateLangLabel();
+    updateCursorPosition();
+    document.dispatchEvent(new CustomEvent('rebel-editor-refresh', { detail: { file: currentFile, content: files[currentFile] ?? '' } }));
   }
 
-  function setSaveStatus(saved) {
+  function setSaveStatus(saved, synced) {
     const el = $('ide-save-status');
     if (!el) return;
-    el.className = 'ide-save-status' + (saved ? '' : ' unsaved');
-    el.innerHTML = saved ? '<i class="fas fa-check-circle"></i> Saved' : '<i class="fas fa-circle"></i> Unsaved';
+    el.className = 'ide-save-status' + (saved ? '' : ' unsaved') + (synced ? ' synced' : '');
+    if (!saved) {
+      el.innerHTML = '<i class="fas fa-circle"></i> Unsaved';
+    } else if (synced) {
+      el.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Saved &amp; synced';
+    } else {
+      el.innerHTML = '<i class="fas fa-check-circle"></i> Saved locally';
+    }
   }
 
   function fileIcon(name) {
@@ -211,28 +367,247 @@
     el.innerHTML = changes.length ? changes.map(f => `<div class="ide-git-change modified"><i class="fas fa-pen"></i> ${f}</div>`).join('') : '<div style="padding:12px;color:rgba(255,255,255,0.3);font-size:0.75rem;">No changes</div>';
   }
 
-  // ── Live Preview ──────────────────────────────────────────
+  // ── Live Preview (full browser bundle) ────────────────────
+  function normalizeAssetPath(href) {
+    if (!href || /^https?:\/\//i.test(href) || /^\/\//.test(href) || /^data:/i.test(href)) return null;
+    return href.replace(/^\.\//, '').split('?')[0].split('#')[0];
+  }
+
+  function extractTagAttr(tag, attr) {
+    const m = tag.match(new RegExp('\\b' + attr + '\\s*=\\s*["\\\']([^"\\\']+)["\\\']', 'i'));
+    return m ? m[1] : null;
+  }
+
+  function findHtmlEntry() {
+    if (files['index.html']) return 'index.html';
+    if (files['index.htm']) return 'index.htm';
+    return Object.keys(files).find(f => /\.html?$/i.test(f)) || null;
+  }
+
+  function setPreviewStatus(text, type) {
+    const el = $('ide-preview-status');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'ide-preview-status' + (type ? ' ' + type : '');
+  }
+
+  function buildPreviewDocument() {
+    syncEditorToFile();
+    const entry = findHtmlEntry();
+
+    if (!entry) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:system-ui;background:#111;color:#fff;padding:24px}code{color:#00ced1}</style></head><body><h1>No HTML file</h1><p>Create <code>index.html</code> in your project to use Live Preview.</p></body></html>';
+    }
+
+    let html = files[entry];
+    const cssFiles = new Set();
+    const jsFiles = new Set();
+
+    function queueCss(file) {
+      if (file && files[file] && !cssFiles.has(file)) cssFiles.add(file);
+    }
+    function queueJs(file) {
+      if (file && files[file] && !jsFiles.has(file)) jsFiles.add(file);
+    }
+
+    html = html.replace(/<link\b[^>]*>/gi, tag => {
+      const rel = (extractTagAttr(tag, 'rel') || '').toLowerCase();
+      if (!rel.includes('stylesheet')) return tag;
+      const href = extractTagAttr(tag, 'href');
+      const file = normalizeAssetPath(href);
+      if (file && files[file]) { queueCss(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<script\b[^>]*\ssrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
+      const file = normalizeAssetPath(src);
+      if (file && files[file]) { queueJs(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<script\b[^>]*src=["']([^"']+)["'][^>]*\/>/gi, (tag, src) => {
+      const file = normalizeAssetPath(src);
+      if (file && files[file]) { queueJs(file); return ''; }
+      return tag;
+    });
+
+    html = html.replace(/<base\b[^>]*>/gi, '');
+
+    if (cssFiles.size === 0 && files['style.css']) queueCss('style.css');
+    if (jsFiles.size === 0 && files['app.js'] && /<\/body>/i.test(html)) queueJs('app.js');
+
+    const cssBundle = [...cssFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
+    const jsBundle = [...jsFiles].map(f => `/* ${f} */\n${files[f]}`).join('\n\n');
+
+    const phonePreview = currentPreviewDevice === 'iphone17';
+    const previewHead = `
+<meta charset="UTF-8">
+<meta name="viewport" content="${phonePreview ? 'width=430, initial-scale=1, viewport-fit=cover' : 'width=device-width, initial-scale=1.0'}">
+<style id="rebel-preview-base">
+  #rebel-preview-error-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:#1a0a0a;color:#ff7676;padding:10px 14px;font:12px/1.45 monospace;z-index:2147483647;border-top:2px solid #e74c3c;max-height:35vh;overflow:auto;white-space:pre-wrap}
+  #rebel-preview-error-bar.show{display:block}
+</style>
+${cssBundle ? `<style id="rebel-inlined-css">\n${cssBundle}\n</style>` : ''}
+<script id="rebel-preview-shim">
+(function(){
+  if(typeof module==='undefined')window.module={exports:{}};
+  if(typeof exports==='undefined')window.exports=module.exports;
+  if(typeof require==='undefined'){
+    window.require=function(n){console.warn('[Preview] Node module unavailable in browser:',n);return {};};
+  }
+  window.process=window.process||{env:{NODE_ENV:'preview'}};
+  window.addEventListener('error',function(e){
+    var b=document.getElementById('rebel-preview-error-bar');
+    if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
+    b.className='show';
+    b.textContent='Error: '+(e.message||'Unknown')+(e.filename?'\\n@ '+e.filename+(e.lineno?':'+e.lineno:''):'');
+    window.parent.postMessage({type:'rebel-preview-error',message:e.message||String(e),line:e.lineno||1,col:e.colno||1,sourceFile:''},'*');
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var b=document.getElementById('rebel-preview-error-bar');
+    if(!b){b=document.createElement('div');b.id='rebel-preview-error-bar';document.body.appendChild(b);}
+    b.className='show';
+    var msg='Promise Error: '+(e.reason&&(e.reason.message||e.reason)||'Unknown');
+    b.textContent=msg;
+    window.parent.postMessage({type:'rebel-preview-error',message:msg,line:1,col:1,sourceFile:''},'*');
+  });
+  window.addEventListener('load',function(){
+    window.parent.postMessage({type:'rebel-preview-ready'},'*');
+  });
+})();
+<\/script>`;
+
+    const previewJs = jsBundle
+      ? `<script id="rebel-inlined-js">\n${jsBundle}\n<\/script>`
+      : '';
+
+    const isFullDoc = /<html[\s>]/i.test(html);
+
+    if (isFullDoc) {
+      if (/<head[\s>]/i.test(html)) {
+        html = html.replace(/<head([^>]*)>/i, '<head$1>' + previewHead);
+      } else {
+        html = html.replace(/<html([^>]*)>/i, '<html$1><head>' + previewHead + '</head>');
+      }
+      if (/<\/body>/i.test(html)) {
+        html = html.replace(/<\/body>/i, previewJs + '</body>');
+      } else {
+        html += previewJs;
+      }
+    } else {
+      html = `<!DOCTYPE html><html lang="en"><head>${previewHead}</head><body>${html}${previewJs}</body></html>`;
+    }
+
+    return html;
+  }
+
+  function applyPreviewToFrame() {
+    const frame = $('ide-preview-frame');
+    if (!frame) return;
+    mountPreviewFrame(currentPreviewDevice);
+    previewErrors = [];
+    const doc = buildPreviewDocument();
+    setPreviewStatus('Loading…', 'loading');
+    frame.srcdoc = doc;
+    logOutput('Live preview updated.', 'info');
+    runLinter();
+  }
+
+  function syncDeviceButtonState(device) {
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-device-quick, .ide-preview-device-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.device === d);
+    });
+  }
+
+  function choosePreviewDevice(device) {
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
+    try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
+    if (!previewOpen) runPreview();
+    else setPreviewDevice(d);
+  }
+
+  function mountPreviewFrame(device) {
+    const iframe = $('ide-preview-frame');
+    const cfg = PREVIEW_DEVICES[device] || PREVIEW_DEVICES[DEFAULT_PREVIEW_DEVICE];
+    const target = $(cfg.viewport);
+    if (!iframe || !target) return;
+    if (iframe.parentElement !== target) target.appendChild(iframe);
+    iframe.removeAttribute('hidden');
+    iframe.style.cssText = 'display:block;width:100%;height:100%;border:none;';
+  }
+
+  function setPreviewDevice(device) {
+    const stage = $('ide-preview-stage');
+    if (!stage) return;
+    const d = PREVIEW_DEVICES[device] ? device : DEFAULT_PREVIEW_DEVICE;
+    currentPreviewDevice = d;
+    stage.className = 'ide-preview-stage device-' + d;
+    syncDeviceButtonState(d);
+    mountPreviewFrame(d);
+    try { localStorage.setItem('rebel_preview_device', d); } catch (e) {}
+    toast(PREVIEW_DEVICES[d].label);
+  }
+
+  function initPreviewDevices() {
+    document.querySelectorAll('.ide-device-btn, .ide-device-bar-btn, .ide-preview-device-tab').forEach(btn => {
+      if (btn._deviceBound) return;
+      btn._deviceBound = true;
+      btn.addEventListener('click', () => choosePreviewDevice(btn.dataset.device));
+    });
+    document.querySelectorAll('.ide-device-quick').forEach(btn => {
+      if (btn._deviceQuickBound) return;
+      btn._deviceQuickBound = true;
+      btn.addEventListener('click', () => choosePreviewDevice(btn.dataset.device));
+    });
+    const openPreviewBtn = $('ide-device-open-preview');
+    if (openPreviewBtn && !openPreviewBtn._previewOpenBound) {
+      openPreviewBtn._previewOpenBound = true;
+      openPreviewBtn.addEventListener('click', runPreview);
+    }
+  }
+
   function runPreview() {
     syncEditorToFile();
-    const html = files['index.html'] || '<h1>No index.html</h1>';
-    const css = files['style.css'] || '';
-    const js = files['app.js'] || '';
-    const doc = html.includes('<html') ? html : `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
-    const full = doc.replace('</head>', `<style>${css}</style></head>`).replace(/<script src="app\.js"><\/script>/, `<script>${js}<\/script>`);
-    const frame = $('ide-preview-frame');
     const panel = $('ide-preview-panel');
-    if (frame) { frame.srcdoc = full; }
-    if (panel) { panel.style.display = 'flex'; $('ide-editor-area')?.classList.add('preview-open'); }
+    previewOpen = true;
+    panel?.removeAttribute('hidden');
+    $('ide-editor-area')?.classList.add('preview-open');
+    $('codespaceModal')?.classList.add('preview-focus');
     $('ide-preview-btn')?.classList.add('active');
-    termLog('Preview updated.', 'out');
+    $('ide-run-btn')?.classList.add('active');
+    initPreviewDevices();
+    setPreviewDevice(localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE);
+    applyPreviewToFrame();
+    termLog('Live preview opened.', 'out');
     trackCodespace('preview');
     runLinter();
   }
 
+  function schedulePreviewRefresh() {
+    if (!previewOpen || !previewLive) return;
+    clearTimeout(previewDebounce);
+    previewDebounce = setTimeout(applyPreviewToFrame, 500);
+  }
+
   function closePreview() {
-    $('ide-preview-panel').style.display = 'none';
+    previewOpen = false;
+    const panel = $('ide-preview-panel');
+    panel?.setAttribute('hidden', '');
     $('ide-editor-area')?.classList.remove('preview-open');
+    $('codespaceModal')?.classList.remove('preview-focus');
     $('ide-preview-btn')?.classList.remove('active');
+    $('ide-run-btn')?.classList.remove('active');
+    clearTimeout(previewDebounce);
+  }
+
+  function openPreviewNewTab() {
+    syncEditorToFile();
+    const doc = buildPreviewDocument();
+    if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl);
+    previewBlobUrl = URL.createObjectURL(new Blob([doc], { type: 'text/html;charset=utf-8' }));
+    window.open(previewBlobUrl, '_blank', 'noopener');
+    toast('Opened in new tab');
   }
 
   function downloadProject() {
@@ -333,21 +708,212 @@
     reader.readAsText(file);
   }
 
+  function goToLineInFile(name, line) {
+    const n = parseInt(line, 10) || 1;
+    if (name && name !== 'preview' && files[name]) {
+      if (name !== currentFile) openFile(name);
+    }
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const lines = ta.value.split('\n');
+    if (n > lines.length) return;
+    let pos = 0;
+    for (let i = 0; i < n - 1; i++) pos += lines[i].length + 1;
+    ta.focus();
+    ta.setSelectionRange(pos, pos);
+    const lh = parseInt(getComputedStyle(ta).lineHeight, 10) || 18;
+    ta.scrollTop = Math.max(0, (n - 4) * lh);
+    updateCursorPosition();
+  }
+
+  function mapPreviewError(data) {
+    const msg = data.message || 'Preview runtime error';
+    let line = data.line || 1;
+
+    const bundled = msg.match(/rebel-inlined-js:(\d+)/i) || msg.match(/:(\d+):(\d+)/);
+    if (bundled) line = parseInt(bundled[1], 10) || line;
+
+    if (data.sourceFile && files[data.sourceFile]) {
+      return { file: data.sourceFile, line, msg: 'Preview: ' + msg };
+    }
+
+    const jsFiles = [];
+    const entry = findHtmlEntry();
+    if (entry && files[entry]) {
+      const html = files[entry];
+      html.replace(/<script\b[^>]*\ssrc=["']([^"']+)["']/gi, (_, src) => {
+        const f = normalizeAssetPath(src);
+        if (f && files[f] && !jsFiles.includes(f)) jsFiles.push(f);
+        return '';
+      });
+    }
+    if (!jsFiles.length && files['app.js']) jsFiles.push('app.js');
+    Object.keys(files).filter(f => f.endsWith('.js') && !jsFiles.includes(f)).forEach(f => jsFiles.push(f));
+
+    let offset = 1;
+    for (const f of jsFiles) {
+      const blockLines = (`/* ${f} */\n${files[f] || ''}`).split('\n').length;
+      if (line <= offset + blockLines - 1) {
+        return { file: f, line: Math.max(1, line - offset + 1), msg: 'Preview: ' + msg };
+      }
+      offset += blockLines + 1;
+    }
+
+    return { file: jsFiles[0] || 'app.js', line, msg: 'Preview: ' + msg };
+  }
+
   function runLinter() {
     syncEditorToFile();
-    problemsList = [];
-    Object.entries(files).forEach(([name, code]) => {
-      const lines = code.split('\n');
-      lines.forEach((line, i) => {
-        if (name.endsWith('.js')) {
-          if (line.includes('console.log') && !line.trim().startsWith('//')) problemsList.push({ file: name, line: i + 1, msg: 'Avoid console.log in production', sev: 'warn' });
-          if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length && line.includes('(')) problemsList.push({ file: name, line: i + 1, msg: 'Possible unbalanced parentheses', sev: 'error' });
-        }
-        if (line.includes('TODO') || line.includes('FIXME')) problemsList.push({ file: name, line: i + 1, msg: 'TODO/FIXME found', sev: 'info' });
+    if (window.RebelDiagnostics && window.RebelDiagnostics.analyze) {
+      problemsList = window.RebelDiagnostics.analyze(files, previewErrors);
+    } else {
+      problemsList = [];
+      Object.entries(files).forEach(([name, code]) => {
+        code.split('\n').forEach((line, i) => {
+          if (name.endsWith('.js') && line.includes('console.log') && !line.trim().startsWith('//')) {
+            problemsList.push({ file: name, line: i + 1, msg: 'Unexpected console statement', sev: 'info', fixable: true, rule: 'console-log', id: name + ':' + (i + 1) + ':console-log' });
+          }
+        });
       });
-    });
+    }
     renderProblems();
     updateStatusBarCounts();
+    updateGutter();
+  }
+
+  function getProblemById(id) {
+    return problemsList.find(p => p.id === id);
+  }
+
+  function applyQuickFixForProblem(problem) {
+    if (!problem || !files[problem.file]) return false;
+    if (!window.RebelDiagnostics || !window.RebelDiagnostics.applyQuickFix) return false;
+    pushUndo();
+    const fixed = window.RebelDiagnostics.applyQuickFix(problem, files[problem.file]);
+    if (fixed === null) return false;
+    files[problem.file] = fixed;
+    dirty[problem.file] = true;
+    if (problem.file === currentFile) {
+      const ta = $('ide-textarea');
+      if (ta) {
+        ta.value = fixed;
+        ta.dispatchEvent(new Event('input'));
+      }
+    } else {
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+    }
+    logOutput('Quick fix: ' + problem.file + ':' + problem.line + ' — ' + problem.msg, 'success');
+    toast('Fixed!');
+    runLinter();
+    schedulePreviewRefresh();
+    return true;
+  }
+
+  function fixAllQuick() {
+    const fixable = problemsList.filter(p => p.fixable);
+    if (!fixable.length) {
+      toast('No quick fixes — try AI Fix All');
+      return;
+    }
+    pushUndo();
+    const byFile = {};
+    fixable.forEach(p => { (byFile[p.file] = byFile[p.file] || []).push(p); });
+    let count = 0;
+    Object.entries(byFile).forEach(([file, probs]) => {
+      probs.sort((a, b) => b.line - a.line);
+      probs.forEach(p => {
+        const fixed = window.RebelDiagnostics.applyQuickFix(p, files[file]);
+        if (fixed !== null) { files[file] = fixed; count++; }
+      });
+      dirty[file] = true;
+    });
+    refreshEditor();
+    runLinter();
+    schedulePreviewRefresh();
+    logOutput('Applied ' + count + ' quick fix(es)', 'success');
+    toast('Applied ' + count + ' quick fix(es)');
+  }
+
+  async function fixWithAi(problems) {
+    const list = problems && problems.length ? problems : problemsList.filter(p => p.sev === 'error' || p.fixable);
+    if (!list.length) {
+      toast('No problems to fix');
+      return;
+    }
+    syncEditorToFile();
+    showTermPanel('problems');
+    const btn = $('ide-fix-all-ai-btn');
+    if (btn) btn.disabled = true;
+
+    const problemText = list.map(p => `- ${p.file}:${p.line} [${p.sev}] ${p.msg}`).join('\n');
+    const fileSnippets = [...new Set(list.map(p => p.file))].map(f =>
+      `// FILE: ${f}\n${(files[f] || '').slice(0, 2500)}`
+    ).join('\n\n');
+
+    const prompt = `${IDE_AI_SYSTEM}
+
+Fix ALL of these code problems. Return corrected full files using fenced blocks with // FILE: filename on the first line.
+
+PROBLEMS:
+${problemText}
+
+CURRENT FILES:
+${fileSnippets}
+
+User: Fix every problem listed above with working code.
+Rebel AI:`;
+
+    ideAddAiMsg('Fix these problems:\n' + problemText, 'user');
+    const typing = document.createElement('div');
+    typing.className = 'ide-ai-msg bot';
+    typing.id = 'ide-ai-typing-indicator';
+    typing.innerHTML = '<div class="ide-ai-avatar"><i class="fas fa-robot"></i></div><div class="ide-ai-typing"><span></span><span></span><span></span> Fixing errors…</div>';
+    $('ide-ai-messages')?.appendChild(typing);
+
+    try {
+      const resp = await fetch(AI_BASE + '?q=' + encodeURIComponent(prompt));
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const reply = data.results || data.result || 'No response';
+      typing.remove();
+      ideAddAiMsg(reply, 'bot');
+      extractBlocks(reply).forEach(b => {
+        files[b.file] = b.code;
+        dirty[b.file] = true;
+        if (!openTabs.includes(b.file)) openTabs.push(b.file);
+      });
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+      previewErrors = [];
+      runLinter();
+      if (previewOpen) schedulePreviewRefresh();
+      logOutput('AI fixed ' + list.length + ' problem(s)', 'success');
+      toast('AI fixes applied!');
+      trackCodespace('ai-fix');
+    } catch (err) {
+      typing.remove();
+      ideAddAiMsg('Fix failed: ' + err.message, 'bot');
+      toast('AI fix failed');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function quickFixAtCursor() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const lineNum = ta.value.slice(0, ta.selectionStart).split('\n').length;
+    const onLine = problemsList.filter(p => p.file === currentFile && p.line === lineNum);
+    const problem = onLine.find(p => p.fixable) || onLine[0];
+    if (!problem) {
+      toast('No fix at this line');
+      return;
+    }
+    if (problem.fixable && applyQuickFixForProblem(problem)) return;
+    fixWithAi([problem]);
   }
 
   function renderProblems() {
@@ -355,25 +921,150 @@
     const cnt = $('ide-problems-count');
     if (cnt) cnt.textContent = problemsList.length ? `(${problemsList.length})` : '';
     if (!el) return;
-    el.innerHTML = problemsList.length ? problemsList.map(p =>
-      `<div class="ide-problem ide-problem-${p.sev}" data-file="${p.file}" data-line="${p.line}"><i class="fas fa-${p.sev === 'error' ? 'times-circle' : p.sev === 'warn' ? 'exclamation-triangle' : 'info-circle'}"></i> <strong>${p.file}:${p.line}</strong> ${p.msg}</div>`
-    ).join('') : '<div class="ide-no-problems"><i class="fas fa-check-circle"></i> No problems detected</div>';
+
+    if (!problemsList.length) {
+      el.innerHTML = '<div class="ide-no-problems"><i class="fas fa-check-circle"></i> No problems detected — code looks clean!</div>';
+      return;
+    }
+
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    el.innerHTML = problemsList.map(p => {
+      const icon = p.sev === 'error' ? 'times-circle' : p.sev === 'warn' ? 'exclamation-triangle' : 'info-circle';
+      const sel = p.id === selectedProblemId ? ' selected' : '';
+      return `<div class="ide-problem ide-problem-${p.sev}${sel}" data-id="${p.id}" data-file="${p.file}" data-line="${p.line}">
+        <i class="fas fa-${icon}"></i>
+        <div class="ide-problem-main">
+          <strong>${esc(p.file)}:${p.line}</strong>
+          <span class="ide-problem-msg">${esc(p.msg)}</span>
+          ${p.source ? `<span class="ide-problem-src">${esc(p.source)}</span>` : ''}
+        </div>
+        <div class="ide-problem-actions">
+          ${p.fixable ? `<button type="button" class="ide-problem-fix" data-id="${p.id}" title="Quick fix">Fix</button>` : ''}
+          <button type="button" class="ide-problem-ai" data-id="${p.id}" title="AI fix">AI</button>
+        </div>
+      </div>`;
+    }).join('');
+
     el.querySelectorAll('.ide-problem').forEach(row => {
-      row.addEventListener('click', () => openFile(row.dataset.file));
+      row.addEventListener('click', e => {
+        if (e.target.closest('.ide-problem-actions')) return;
+        selectedProblemId = row.dataset.id;
+        renderProblems();
+        goToLineInFile(row.dataset.file, row.dataset.line);
+      });
+    });
+    el.querySelectorAll('.ide-problem-fix').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = getProblemById(btn.dataset.id);
+        if (p) applyQuickFixForProblem(p);
+      });
+    });
+    el.querySelectorAll('.ide-problem-ai').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = getProblemById(btn.dataset.id);
+        if (p) fixWithAi([p]);
+      });
     });
   }
 
   function updateStatusBarCounts() {
     const errs = problemsList.filter(p => p.sev === 'error').length;
     const warns = problemsList.filter(p => p.sev === 'warn').length;
-    document.querySelectorAll('.ide-sb-item').forEach(el => {
-      if (el.innerHTML.includes('fa-check-circle')) el.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
-      if (el.innerHTML.includes('fa-exclamation-triangle') && el.classList.contains('ide-sb-warn')) el.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
-    });
-    const warnEl = document.querySelector('.ide-sb-item:nth-child(3)');
+    const errEl = $('ide-sb-errors');
+    const warnEl = $('ide-sb-warnings');
+    if (errEl) errEl.innerHTML = `<i class="fas fa-${errs ? 'times-circle' : 'check-circle'}"></i> ${errs} errors`;
     if (warnEl) warnEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${warns} warnings`;
-    const errEl = document.querySelector('.ide-sb-item:nth-child(2)');
-    if (errEl) errEl.innerHTML = `<i class="fas fa-check-circle"></i> ${errs} errors`;
+  }
+
+  function updateCursorPosition() {
+    const ta = $('ide-textarea');
+    const el = $('ide-sb-position');
+    if (!ta || !el) return;
+    const before = ta.value.slice(0, ta.selectionStart);
+    const lines = before.split('\n');
+    el.textContent = `Ln ${lines.length}, Col ${(lines[lines.length - 1].length) + 1}`;
+  }
+
+  function updateLangLabel() {
+    const el = $('ide-sb-lang');
+    if (!el || !currentFile) return;
+    const ext = currentFile.split('.').pop();
+    const names = { js: 'JavaScript', html: 'HTML', css: 'CSS', md: 'Markdown', ts: 'TypeScript', json: 'JSON' };
+    el.textContent = names[ext] || ext.toUpperCase();
+  }
+
+  function toggleLineComment() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    pushUndo();
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    const lineEndIdx = val.indexOf('\n', end);
+    const block = val.slice(lineStart, lineEndIdx === -1 ? val.length : lineEndIdx);
+    const lines = block.split('\n');
+    const allCommented = lines.every(l => /^\s*\/\//.test(l));
+    const newLines = lines.map(l => {
+      if (allCommented) return l.replace(/^(\s*)\/\/ ?/, '$1');
+      return /^\s*\/\//.test(l) ? l : l.replace(/^(\s*)/, '$1// ');
+    });
+    ta.value = val.slice(0, lineStart) + newLines.join('\n') + val.slice(lineEndIdx === -1 ? val.length : lineEndIdx);
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function duplicateLine() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    pushUndo();
+    const pos = ta.selectionStart;
+    const val = ta.value;
+    const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+    const lineEnd = val.indexOf('\n', pos);
+    const line = val.slice(lineStart, lineEnd === -1 ? val.length : lineEnd);
+    const at = lineEnd === -1 ? val.length : lineEnd;
+    ta.value = val.slice(0, at) + (lineEnd === -1 ? '\n' : '') + line + val.slice(at);
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function goToLine() {
+    const ta = $('ide-textarea');
+    if (!ta) return;
+    const n = parseInt(prompt('Go to line number:'), 10);
+    if (!n || n < 1) return;
+    const lines = ta.value.split('\n');
+    if (n > lines.length) return;
+    let pos = 0;
+    for (let i = 0; i < n - 1; i++) pos += lines[i].length + 1;
+    ta.focus();
+    ta.setSelectionRange(pos, pos);
+    updateCursorPosition();
+  }
+
+  const SNIPPETS = {
+    log: "console.log('');\n",
+    fn: "function name() {\n  \n}\n",
+    fetch: "const res = await fetch(url);\nconst data = await res.json();\n",
+    html5: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Document</title>\n</head>\n<body>\n  \n</body>\n</html>\n",
+  };
+
+  function insertSnippet(key) {
+    const ta = $('ide-textarea');
+    const snippet = SNIPPETS[key];
+    if (!ta || !snippet) return;
+    pushUndo();
+    const s = ta.selectionStart;
+    ta.value = ta.value.slice(0, s) + snippet + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = s + snippet.length;
+    ta.dispatchEvent(new Event('input'));
+  }
+
+  function pickSnippet() {
+    const choice = prompt('Snippet: log, fn, fetch, html5');
+    if (choice && SNIPPETS[choice.trim().toLowerCase()]) insertSnippet(choice.trim().toLowerCase());
   }
 
   function showTermPanel(name) {
@@ -433,18 +1124,23 @@
     closeDropdowns();
     const map = {
       'new-file': newFile,
-      'save': saveProject,
+      'save': () => saveProject({ manual: true }),
       'import': () => $('ide-import-input')?.click(),
       'download': downloadProject,
       'export-file': exportCurrentFile,
-      'close-ide': () => { syncEditorToFile(); saveProject(); $('codespaceModal')?.classList.remove('show'); document.body.style.overflow = ''; },
+      'close-ide': () => { syncEditorToFile(); saveProject({ manual: true }); $('codespaceModal')?.classList.remove('show'); document.body.style.overflow = ''; },
       'undo': undoEdit,
       'redo': redoEdit,
       'copy': () => { const ta = $('ide-textarea'); navigator.clipboard.writeText(ta?.value.slice(ta.selectionStart, ta.selectionEnd) || ta?.value || ''); toast('Copied'); },
       'paste': async () => { const ta = $('ide-textarea'); try { const t = await navigator.clipboard.readText(); if (ta) { pushUndo(); const s = ta.selectionStart; ta.value = ta.value.slice(0, s) + t + ta.value.slice(ta.selectionEnd); ta.dispatchEvent(new Event('input')); } } catch(e) {} },
       'format': formatDocument,
+      'fix-all': fixAllQuick,
+      'fix-all-ai': () => fixWithAi(),
       'find': () => { showPanel('search'); $('ide-search-input')?.focus(); },
       'preview': runPreview,
+      'preview-macbook': () => choosePreviewDevice('macbook'),
+      'preview-iphone17': () => choosePreviewDevice('iphone17'),
+      'preview-full': () => choosePreviewDevice('full'),
       'toggle-terminal': () => { const p = $('ide-terminal-panel'); p.style.display = p.style.display === 'none' ? '' : 'none'; },
       'explorer': () => showPanel('explorer'),
       'search-panel': () => showPanel('search'),
@@ -452,7 +1148,7 @@
       'term-problems': () => showTermPanel('problems'),
       'term-output': () => showTermPanel('output'),
       'term-clear': () => { $('ide-terminal-output').innerHTML = ''; termLog('', 'out'); },
-      'shortcuts': () => alert('Ctrl+S Save · Ctrl+F Find · F5 Preview · Ctrl+Z Undo · Ctrl+Y Redo · Esc Close'),
+      'shortcuts': () => alert('Ctrl+S Save · Ctrl+F Find · F5 Preview · Ctrl+. Quick Fix · Ctrl+Z Undo · Ctrl+Y Redo · Esc Close'),
       'docs': () => { openFile('README.md'); showPanel('explorer'); },
       'ai-help': () => { $('ide-ai-input').value = 'Explain this project and how to run it'; $('ide-ai-input')?.focus(); },
     };
@@ -472,7 +1168,7 @@
     toast('AI chat cleared');
   }
 
-  // ── Terminal ──────────────────────────────────────────────
+  // ── Private Terminal (virtual shell on saved project) ─────
   function termLog(text, type) {
     const out = $('ide-terminal-output');
     if (!out) return;
@@ -481,40 +1177,144 @@
     const cls = type === 'out' ? 'ide-tout' : type === 'err' ? 'ide-terr' : 'ide-tline';
     const div = document.createElement('div');
     div.className = cls;
-    div.innerHTML = type === 'cmd' ? `<span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcmd">${text}</span>` : text;
+    const prompt = termPrompt();
+    div.innerHTML = type === 'cmd'
+      ? `<span class="ide-tprompt">${prompt}</span> <span class="ide-tcmd">${String(text).replace(/</g, '&lt;')}</span>`
+      : String(text).replace(/</g, '&lt;');
     out.appendChild(div);
-    out.insertAdjacentHTML('beforeend', '<div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcursor">▌</span></div>');
+    out.insertAdjacentHTML('beforeend', `<div class="ide-tline"><span class="ide-tprompt">${prompt}</span> <span class="ide-tcursor">▌</span></div>`);
     out.scrollTop = out.scrollHeight;
+  }
+
+  function termHelp() {
+    termLog([
+      'Private Terminal — changes auto-save to your project:',
+      '  ls [-la]  cat  touch  rm  mv  cp  edit/code',
+      '  echo text > file   echo text >> file',
+      '  grep  save  preview  lint  history  clear',
+    ].join('\n'), 'out');
   }
 
   function runTerminalCmd(cmd) {
     const c = cmd.trim();
+    if (!c) return;
     const lc = c.toLowerCase();
     termLog(c, 'cmd');
-    termHistory.push(c); termIdx = termHistory.length;
+    termHistory.push(c);
+    termIdx = termHistory.length;
 
-    if (lc === 'clear') { $('ide-terminal-output').innerHTML = ''; return; }
-    if (lc === 'ls') { termLog(Object.keys(files).join('  '), 'out'); return; }
-    if (lc === 'pwd') { termLog('/home/rebel/rebel-project', 'out'); return; }
-    if (lc === 'whoami') { termLog('rebel', 'out'); return; }
-    if (lc === 'date') { termLog(new Date().toString(), 'out'); return; }
-    if (lc === 'git status') { updateGitPanel(); const ch = Object.keys(files).filter(f => dirty[f]); termLog('On branch main\n' + (ch.length ? 'Modified: ' + ch.join(', ') : 'nothing to commit, working tree clean'), 'out'); return; }
-    if (lc === 'npm install') { npmInstalled = true; termLog('added 248 packages in 2.1s', 'out'); return; }
-    if (lc === 'npm run dev' || lc === 'node app.js') {
-      if (!npmInstalled) termLog('Run npm install first.', 'err');
-      else { termLog('> rebel-project@1.0.0 dev\n> node app.js\n\nServer running on port 3000', 'out'); runPreview(); }
+    if (lc === 'clear') { $('ide-terminal-output').innerHTML = ''; termLog('Private terminal ready.', 'out'); return; }
+    if (lc === 'help' || lc === 'rebel help') { termHelp(); return; }
+    if (lc === 'history') { termLog(termHistory.slice(-20).map((h, i) => `${i + 1}  ${h}`).join('\n') || '(empty)', 'out'); return; }
+    if (lc === 'ls' || lc === 'ls -la') {
+      const rows = Object.keys(files).sort().map(f => {
+        const sz = (files[f] || '').length;
+        const mark = dirty[f] ? '*' : ' ';
+        return lc.includes('-la') ? `${mark}${f} (${sz}b)` : f;
+      });
+      termLog(rows.join('  ') || '(empty)', 'out');
       return;
     }
-    if (lc.startsWith('cat ')) { const f = c.slice(4).trim(); termLog(files[f] ? files[f].slice(0, 500) : 'No such file', files[f] ? 'out' : 'err'); return; }
+    if (lc === 'pwd') { termLog('/home/rebel/rebel-project', 'out'); return; }
+    if (lc === 'whoami') { termLog(getTermUser(), 'out'); return; }
+    if (lc === 'date') { termLog(new Date().toString(), 'out'); return; }
+    if (lc.startsWith('cat ')) {
+      const f = c.slice(4).trim();
+      termLog(files[f] !== undefined ? files[f] : 'cat: ' + f + ': No such file', files[f] !== undefined ? 'out' : 'err');
+      return;
+    }
+    if (lc.startsWith('grep ')) {
+      const m = c.match(/^grep\s+(\S+)\s+(\S+)$/i);
+      if (!m) { termLog('Usage: grep <word> <file>', 'err'); return; }
+      const [, word, f] = m;
+      if (files[f] === undefined) { termLog('grep: ' + f + ': No such file', 'err'); return; }
+      const hits = files[f].split('\n').map((line, i) => ({ line, n: i + 1 })).filter(x => x.line.includes(word));
+      termLog(hits.length ? hits.map(h => `${f}:${h.n}:${h.line}`).join('\n') : '(no matches)', 'out');
+      return;
+    }
+    if (lc.startsWith('touch ')) {
+      const f = c.slice(6).trim();
+      if (!f) { termLog('touch: missing file', 'err'); return; }
+      if (files[f] === undefined) writeFileFromTerminal(f, '// ' + f + '\n', false);
+      termLog('Touched ' + f, 'out');
+      return;
+    }
+    if (lc.startsWith('rm ')) {
+      const f = c.slice(3).trim();
+      if (!files[f]) { termLog('rm: ' + f + ': No such file', 'err'); return; }
+      if (Object.keys(files).length <= 1) { termLog('rm: cannot delete last file', 'err'); return; }
+      delete files[f]; delete dirty[f];
+      openTabs = openTabs.filter(t => t !== f);
+      if (currentFile === f) currentFile = openTabs[0] || Object.keys(files)[0];
+      renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave(); runLinter();
+      termLog('Removed ' + f, 'out');
+      return;
+    }
+    if (lc.startsWith('mv ')) {
+      const parts = c.slice(3).trim().split(/\s+/);
+      if (parts.length < 2) { termLog('Usage: mv <from> <to>', 'err'); return; }
+      const [from, to] = parts;
+      if (files[from] === undefined) { termLog('mv: ' + from + ': No such file', 'err'); return; }
+      files[to] = files[from]; dirty[to] = true;
+      delete files[from]; delete dirty[from];
+      openTabs = openTabs.map(t => t === from ? to : t);
+      if (currentFile === from) currentFile = to;
+      renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave();
+      termLog('Renamed ' + from + ' → ' + to, 'out');
+      return;
+    }
+    if (lc.startsWith('cp ')) {
+      const parts = c.slice(3).trim().split(/\s+/);
+      if (parts.length < 2) { termLog('Usage: cp <from> <to>', 'err'); return; }
+      const [from, to] = parts;
+      if (files[from] === undefined) { termLog('cp: ' + from + ': No such file', 'err'); return; }
+      writeFileFromTerminal(to, files[from], false);
+      termLog('Copied ' + from + ' → ' + to, 'out');
+      return;
+    }
+    if (/^echo\s+.+\s>>\s*\S+/.test(c)) {
+      const m = c.match(/^echo\s+(.+)\s>>\s*(\S+)\s*$/);
+      if (m) {
+        const text = m[1].replace(/^["']|["']$/g, '');
+        writeFileFromTerminal(m[2], text + '\n', true);
+        termLog('Appended to ' + m[2], 'out');
+      }
+      return;
+    }
+    if (/^echo\s+.+\s>\s*\S+/.test(c)) {
+      const m = c.match(/^echo\s+(.+)\s>\s*(\S+)\s*$/);
+      if (m) {
+        const text = m[1].replace(/^["']|["']$/g, '');
+        writeFileFromTerminal(m[2], text + '\n', false);
+        termLog('Written to ' + m[2], 'out');
+      }
+      return;
+    }
+    if (lc.startsWith('edit ') || lc.startsWith('code ') || lc.startsWith('nano ')) {
+      const f = c.split(/\s+/)[1];
+      if (!files[f]) { termLog('No such file: ' + f, 'err'); return; }
+      openFile(f);
+      termLog('Opened ' + f + ' in editor', 'out');
+      return;
+    }
+    if (lc === 'git status') { updateGitPanel(); const ch = Object.keys(files).filter(f => dirty[f]); termLog('On branch main\n' + (ch.length ? 'Modified: ' + ch.join(', ') : 'nothing to commit, working tree clean'), 'out'); return; }
+    if (lc === 'npm install') { npmInstalled = true; termLog('added 248 packages in 2.1s', 'out'); return; }
+    if (lc === 'npm run dev' || lc === 'node app.js' || lc === 'npm start') {
+      termLog('Starting browser live preview…', 'out');
+      runPreview();
+      return;
+    }
     if (lc.startsWith('echo ')) { termLog(c.slice(5), 'out'); return; }
-    if (lc === 'rebel help') { termLog('Commands: ls, cat, npm install, npm run dev, git status, clear, preview', 'out'); return; }
     if (lc === 'preview') { runPreview(); return; }
-    if (lc === 'save') { saveProject(); return; }
+    if (lc === 'lint' || lc === 'diagnostics') { runLinter(); showTermPanel('problems'); termLog('Found ' + problemsList.length + ' problem(s)', 'out'); return; }
+    if (lc === 'save') { saveProject({ manual: true }); return; }
     if (lc === 'format') { formatDocument(); return; }
     if (lc === 'git add .') { gitStageAll(); termLog('Staged all changes.', 'out'); return; }
     if (lc.startsWith('git commit')) { gitCommit(); return; }
     if (lc === 'npm run build') { logOutput('Build successful ✓', 'success'); termLog('Build completed.', 'out'); return; }
-    termLog('bash: ' + c + ': command not found', 'err');
+    termLog('bash: ' + c + ': command not found (type help)', 'err');
   }
 
   // ── Search ────────────────────────────────────────────────
@@ -607,6 +1407,8 @@
         if (!openTabs.includes(b.file)) openTabs.push(b.file);
       });
       renderFileTree(); renderTabs(); refreshEditor();
+      scheduleAutoSave();
+      if (previewOpen) schedulePreviewRefresh();
       trackCodespace('ai-write');
     } catch (err) {
       typing.remove();
@@ -635,13 +1437,19 @@
   }
 
   // ── Init ──────────────────────────────────────────────────
-  function init() {
-    loadProject();
+  async function init() {
+    await loadProject();
     Object.keys(files).forEach(f => { savedSnapshot[f] = files[f]; });
 
     renderFileTree();
     renderTabs();
     refreshEditor();
+
+    const termOut = $('ide-terminal-output');
+    if (termOut && !termOut.querySelector('.ide-tout')) {
+      termOut.innerHTML = '';
+      termLog('Welcome to your Private Terminal — type help for commands.', 'out');
+    }
 
     const ta = $('ide-textarea');
     if (ta) {
@@ -651,12 +1459,17 @@
         dirty[currentFile] = true;
         $('ide-highlight-layer').innerHTML = highlight(ta.value, currentFile);
         updateGutter();
-        setSaveStatus(false);
+        setSaveStatus(false, cloudSynced);
         renderTabs();
         renderFileTree();
+        updateCursorPosition();
         clearTimeout(inputTimer);
         inputTimer = setTimeout(runLinter, 800);
+        scheduleAutoSave();
+        schedulePreviewRefresh();
       });
+      ta.addEventListener('click', updateCursorPosition);
+      ta.addEventListener('keyup', updateCursorPosition);
       ta.addEventListener('scroll', () => {
         const hl = $('ide-highlight-layer');
         if (hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; }
@@ -705,18 +1518,54 @@
     $('ide-toggle-terminal-menu')?.addEventListener('click', e => { e.stopPropagation(); toggleDropdown('ide-menu-terminal'); });
 
     logOutput('Rebel Codespace Pro ready.', 'info');
+    initPreviewDevices();
+    syncDeviceButtonState(localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE);
+    currentPreviewDevice = localStorage.getItem('rebel_preview_device') || DEFAULT_PREVIEW_DEVICE;
+    if (!PREVIEW_DEVICES[currentPreviewDevice]) currentPreviewDevice = DEFAULT_PREVIEW_DEVICE;
     runLinter();
-    $('ide-save-btn')?.addEventListener('click', saveProject);
+    $('ide-save-btn')?.addEventListener('click', () => saveProject({ manual: true }));
     $('ide-new-file-btn')?.addEventListener('click', newFile);
     $('ide-add-file-btn')?.addEventListener('click', newFile);
     $('ide-download-btn')?.addEventListener('click', downloadProject);
     $('ide-run-btn')?.addEventListener('click', runPreview);
     $('ide-preview-btn')?.addEventListener('click', runPreview);
     $('ide-preview-close')?.addEventListener('click', closePreview);
+    $('ide-preview-refresh')?.addEventListener('click', () => { applyPreviewToFrame(); toast('Preview refreshed'); });
+    $('ide-preview-newtab')?.addEventListener('click', openPreviewNewTab);
+    $('ide-preview-live')?.addEventListener('change', e => {
+      previewLive = e.target.checked;
+      toast(previewLive ? 'Live preview ON' : 'Live preview paused');
+      if (previewLive && previewOpen) schedulePreviewRefresh();
+    });
+
+    window.addEventListener('message', e => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'rebel-preview-ready') setPreviewStatus('Ready', 'ready');
+      if (e.data.type === 'rebel-preview-error') {
+        setPreviewStatus('Error', 'error');
+        const mapped = mapPreviewError(e.data);
+        const dup = previewErrors.some(p => p.msg === mapped.msg && p.line === mapped.line);
+        if (!dup) {
+          previewErrors.push(mapped);
+          runLinter();
+          showTermPanel('problems');
+          logOutput('Preview error: ' + mapped.msg, 'info');
+        }
+      }
+    });
+
+    $('ide-preview-frame')?.addEventListener('load', () => {
+      if (previewOpen) setPreviewStatus('Ready', 'ready');
+    });
     $('ide-ai-send-btn')?.addEventListener('click', ideAiSend);
     $('ide-ai-input')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ideAiSend(); } });
     $('ide-search-input')?.addEventListener('input', e => searchFiles(e.target.value));
-    $('ide-reset-project')?.addEventListener('click', () => { if (confirm('Reset project to defaults?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } });
+    $('ide-reset-project')?.addEventListener('click', () => {
+      if (confirm('Reset project to defaults? Your saved code will be cleared.')) {
+        localStorage.removeItem(getStorageKey());
+        location.reload();
+      }
+    });
 
     document.querySelectorAll('.ide-act-btn[data-panel]').forEach(btn => {
       btn.addEventListener('click', () => showPanel(btn.dataset.panel));
@@ -731,6 +1580,11 @@
       });
     }
 
+    $('ide-fix-all-btn')?.addEventListener('click', fixAllQuick);
+    $('ide-fix-all-ai-btn')?.addEventListener('click', () => fixWithAi());
+    $('ide-refresh-diagnostics-btn')?.addEventListener('click', () => { previewErrors = []; runLinter(); toast('Re-scanned'); });
+    $('ide-sb-errors')?.addEventListener('click', () => showTermPanel('problems'));
+    $('ide-sb-warnings')?.addEventListener('click', () => showTermPanel('problems'));
     $('ide-term-close')?.addEventListener('click', () => { $('ide-terminal-panel').style.display = $('ide-terminal-panel').style.display === 'none' ? '' : 'none'; });
     $('ide-git-btn')?.addEventListener('click', () => showPanel('git'));
 
@@ -752,9 +1606,14 @@
 
     document.addEventListener('keydown', e => {
       if (!$('codespaceModal')?.classList.contains('show')) return;
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject({ manual: true }); }
       if (e.key === 'F5') { e.preventDefault(); runPreview(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); showPanel('search'); $('ide-search-input')?.focus(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); toggleLineComment(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); duplicateLine(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); goToLine(); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); pickSnippet(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); quickFixAtCursor(); }
       if (e.key === 'Escape') closeModal();
     });
 
@@ -770,8 +1629,87 @@
     $('ide-tab-size')?.addEventListener('change', e => {
       if (ta) ta.style.tabSize = e.target.value;
     });
+
+    document.dispatchEvent(new CustomEvent('rebel-codespace-ready'));
   }
 
-  document.addEventListener('DOMContentLoaded', init);
-  window.RebelCodespace = { saveProject, runPreview, getFiles: () => ({ ...files }) };
+  document.addEventListener('DOMContentLoaded', () => { init().catch(() => {}); });
+
+  function applyTemplate(templateFiles) {
+    if (!templateFiles || !Object.keys(templateFiles).length) return;
+    syncEditorToFile();
+    files = { ...templateFiles };
+    openTabs = Object.keys(files).slice(0, 8);
+    currentFile = openTabs[0];
+    Object.keys(files).forEach(f => { dirty[f] = true; savedSnapshot[f] = ''; });
+    renderFileTree();
+    renderTabs();
+    refreshEditor();
+    scheduleAutoSave();
+    runLinter();
+    termLog('Template loaded — ' + openTabs.join(', '), 'out');
+  }
+
+  function getEditorSelection() {
+    const ta = $('ide-textarea');
+    if (!ta) return { text: '', start: 0, end: 0 };
+    return {
+      text: ta.value.slice(ta.selectionStart, ta.selectionEnd),
+      start: ta.selectionStart,
+      end: ta.selectionEnd,
+    };
+  }
+
+  function askAi(prompt) {
+    const input = $('ide-ai-input');
+    if (!input) return Promise.resolve();
+    input.value = prompt;
+    return ideAiSend();
+  }
+
+  window.RebelCodespace = {
+    saveProject: (opts) => saveProject(opts || {}),
+    runPreview,
+    setPreviewDevice,
+    choosePreviewDevice,
+    initPreviewDevices,
+    runLinter,
+    fixWithAi,
+    fixAllQuick,
+    showTermPanel,
+    showPanel,
+    goToLineInFile,
+    applyTemplate,
+    askAi,
+    getFiles: () => ({ ...files }),
+    getCurrentFile: () => currentFile,
+    getSavedSnapshot: () => ({ ...savedSnapshot }),
+    getDirty: () => ({ ...dirty }),
+    getSelection: getEditorSelection,
+    openFile,
+    syncEditor: syncEditorToFile,
+    refresh: () => { renderFileTree(); renderTabs(); refreshEditor(); },
+    refreshEditor,
+    getEditorText: () => ($('ide-textarea')?.value ?? ''),
+    setEditorText: (v) => { const ta = $('ide-textarea'); if (ta) { ta.value = v; ta.dispatchEvent(new Event('input')); } },
+    setFiles: (next) => {
+      files = { ...next };
+      openTabs = Object.keys(files).slice(0, 8);
+      currentFile = openTabs[0] || 'app.js';
+      Object.keys(files).forEach(f => { dirty[f] = true; });
+      renderFileTree();
+      renderTabs();
+      refreshEditor();
+      scheduleAutoSave();
+    },
+    updateFile: (name, content) => {
+      files[name] = content;
+      dirty[name] = true;
+      if (!openTabs.includes(name)) openTabs.push(name);
+      renderFileTree();
+      renderTabs();
+      if (currentFile === name) refreshEditor();
+      scheduleAutoSave();
+    },
+  };
 })();

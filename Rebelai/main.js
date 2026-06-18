@@ -423,40 +423,13 @@ Powered by Rebel AI.
 
   // ── Simple syntax highlighter ──────────────────────────────────
   function ideHighlight(code, filename) {
-    const ext = filename.split('.').pop();
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    if (ext === 'js' || ext === 'ts') {
-      return esc(code)
-        .replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
-        .replace(/\b(const|let|var|function|return|async|await|if|else|for|while|of|in|new|class|import|export|from|default|try|catch|throw)\b/g, '<span class="tok-kw">$1</span>')
-        .replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g, '<span class="tok-str">$1</span>')
-        .replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, '<span class="tok-fn">$1</span>');
+    if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+      return window.RebelSyntax.highlightCode(code, filename);
     }
-    if (ext === 'html') {
-      return esc(code)
-        .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-comment">$1</span>')
-        .replace(/(&lt;\/?[a-zA-Z][a-zA-Z0-9]*)/g, '<span class="tok-fn">$1</span>')
-        .replace(/(\/?\s*&gt;)/g, '<span class="tok-fn">$1</span>')
-        .replace(/([a-zA-Z-]+)(\s*=\s*)/g, '<span class="tok-var">$1</span>$2')
-        .replace(/("(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    }
-    if (ext === 'css') {
-      return esc(code)
-        .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>')
-        .replace(/([.#]?[a-zA-Z][a-zA-Z0-9_-]*)\s*\{/g, '<span class="tok-var">$1</span> {')
-        .replace(/([\w-]+)\s*:/g, '<span class="tok-kw">$1</span>:')
-        .replace(/(#[0-9a-fA-F]{3,8}|\d+(?:px|em|rem|%|vh|vw|s))/g, '<span class="tok-num">$1</span>')
-        .replace(/('(?:[^']*)'|"(?:[^"]*)")/g, '<span class="tok-str">$1</span>');
-    }
-    if (ext === 'md') {
-      return esc(code)
-        .replace(/(#{1,6} .+)/g, '<span class="tok-comment">$1</span>')
-        .replace(/(`[^`]+`)/g, '<span class="tok-str">$1</span>')
-        .replace(/(\*\*[^*]+\*\*)/g, '<strong>$1</strong>');
-    }
-    return esc(code);
+    return (code || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   // ── Gutter line numbers ─────────────────────────────────────────
@@ -857,6 +830,10 @@ And the HTML:
   }
 
   function openVoiceAssistant() {
+    if (typeof window.__REBEL_OPEN_VOICE__ === 'function') {
+      window.__REBEL_OPEN_VOICE__();
+      return;
+    }
     const vaModal = document.getElementById('voiceAvatarModal');
     if (vaModal) { vaModal.classList.add('show'); document.body.style.overflow='hidden'; }
   }
@@ -1278,7 +1255,7 @@ And the HTML:
     container.classList.add('message-container', `${sender}-container`);
     if(sender==='bot'){
       const avatar = document.createElement('img');
-      avatar.src='rebel-avatar.jpg';
+      avatar.src='https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg';
       avatar.alt='Rebel AI'; avatar.classList.add('message-avatar');
       container.appendChild(avatar);
     }
@@ -2787,15 +2764,10 @@ And the HTML:
 
       wakeRecognition.onend = () => {
         wakeActive = false;
-        // Restart after 1s if modal is not open
-        if (!modal.classList.contains('show')) {
-          setTimeout(startWakeWordListener, 1000);
-        }
       };
 
       wakeRecognition.onerror = () => {
         wakeActive = false;
-        setTimeout(startWakeWordListener, 3000);
       };
 
       wakeRecognition.start();
@@ -2804,8 +2776,41 @@ And the HTML:
     }
   }
 
-  // Start wake word listener after 2s
-  setTimeout(startWakeWordListener, 2000);
+  // Wake word disabled on idle page load — saves CPU/mic on landing
+  function stopWakeWordListener() {
+    wakeActive = false;
+    try { wakeRecognition && wakeRecognition.stop(); } catch (e) {}
+    wakeRecognition = null;
+  }
+
+  let avatarDrawActive = false;
+  let avatarAnimId = null;
+
+  function startAvatarDraw() {
+    avatarDrawActive = true;
+    if (!avatarAnimId) avatarAnimId = requestAnimationFrame(draw);
+  }
+
+  function stopAvatarDraw() {
+    avatarDrawActive = false;
+    if (avatarAnimId) cancelAnimationFrame(avatarAnimId);
+    avatarAnimId = null;
+  }
+
+  const modalObs = new MutationObserver(() => {
+    if (modal.classList.contains('show')) startAvatarDraw();
+    else {
+      stopAvatarDraw();
+      stopWakeWordListener();
+    }
+  });
+  modalObs.observe(modal, { attributes: true, attributeFilter: ['class'] });
+
+  window.__REBEL_OPEN_VOICE__ = () => {
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    startAvatarDraw();
+  };
 
   const ctx  = canvas.getContext('2d');
   const wCtx = waveCanvas?.getContext('2d');
@@ -2956,7 +2961,11 @@ And the HTML:
 
   // ── Main Draw Loop ───────────────────────────────────────
   function draw(ts) {
-    requestAnimationFrame(draw);
+    if (!avatarDrawActive) {
+      avatarAnimId = null;
+      return;
+    }
+    avatarAnimId = requestAnimationFrame(draw);
 
     breathe    = Math.sin(ts / 1400) * 3;
     blinkT    += 0.02;
@@ -3690,8 +3699,6 @@ RULES — strictly follow:
     mouthTarget = 0;
     gestureType = 0;
     gestureTimer = 0;
-    // Restart wake word listener after modal closes
-    setTimeout(startWakeWordListener, 1500);
   };
 
   closeBtn && closeBtn.addEventListener('click', closeModal);
@@ -3714,9 +3721,6 @@ RULES — strictly follow:
       if (cmd && !isListening) callAI(cmd);
     });
   });
-
-  // ── Start animation ──────────────────────────────────────
-  requestAnimationFrame(draw);
 
 })();
 

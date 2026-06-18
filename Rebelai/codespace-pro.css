@@ -20,7 +20,8 @@
   width: 100%;
   height: 100%;
   background: transparent;
-  color: transparent;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
   caret-color: #00ced1;
   border: none;
   outline: none;
@@ -50,6 +51,24 @@
   z-index: 1;
   tab-size: 2;
 }
+
+/* Syntax colors — hl-* (safe highlighter) */
+.hl-cmt  { color: #6a9955; }
+.hl-kw   { color: #569cd6; }
+.hl-fn   { color: #dcdcaa; }
+.hl-str  { color: #ce9178; }
+.hl-num  { color: #b5cea8; }
+.hl-tag  { color: #569cd6; }
+.hl-sel  { color: #9cdcfe; }
+.hl-prop { color: #9cdcfe; }
+
+/* Legacy tok-* aliases */
+.tok-comment, .hl-cmt { color: #6a9955; }
+.tok-kw, .hl-kw       { color: #569cd6; }
+.tok-fn, .hl-fn       { color: #dcdcaa; }
+.tok-str, .hl-str     { color: #ce9178; }
+.tok-num, .hl-num     { color: #b5cea8; }
+.tok-var, .hl-sel, .hl-prop { color: #9cdcfe; }
 
 .ide-sidebar-action {
   background: none;
@@ -149,36 +168,15 @@
 .ide-save-status.unsaved { color: #f1c40f; }
 
 .ide-preview-panel {
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 45%;
-  background: #fff;
-  border-left: 2px solid var(--accent-purple);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
+  /* layout in rebel-preview.css */
 }
-.ide-preview-header {
+.ide-preview-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 8px 12px;
-  background: #1a1a1a;
-  color: #fff;
-  font-size: 0.75rem;
 }
-.ide-preview-header button {
-  background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer;
-}
-#ide-preview-frame {
-  flex: 1;
-  border: none;
-  width: 100%;
-  background: #fff;
-}
-
-.ide-editor-area.preview-open .ide-editor-pro { width: 55%; }
-.ide-editor-area.preview-open { position: relative; }
 
 .ide-tree-file .file-delete {
   opacity: 0;
@@ -193,8 +191,7 @@
 .ide-toolbar-btn.active { background: rgba(0,206,209,0.2) !important; color: var(--accent-teal) !important; }
 
 @media (max-width: 768px) {
-  .ide-preview-panel { width: 100%; height: 40%; top: auto; border-left: none; border-top: 2px solid var(--accent-purple); }
-  .ide-editor-area.preview-open .ide-editor-pro { width: 100%; height: 60%; }
+  .ide-tree-file:hover .file-delete { opacity: 1; }
 }
 
 /* ── Menu Dropdowns ── */
@@ -233,12 +230,67 @@
 }
 .ide-dropdown button:hover { background: rgba(138,43,226,0.15); color: #fff; }
 .ide-dropdown button kbd { margin-left: auto; font-size: 0.65rem; color: rgba(255,255,255,0.3); }
+.ide-dropdown-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(255,255,255,0.1);
+}
 
 /* ── Terminal panels ── */
 .ide-term-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .ide-term-panel.active { display: flex; }
-.ide-term-tab { cursor: pointer; }
+.ide-save-status.synced { color: var(--accent-teal); }
+.ide-save-status.unsaved { color: #f1c40f; }
+
+.ide-private-badge {
+  font-size: 0.55rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(138,43,226,0.35);
+  color: #fff;
+  letter-spacing: 0.06em;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.ide-term-tab .ide-private-badge { font-weight: 700; }
+
+.ide-tprompt { color: #00ced1; font-family: 'Roboto Mono', monospace; font-size: 0.72rem; }
+
 .ide-term-tab.active { color: var(--accent-teal); border-bottom: 2px solid var(--accent-teal); }
+
+.ide-problems-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.ide-problems-toolbar button {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(138,43,226,0.35);
+  background: rgba(138,43,226,0.12);
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ide-problems-toolbar button:hover:not(:disabled) { background: rgba(138,43,226,0.28); }
+.ide-problems-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+.ide-problems-hint { margin-left: auto; font-size: 0.65rem; color: rgba(255,255,255,0.35); }
+.ide-problems-hint kbd {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.62rem;
+}
 
 .ide-problems-body, .ide-output-body {
   flex: 1;
@@ -253,9 +305,55 @@
   margin-bottom: 4px;
   cursor: pointer;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  border: 1px solid transparent;
 }
+.ide-problem.selected { border-color: rgba(0,206,209,0.45); background: rgba(0,206,209,0.06); }
+.ide-problem-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ide-problem-msg { color: rgba(255,255,255,0.75); font-size: 0.72rem; line-height: 1.35; }
+.ide-problem-src {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ide-problem-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.ide-problem-fix, .ide-problem-ai {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 0.65rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ide-problem-fix:hover { background: rgba(46,204,113,0.2); border-color: rgba(46,204,113,0.4); }
+.ide-problem-ai:hover { background: rgba(138,43,226,0.25); border-color: rgba(138,43,226,0.5); }
+
+.ide-gutter span.gutter-error {
+  color: #e74c3c;
+  font-weight: 700;
+  position: relative;
+}
+.ide-gutter span.gutter-error::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 70%;
+  background: #e74c3c;
+  border-radius: 2px;
+}
+.ide-gutter span.gutter-warn {
+  color: #f1c40f;
+  font-weight: 600;
+}
+.ide-sb-item#ide-sb-errors, .ide-sb-item#ide-sb-warnings { cursor: pointer; }
+.ide-sb-item#ide-sb-errors:hover, .ide-sb-item#ide-sb-warnings:hover { color: var(--accent-teal); }
 .ide-problem-error { background: rgba(231,76,60,0.1); color: #e74c3c; }
 .ide-problem-warn { background: rgba(241,196,15,0.08); color: #f1c40f; }
 .ide-problem-info { background: rgba(0,206,209,0.08); color: var(--accent-teal); }

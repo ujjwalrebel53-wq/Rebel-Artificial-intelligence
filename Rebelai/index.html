@@ -17,19 +17,23 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="advanced.css">
   <link rel="stylesheet" href="codespace-pro.css">
+  <link rel="stylesheet" href="rebel-codespace-advanced.css">
+  <link rel="stylesheet" href="rebel-codespace-v5.css">
+  <link rel="stylesheet" href="rebel-preview.css">
   <link rel="stylesheet" href="admin-control.css">
   <link rel="stylesheet" href="rebel-3d.css">
+  <link rel="stylesheet" href="rebel-perf.css">
+  <link rel="stylesheet" href="rebel-v3.css">
   <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 </head>
-<body>
+<body class="rebel-perf-mode">
+<script>document.documentElement.classList.add('rebel-perf-mode');</script>
 
   <!-- Advanced: Loading Splash -->
   <div id="rebelSplash" class="rebel-splash">
     <div class="splash-inner">
-      <div class="splash-logo-ring">
-        <img src="rebel-avatar.jpg" alt="Rebel Ai" class="splash-avatar">
-      </div>
+      <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="splash-avatar">
       <div class="splash-title">REBEL AI</div>
       <div class="splash-sub">Neural Interface Initializing…</div>
       <div class="splash-bar"><div class="splash-bar-fill" id="splashBarFill"></div></div>
@@ -40,14 +44,9 @@
   <!-- Advanced: Scroll Progress -->
   <div id="scrollProgress" class="scroll-progress"></div>
 
-  <!-- 3D WebGL Background -->
-  <canvas id="rebel3dCanvas" class="rebel-3d-canvas"></canvas>
-
-  <!-- Advanced: Particle Canvas -->
-  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  <!-- Static background (no WebGL / particle loops) -->
+  <div class="rebel-mesh-bg" aria-hidden="true"></div>
   <div class="cyber-grid" aria-hidden="true"></div>
-  <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
-  <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
 
   <!-- Header -->
   <header class="header">
@@ -55,13 +54,17 @@
       <div class="logo-wrap">
         <div class="logo">Rebel Ai</div>
         <span class="live-badge"><span class="live-dot"></span> ONLINE</span>
+        <span class="api-status-pill" id="apiStatusPill"><span class="api-status-dot"></span> Checking…</span>
       </div>
       <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
       <nav class="main-nav" id="mainNav">
         <a href="#about" class="nav-link">Features</a>
+        <a href="#capabilities" class="nav-link">Capabilities</a>
         <a href="#stats" class="nav-link">Stats</a>
         <a href="#how-it-works" class="nav-link">How It Works</a>
         <a href="#faq" class="nav-link">FAQ</a>
+        <button class="nav-theme-btn" id="themeToggleBtn" title="Cycle theme"><i class="fas fa-moon"></i></button>
+        <button class="nav-help-btn" id="openShortcutsBtn" title="Shortcuts (?)"><i class="fas fa-keyboard"></i></button>
         <button class="nav-cmd-btn" id="openCmdPaletteBtn" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i> ⌘K</button>
         <a href="#" id="adminPanelBtn" class="nav-link admin-nav-btn"><i class="fas fa-shield-alt"></i> Admin</a>
       </nav>
@@ -73,7 +76,7 @@
     <div class="container">
       <div class="hero-layout">
         <div class="hero-content animate card-3d-tilt">
-          <div class="hero-badge"><i class="fas fa-bolt"></i> Next-Gen AI Platform · v2.0</div>
+          <div class="hero-badge"><i class="fas fa-bolt"></i> Next-Gen AI Platform · v3.0 Pro</div>
           <h1>
             Rebel Ai<br><span id="heroTyping">Unleash the Code.</span><span class="typing-cursor">|</span>
           </h1>
@@ -103,10 +106,8 @@
         </div>
         
         <div class="hero-visual animate card-3d-tilt" id="hero3dVisual">
-          <div class="ai-avatar avatar-3d-wrap">
-            <img src="rebel-avatar.jpg" alt="AI Assistant">
-            <div class="pulse-ring"></div>
-            <div class="pulse-ring-2"></div>
+          <div class="ai-avatar">
+            <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="AI Assistant">
           </div>
           <div class="floating-features">
             <div class="feature-bubble bubble-1">
@@ -123,6 +124,40 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v3: Platform Capabilities -->
+  <section id="capabilities" class="capabilities-section scene-3d">
+    <div class="container">
+      <h2 class="section-title animate">Platform Capabilities</h2>
+      <p class="section-sub animate">Chat, voice, code & control — one rebel interface</p>
+      <div class="cap-grid">
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="chat">
+          <div class="cap-icon"><i class="fas fa-robot"></i></div>
+          <h3>Rebel Gpt Chat</h3>
+          <p>Multi-model AI with memory, markdown, image vision, and code blocks with syntax highlight.</p>
+          <span class="cap-tag">GPT-5 · Claude · Gemini</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="voice">
+          <div class="cap-icon teal"><i class="fas fa-microphone-alt"></i></div>
+          <h3>Voice Assistant</h3>
+          <p>3D lip-sync avatar, ElevenLabs TTS, speech recognition, and natural conversation flow.</p>
+          <span class="cap-tag">Callum · Edge TTS</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="codespace">
+          <div class="cap-icon green"><i class="fas fa-code"></i></div>
+          <h3>Rebel Codespace</h3>
+          <p>Full IDE — tabs, terminal, git, AI pair programming, live preview, and project export.</p>
+          <span class="cap-tag">Ctrl+S · F5 Run</span>
+        </button>
+        <button type="button" class="cap-card animate card-3d-tilt" data-cap="admin">
+          <div class="cap-icon orange"><i class="fas fa-shield-alt"></i></div>
+          <h3>Admin Control</h3>
+          <p>User management, API keys, broadcast banners, feature toggles, and system logs.</p>
+          <span class="cap-tag">Control Center</span>
+        </button>
       </div>
     </div>
   </section>
@@ -347,7 +382,7 @@
       <span class="close-modal">&times;</span>
       <div class="dev-profile">
         <div class="dev-avatar-container">
-          <img src="rebel-avatar.jpg" alt="Rebel Bhaiya" class="dev-avatar">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Bhaiya" class="dev-avatar">
           <div class="dev-pulse"></div>
         </div>
         <h2>About Developer</h2>
@@ -371,7 +406,7 @@
       <button class="auth-close-x" id="closeAccessModal">✕</button>
       <div class="access-rebel-inner">
         <div class="access-rebel-logo">
-          <img src="rebel-avatar.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
           <h2 class="auth-title">Access <span>Rebel Ai</span></h2>
           <p class="auth-subtitle">Choose your experience</p>
         </div>
@@ -412,7 +447,7 @@
       <!-- ── STEP: Login ── -->
       <div class="auth-step" id="authStepLogin">
         <div class="auth-brand">
-          <img src="rebel-avatar.jpg" alt="Rebel Ai" class="auth-logo-img">
+          <img src="https://public.youware.com/users-website-assets/prod/a6330b2a-2d0c-4263-9e0e-f58a67b39c2d/3bd4f7557c4e4ed0adc20480987490fa.jpg" alt="Rebel Ai" class="auth-logo-img">
           <h2 class="auth-title">Welcome to <span>Rebel Ai</span></h2>
           <p class="auth-subtitle" id="loginSubtitle">Sign in to continue</p>
         </div>
@@ -593,6 +628,8 @@
           <span class="ide-title-icon"><i class="fas fa-code"></i></span>
           <span class="ide-title-text">Rebel Codespace</span>
           <span class="ide-title-badge">AI</span>
+          <span class="ide-title-badge-v4">PRO v4</span>
+          <span class="ide-title-badge-v5">v5</span>
         </div>
         <div class="ide-titlebar-right">
           <button class="ide-topbtn ide-toolbar-btn" id="ide-format-btn" title="Format"><i class="fas fa-magic"></i></button>
@@ -600,6 +637,8 @@
           <button class="ide-topbtn ide-toolbar-btn" id="ide-save-btn" title="Save (Ctrl+S)"><i class="fas fa-save"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-new-file-btn" title="New File"><i class="fas fa-file-medical"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-preview-btn" title="Live Preview"><i class="fas fa-eye"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn ide-device-quick" data-device="macbook" title="MacBook Preview"><i class="fas fa-laptop"></i></button>
+          <button class="ide-topbtn ide-toolbar-btn ide-device-quick" data-device="iphone17" title="iPhone 17 Pro Max Preview"><i class="fas fa-mobile-alt"></i></button>
           <button class="ide-topbtn ide-toolbar-btn" id="ide-download-btn" title="Download Project"><i class="fas fa-download"></i></button>
           <button class="ide-topbtn" id="ide-run-btn" title="Run (F5)"><i class="fas fa-play"></i></button>
           <button class="ide-topbtn" id="ide-git-btn" title="Git Status"><i class="fas fa-code-branch"></i></button>
@@ -628,13 +667,20 @@
             <button data-action="copy"><i class="fas fa-copy"></i> Copy</button>
             <button data-action="paste"><i class="fas fa-paste"></i> Paste</button>
             <button data-action="format"><i class="fas fa-magic"></i> Format Document</button>
+            <button data-action="fix-all"><i class="fas fa-wrench"></i> Fix All Problems</button>
+            <button data-action="fix-all-ai"><i class="fas fa-robot"></i> Fix All with AI</button>
             <button data-action="find"><i class="fas fa-search"></i> Find <kbd>Ctrl+F</kbd></button>
           </div>
         </div>
         <div class="ide-menu-wrap">
           <span class="ide-menu-item" data-menu="view" id="ide-toggle-preview-menu">View</span>
           <div class="ide-dropdown" id="ide-menu-view">
-            <button data-action="preview"><i class="fas fa-eye"></i> Live Preview</button>
+            <button data-action="preview"><i class="fas fa-eye"></i> Live Preview <kbd>F5</kbd></button>
+            <div class="ide-dropdown-divider"></div>
+            <button data-action="preview-macbook"><i class="fas fa-laptop"></i> MacBook Preview</button>
+            <button data-action="preview-iphone17"><i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max</button>
+            <button data-action="preview-full"><i class="fas fa-expand"></i> Full Screen Preview</button>
+            <div class="ide-dropdown-divider"></div>
             <button data-action="toggle-terminal"><i class="fas fa-terminal"></i> Toggle Terminal</button>
             <button data-action="explorer"><i class="fas fa-folder"></i> Explorer</button>
             <button data-action="search-panel"><i class="fas fa-search"></i> Search Panel</button>
@@ -643,7 +689,7 @@
         <div class="ide-menu-wrap">
           <span class="ide-menu-item" data-menu="terminal" id="ide-toggle-terminal-menu">Terminal</span>
           <div class="ide-dropdown" id="ide-menu-terminal">
-            <button data-action="term-terminal"><i class="fas fa-terminal"></i> Terminal</button>
+            <button data-action="term-terminal"><i class="fas fa-lock"></i> Private Terminal</button>
             <button data-action="term-problems"><i class="fas fa-exclamation-triangle"></i> Problems</button>
             <button data-action="term-output"><i class="fas fa-list"></i> Output</button>
             <button data-action="term-clear"><i class="fas fa-trash"></i> Clear Terminal</button>
@@ -662,6 +708,24 @@
         <span class="ide-menu-status"><span class="ide-status-dot-green"></span> Rebel AI Connected</span>
       </div>
 
+      <!-- Device preview bar — always visible (not inside hidden preview panel) -->
+      <div class="ide-device-bar-sticky" id="ide-device-bar-sticky">
+        <span class="ide-device-bar-title"><i class="fas fa-tablet-alt"></i> Preview Device</span>
+        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="macbook" title="MacBook Pro frame">
+          <i class="fas fa-laptop"></i> MacBook
+        </button>
+        <button type="button" class="ide-device-btn ide-device-bar-btn active" data-device="iphone17" title="iPhone 17 Pro Max frame">
+          <i class="fas fa-mobile-alt"></i> iPhone 17 Pro Max
+        </button>
+        <button type="button" class="ide-device-btn ide-device-bar-btn" data-device="full" title="Full width preview">
+          <i class="fas fa-expand"></i> Full Screen
+        </button>
+        <span class="ide-device-bar-spacer"></span>
+        <button type="button" class="ide-device-open-btn" id="ide-device-open-preview" title="Open live preview (F5)">
+          <i class="fas fa-eye"></i> Open Preview
+        </button>
+      </div>
+
       <!-- ── Main IDE Body ── -->
       <div class="ide-body">
 
@@ -670,6 +734,9 @@
           <button class="ide-act-btn active" data-panel="explorer" title="Explorer"><i class="fas fa-copy"></i></button>
           <button class="ide-act-btn" data-panel="search" title="Search"><i class="fas fa-search"></i></button>
           <button class="ide-act-btn" data-panel="git" title="Git"><i class="fas fa-code-branch"></i></button>
+          <button class="ide-act-btn" data-panel="templates" title="Templates"><i class="fas fa-layer-group"></i></button>
+          <button class="ide-act-btn" data-panel="snippets" title="Snippets"><i class="fas fa-puzzle-piece"></i></button>
+          <button class="ide-act-btn" data-panel="snapshots" title="Snapshots"><i class="fas fa-history"></i></button>
           <button class="ide-act-btn" data-panel="preview" title="Preview"><i class="fas fa-eye"></i></button>
           <div class="ide-act-spacer"></div>
           <button class="ide-act-btn" data-panel="settings" title="Settings"><i class="fas fa-cog"></i></button>
@@ -683,10 +750,32 @@
           </div>
           <div class="ide-tree" id="ide-file-tree"></div>
         </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-snippets" style="display:none;">
+          <div class="ide-sidebar-title">SNIPPETS</div>
+          <div id="ide-snippets-list" style="padding:8px;"></div>
+        </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-snapshots" style="display:none;">
+          <div class="ide-sidebar-title">SNAPSHOTS</div>
+          <button type="button" class="ide-settings-btn" id="ide-save-snapshot-btn" style="margin:8px;"><i class="fas fa-camera"></i> Save Snapshot</button>
+          <div id="ide-snapshots-list" style="padding:8px;"></div>
+        </div>
+        <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-templates" style="display:none;">
+          <div class="ide-sidebar-title">TEMPLATES</div>
+          <div class="ide-templates-list" id="ide-templates-list" style="padding:8px;"></div>
+        </div>
         <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-search" style="display:none;">
           <div class="ide-sidebar-title">SEARCH</div>
           <div class="ide-search-wrap">
             <input type="text" id="ide-search-input" placeholder="Search in files…" spellcheck="false">
+          </div>
+          <div class="ide-search-options">
+            <label><input type="checkbox" id="ide-search-regex"> Regex</label>
+            <label><input type="checkbox" id="ide-search-case"> Match case</label>
+          </div>
+          <div class="ide-replace-row">
+            <input type="text" id="ide-replace-input" placeholder="Replace with…" spellcheck="false">
+            <button type="button" id="ide-replace-btn">Replace</button>
+            <button type="button" id="ide-replace-all-btn">All Files</button>
           </div>
           <div class="ide-search-results" id="ide-search-results"></div>
         </div>
@@ -699,14 +788,26 @@
               <button class="ide-git-btn-action" id="ide-git-add"><i class="fas fa-plus"></i> Stage All</button>
               <button class="ide-git-btn-action" id="ide-git-commit"><i class="fas fa-check"></i> Commit</button>
             </div>
+            <div class="ide-git-diff" id="ide-git-diff"></div>
           </div>
         </div>
         <div class="ide-sidebar ide-sidebar-panel" id="ide-sidebar-settings" style="display:none;">
           <div class="ide-sidebar-title">SETTINGS</div>
           <div class="ide-settings-list">
+            <label>IDE Theme
+              <select id="ide-ide-theme">
+                <option value="rebel">Rebel Dark</option>
+                <option value="midnight">Midnight</option>
+                <option value="ocean">Ocean</option>
+                <option value="ember">Ember</option>
+              </select>
+            </label>
             <label>Font Size <input type="range" id="ide-font-size" min="11" max="20" value="14"></label>
             <label>Tab Size <input type="number" id="ide-tab-size" min="2" max="8" value="2"></label>
             <label>Word Wrap <input type="checkbox" id="ide-word-wrap" checked></label>
+            <label>Format on Save <input type="checkbox" id="ide-format-on-save"></label>
+            <button class="ide-settings-btn" id="ide-split-btn"><i class="fas fa-columns"></i> Split Editor</button>
+            <button class="ide-settings-btn" id="ide-deploy-html-btn"><i class="fas fa-rocket"></i> Deploy HTML</button>
             <button class="ide-settings-btn" id="ide-reset-project"><i class="fas fa-undo"></i> Reset Project</button>
           </div>
         </div>
@@ -715,46 +816,107 @@
         <div class="ide-editor-area" id="ide-editor-area">
 
           <!-- Tab Bar -->
+          <div class="ide-breadcrumbs" id="ide-breadcrumbs">
+            <span>rebel-project</span><i class="fas fa-chevron-right"></i><span id="ide-breadcrumb-file">app.js</span>
+          </div>
+          <div class="ide-ai-quickbar" id="ide-ai-quickbar">
+            <button type="button" data-ai-action="explain"><i class="fas fa-lightbulb"></i> Explain</button>
+            <button type="button" data-ai-action="refactor"><i class="fas fa-wrench"></i> Refactor</button>
+            <button type="button" data-ai-action="tests"><i class="fas fa-vial"></i> Tests</button>
+            <span class="ide-quickbar-spacer"></span>
+            <button type="button" id="ide-palette-btn" title="Command Palette (Ctrl+Shift+P)"><i class="fas fa-terminal"></i> ⌘⇧P</button>
+          </div>
           <div class="ide-tabbar" id="ide-tabbar"></div>
 
-          <!-- Code Editor (Pro) -->
-          <div class="ide-editor ide-editor-pro" id="ide-editor">
-            <div class="ide-gutter" id="ide-gutter"></div>
-            <div class="ide-editor-wrap">
-              <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
-              <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-            </div>
-          </div>
+          <!-- Preview left · Editor right -->
+          <div class="ide-workspace" id="ide-workspace">
+            <aside class="ide-preview-panel" id="ide-preview-panel" hidden aria-label="Live preview">
+              <header class="ide-preview-header">
+                <div class="ide-preview-header-left">
+                  <span class="ide-preview-title">Live Preview</span>
+                  <span id="ide-preview-status" class="ide-preview-status">Ready</span>
+                </div>
+                <div class="ide-preview-device-tabs" role="tablist" aria-label="Preview device">
+                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="macbook" title="MacBook">MacBook</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab active" data-device="iphone17" title="iPhone 17 Pro Max">iPhone 17 Pro Max</button>
+                  <button type="button" class="ide-device-btn ide-preview-device-tab" data-device="full" title="Full width">Full</button>
+                </div>
+                <div class="ide-preview-actions">
+                  <label class="ide-preview-live-toggle" title="Auto-refresh while typing">
+                    <input type="checkbox" id="ide-preview-live" checked> Live
+                  </label>
+                  <button type="button" id="ide-preview-refresh" title="Refresh preview"><i class="fas fa-sync-alt"></i></button>
+                  <button type="button" id="ide-preview-newtab" title="Open in new tab"><i class="fas fa-external-link-alt"></i></button>
+                  <button type="button" id="ide-preview-close" title="Close preview"><i class="fas fa-times"></i></button>
+                </div>
+              </header>
+              <div class="ide-preview-viewport">
+                <div class="ide-preview-stage device-iphone17" id="ide-preview-stage">
+                  <div class="preview-device preview-device-macbook">
+                    <span class="preview-device-meta">MacBook · 1440 × 900</span>
+                    <div class="preview-device-screen preview-device-screen-laptop" id="device-macbook-screen">
+                      <div class="preview-frame-host" id="device-macbook-viewport"></div>
+                    </div>
+                  </div>
+                  <div class="preview-device preview-device-phone">
+                    <div class="phone-mockup">
+                      <div class="phone-mockup-frame">
+                        <div class="phone-mockup-screen" id="device-iphone-screen">
+                          <div class="phone-mockup-viewport preview-frame-host" id="device-iphone-viewport"></div>
+                          <span class="phone-mockup-island" aria-hidden="true"></span>
+                          <span class="phone-mockup-home" aria-hidden="true"></span>
+                        </div>
+                      </div>
+                      <span class="phone-mockup-label">iPhone 17 Pro Max · 430 × 932</span>
+                    </div>
+                  </div>
+                  <div class="preview-device preview-device-full">
+                    <div class="preview-device-screen preview-device-screen-full" id="device-full-screen">
+                      <div class="preview-frame-host" id="device-full-viewport"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals allow-popups allow-forms" title="Preview"></iframe>
+            </aside>
 
-          <!-- Live Preview Panel -->
-          <div class="ide-preview-panel" id="ide-preview-panel" style="display:none;">
-            <div class="ide-preview-header">
-              <span><i class="fas fa-eye"></i> Live Preview</span>
-              <button id="ide-preview-close"><i class="fas fa-times"></i></button>
+            <div class="ide-workspace-editor" id="ide-workspace-editor">
+              <div class="ide-editor ide-editor-pro" id="ide-editor">
+                <div class="ide-gutter" id="ide-gutter"></div>
+                <div class="ide-editor-wrap">
+                  <pre class="ide-highlight-layer" id="ide-highlight-layer" aria-hidden="true"></pre>
+                  <textarea class="ide-textarea" id="ide-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                </div>
+                <div class="ide-minimap" id="ide-minimap" title="Minimap"></div>
+              </div>
+              <div class="ide-editor-split-wrap">
+                <div id="ide-monaco-split"></div>
+              </div>
             </div>
-            <iframe id="ide-preview-frame" sandbox="allow-scripts allow-modals" title="Preview"></iframe>
           </div>
 
           <!-- Terminal panel (bottom split) -->
           <div class="ide-terminal-panel" id="ide-terminal-panel">
             <div class="ide-terminal-tabs">
-              <span class="ide-term-tab active" data-term="terminal"><i class="fas fa-terminal"></i> Terminal</span>
+              <span class="ide-term-tab active" data-term="terminal"><i class="fas fa-lock"></i> Private Terminal <span class="ide-private-badge">PRIVATE</span></span>
               <span class="ide-term-tab" data-term="problems"><i class="fas fa-exclamation-triangle"></i> Problems <span id="ide-problems-count"></span></span>
               <span class="ide-term-tab" data-term="output"><i class="fas fa-list"></i> Output</span>
               <button class="ide-term-close-btn" id="ide-term-close"><i class="fas fa-times"></i></button>
             </div>
             <div class="ide-term-panel active" id="ide-term-panel-terminal">
-            <div class="ide-terminal-body" id="ide-terminal-output">
-              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcmd">node app.js</span></div>
-              <div class="ide-tout">Server running on port 3000</div>
-              <div class="ide-tline"><span class="ide-tprompt">rebel@codespace:~$</span> <span class="ide-tcursor">▌</span></div>
-            </div>
+            <div class="ide-terminal-body" id="ide-terminal-output"></div>
             <div class="ide-terminal-input-row">
-              <span class="ide-tprompt-inline">$</span>
-              <input class="ide-terminal-input" id="ide-terminal-input" placeholder="Enter command..." autocomplete="off" spellcheck="false">
+              <span class="ide-tprompt-inline" id="ide-term-prompt-inline">$</span>
+              <input class="ide-terminal-input" id="ide-terminal-input" placeholder="Private terminal — type help…" autocomplete="off" spellcheck="false">
             </div>
             </div>
             <div class="ide-term-panel" id="ide-term-panel-problems">
+              <div class="ide-problems-toolbar">
+                <button type="button" id="ide-fix-all-btn" title="Apply quick fixes"><i class="fas fa-wrench"></i> Fix All</button>
+                <button type="button" id="ide-fix-all-ai-btn" title="Ask Rebel AI to fix all errors"><i class="fas fa-robot"></i> Fix All with AI</button>
+                <button type="button" id="ide-refresh-diagnostics-btn" title="Re-scan project"><i class="fas fa-sync"></i> Re-scan</button>
+                <span class="ide-problems-hint"><kbd>Ctrl+.</kbd> Quick fix at cursor</span>
+              </div>
               <div class="ide-problems-body" id="ide-problems-body"></div>
             </div>
             <div class="ide-term-panel" id="ide-term-panel-output">
@@ -772,6 +934,10 @@
               <span>Rebel AI</span>
             </div>
             <div class="ide-ai-model-badge" id="ide-ai-clear-btn" title="Clear AI chat" style="cursor:pointer;"><i class="fas fa-trash"></i></div>
+          </div>
+
+          <div class="ide-agent-toggle">
+            <label><input type="checkbox" id="ide-agent-mode"> <i class="fas fa-robot"></i> Agent Mode (multi-file auto-build)</label>
           </div>
 
           <div class="ide-ai-messages" id="ide-ai-messages">
@@ -801,13 +967,62 @@
 
       </div><!-- end ide-body -->
 
+      <!-- Inline AI (Ctrl+K) -->
+      <div class="ide-inline-ai" id="ide-inline-ai">
+        <div class="ide-inline-ai-box">
+          <strong style="color:#00ced1;font-size:0.85rem;"><i class="fas fa-magic"></i> Inline AI · Ctrl+K</strong>
+          <textarea id="ide-inline-ai-input" placeholder="Describe the change…" rows="3"></textarea>
+          <div class="ide-inline-ai-actions">
+            <button type="button" class="ide-inline-ai-cancel" id="ide-inline-ai-cancel">Cancel</button>
+            <button type="button" class="ide-inline-ai-run" id="ide-inline-ai-run">Apply with AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Diff modal -->
+      <div class="ide-diff-modal" id="ide-diff-modal">
+        <div class="ide-diff-modal-box">
+          <div class="ide-diff-modal-head">Review AI Changes</div>
+          <div class="ide-diff-modal-body" id="ide-diff-modal-body"></div>
+          <div class="ide-diff-modal-foot">
+            <button type="button" id="ide-diff-reject">Reject</button>
+            <button type="button" id="ide-diff-accept" style="background:#2ecc71;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">Accept</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onboarding -->
+      <div class="ide-onboard-overlay" id="ide-onboard">
+        <div class="ide-onboard-card">
+          <h3 id="ide-onboard-title">Welcome</h3>
+          <p id="ide-onboard-text">…</p>
+          <button type="button" id="ide-onboard-next">Next →</button>
+          <button type="button" id="ide-onboard-skip" style="margin-left:8px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 16px;border-radius:8px;cursor:pointer;">Skip</button>
+        </div>
+      </div>
+
+      <!-- IDE Command Palette (v4) -->
+      <div class="ide-cmd-palette" id="ide-cmd-palette">
+        <div class="ide-cmd-backdrop" id="ide-cmd-backdrop"></div>
+        <div class="ide-cmd-box">
+          <div class="ide-cmd-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="ide-cmd-input" placeholder="Type a command…" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="ide-cmd-list" id="ide-cmd-list"></div>
+          <div class="ide-cmd-footer">↑↓ navigate · Enter run · Esc close · Ctrl+Shift+P</div>
+        </div>
+      </div>
+
       <!-- Status Bar (bottom, like VS Code) -->
       <div class="ide-statusbar">
         <span class="ide-sb-item"><i class="fas fa-code-branch"></i> main</span>
-        <span class="ide-sb-item"><i class="fas fa-check-circle"></i> 0 errors</span>
-        <span class="ide-sb-item"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
+        <span class="ide-sb-item" id="ide-sb-errors"><i class="fas fa-check-circle"></i> 0 errors</span>
+        <span class="ide-sb-item" id="ide-sb-warnings"><i class="fas fa-exclamation-triangle"></i> 0 warnings</span>
         <div class="ide-sb-spacer"></div>
-        <span class="ide-sb-item">JavaScript</span>
+        <span class="ide-sb-item" id="ide-sb-selection"></span>
+        <span class="ide-sb-item" id="ide-sb-position">Ln 1, Col 1</span>
+        <span class="ide-sb-item" id="ide-sb-lang">JavaScript</span>
         <span class="ide-sb-item">UTF-8</span>
         <span class="ide-sb-item ide-sb-ai"><i class="fas fa-robot"></i> Rebel AI Ready</span>
       </div>
@@ -1542,14 +1757,50 @@
   <!-- Broadcast banner (admin controlled) -->
   <div id="broadcastBanner" class="broadcast-banner" style="display:none;"></div>
 
+  <button type="button" id="backToTop" class="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- v3: Keyboard Shortcuts -->
+  <div id="shortcutsModal" class="shortcuts-modal" aria-hidden="true">
+    <div class="shortcuts-box">
+      <button type="button" class="shortcuts-close" id="closeShortcutsBtn" aria-label="Close">✕</button>
+      <h2>Keyboard Shortcuts</h2>
+      <p class="sub">Press <kbd>?</kbd> anytime to toggle this panel</p>
+      <div class="shortcut-group">
+        <h3>Global</h3>
+        <div class="shortcut-row"><span>Command palette</span><kbd>Ctrl K</kbd></div>
+        <div class="shortcut-row"><span>Shortcuts help</span><kbd>?</kbd></div>
+        <div class="shortcut-row"><span>Cycle theme</span><kbd>Header moon icon</kbd></div>
+      </div>
+      <div class="shortcut-group">
+        <h3>Codespace IDE</h3>
+        <div class="shortcut-row"><span>Save project</span><kbd>Ctrl S</kbd></div>
+        <div class="shortcut-row"><span>Run / Preview</span><kbd>F5</kbd></div>
+        <div class="shortcut-row"><span>Search files</span><kbd>Ctrl F</kbd></div>
+        <div class="shortcut-row"><span>Toggle comment</span><kbd>Ctrl /</kbd></div>
+        <div class="shortcut-row"><span>Duplicate line</span><kbd>Ctrl D</kbd></div>
+        <div class="shortcut-row"><span>Go to line</span><kbd>Ctrl G</kbd></div>
+        <div class="shortcut-row"><span>Quick fix at cursor</span><kbd>Ctrl .</kbd></div>
+        <div class="shortcut-row"><span>Command palette (IDE)</span><kbd>Ctrl Shift P</kbd></div>
+        <div class="shortcut-row"><span>Inline AI</span><kbd>Ctrl K</kbd></div>
+        <div class="shortcut-row"><span>Split editor</span><kbd>Ctrl \\</kbd></div>
+        <div class="shortcut-row"><span>Device preview</span><kbd>Preview toolbar</kbd></div>
+        <div class="shortcut-row"><span>Insert snippet</span><kbd>Ctrl Shift S</kbd></div>
+      </div>
+    </div>
+  </div>
+
   <!-- PHP backend: Socket.io replaced with polling (see main.js) -->
   <script>window.__REBEL_USE_CODESPACE_PRO__ = true;</script>
+  <script src="syntax-highlight.js"></script>
+  <script src="rebel-diagnostics.js"></script>
   <script src="advanced.js"></script>
   <script src="main.js"></script>
   <input type="file" id="ide-import-input" accept=".json" style="display:none;">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="rebel-3d.js"></script>
+  <script src="rebel-v3.js"></script>
   <script src="codespace-pro.js"></script>
+  <script src="rebel-codespace-advanced.js"></script>
+  <script src="rebel-codespace-v5.js"></script>
   <script src="admin-control.js"></script>
 </body>
 </html>

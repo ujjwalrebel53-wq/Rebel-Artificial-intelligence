@@ -451,6 +451,93 @@ elseif (preg_match('#^/api/users/(\d+)/update$#', $route, $m) && $method === 'PU
     jsonResponse(['ok' => false], 404);
 }
 
+// CODESPACE — save/load private project (per user or guest)
+elseif ($route === '/api/codespace/project' && $method === 'GET') {
+    $email   = sanitize($_GET['email'] ?? '', 100);
+    $guestId = sanitize($_GET['guest_id'] ?? '', 64);
+    $ownerKey = codespaceOwnerKey($email, $guestId);
+    if (!$ownerKey) jsonResponse(['ok' => false, 'error' => 'Invalid owner'], 400);
+
+    $project = readCodespaceProject($ownerKey);
+    if (!$project) jsonResponse(['ok' => true, 'project' => null]);
+
+    jsonResponse(['ok' => true, 'project' => [
+        'files'       => $project['files'] ?? [],
+        'openTabs'    => $project['openTabs'] ?? [],
+        'currentFile' => $project['currentFile'] ?? 'app.js',
+        'savedAt'     => $project['savedAt'] ?? ($project['updated_at'] ?? 0),
+        'terminal'    => $project['terminal'] ?? null,
+    ]]);
+}
+
+elseif ($route === '/api/codespace/project' && $method === 'POST') {
+    $email   = sanitize($body['email'] ?? '', 100);
+    $guestId = sanitize($body['guest_id'] ?? '', 64);
+    $ownerKey = codespaceOwnerKey($email, $guestId);
+    if (!$ownerKey) jsonResponse(['ok' => false, 'error' => 'Invalid owner'], 400);
+
+    $project = [
+        'files'       => $body['files'] ?? [],
+        'openTabs'    => $body['openTabs'] ?? [],
+        'currentFile' => sanitize($body['currentFile'] ?? 'app.js', 80),
+        'savedAt'     => min(abs((int)($body['savedAt'] ?? time() * 1000)), 9999999999999),
+        'terminal'    => is_array($body['terminal'] ?? null) ? $body['terminal'] : null,
+    ];
+
+    if (!validateCodespaceProject($project)) {
+        jsonResponse(['ok' => false, 'error' => 'Invalid project data'], 400);
+    }
+
+    if (!writeCodespaceProject($ownerKey, $project)) {
+        jsonResponse(['ok' => false, 'error' => 'Save failed'], 500);
+    }
+
+    dbLog('info', 'Codespace project saved: ' . $ownerKey);
+    jsonResponse(['ok' => true, 'savedAt' => $project['savedAt']]);
+}
+
+elseif ($route === '/api/codespace/snapshots' && $method === 'GET') {
+    $email   = sanitize($_GET['email'] ?? '', 100);
+    $guestId = sanitize($_GET['guest_id'] ?? '', 64);
+    $ownerKey = codespaceOwnerKey($email, $guestId);
+    if (!$ownerKey) jsonResponse(['ok' => false, 'error' => 'Invalid owner'], 400);
+    jsonResponse(['ok' => true, 'snapshots' => listCodespaceSnapshots($ownerKey)]);
+}
+
+elseif ($route === '/api/codespace/snapshot' && $method === 'POST') {
+    $email   = sanitize($body['email'] ?? '', 100);
+    $guestId = sanitize($body['guest_id'] ?? '', 64);
+    $ownerKey = codespaceOwnerKey($email, $guestId);
+    if (!$ownerKey) jsonResponse(['ok' => false, 'error' => 'Invalid owner'], 400);
+    $project = [
+        'files' => $body['files'] ?? [],
+        'openTabs' => $body['openTabs'] ?? [],
+        'currentFile' => sanitize($body['currentFile'] ?? 'app.js', 80),
+        'savedAt' => time() * 1000,
+        'name' => sanitize($body['name'] ?? '', 80),
+    ];
+    if (!validateCodespaceProject($project)) jsonResponse(['ok' => false, 'error' => 'Invalid data'], 400);
+    $id = saveCodespaceSnapshot($ownerKey, $project, $project['name']);
+    if (!$id) jsonResponse(['ok' => false, 'error' => 'Save failed'], 500);
+    jsonResponse(['ok' => true, 'id' => $id]);
+}
+
+elseif ($route === '/api/codespace/snapshot/restore' && $method === 'POST') {
+    $email   = sanitize($body['email'] ?? '', 100);
+    $guestId = sanitize($body['guest_id'] ?? '', 64);
+    $id      = preg_replace('/[^0-9]/', '', $body['id'] ?? '');
+    $ownerKey = codespaceOwnerKey($email, $guestId);
+    if (!$ownerKey || !$id) jsonResponse(['ok' => false, 'error' => 'Invalid request'], 400);
+    $snap = readCodespaceSnapshot($ownerKey, $id);
+    if (!$snap) jsonResponse(['ok' => false, 'error' => 'Not found'], 404);
+    jsonResponse(['ok' => true, 'project' => [
+        'files' => $snap['files'] ?? [],
+        'openTabs' => $snap['openTabs'] ?? [],
+        'currentFile' => $snap['currentFile'] ?? 'app.js',
+        'savedAt' => $snap['savedAt'] ?? 0,
+    ]]);
+}
+
 // 404
 else {
     jsonResponse(['ok' => false, 'error' => 'Not found'], 404);

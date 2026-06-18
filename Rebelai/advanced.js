@@ -21,10 +21,16 @@
     const status = document.getElementById('splashStatus');
     if (!splash) return;
 
+    if (sessionStorage.getItem('rebel_splash_ok')) {
+      splash.classList.add('hidden');
+      document.body.style.overflow = '';
+      return;
+    }
+
     let progress = 0;
     let step = 0;
     const interval = setInterval(() => {
-      progress += Math.random() * 18 + 8;
+      progress += Math.random() * 28 + 14;
       if (progress > 100) progress = 100;
       if (bar) bar.style.width = progress + '%';
 
@@ -36,90 +42,31 @@
 
       if (progress >= 100) {
         clearInterval(interval);
+        sessionStorage.setItem('rebel_splash_ok', '1');
         setTimeout(() => {
           splash.classList.add('hidden');
           document.body.style.overflow = '';
-        }, 400);
+        }, 180);
       }
-    }, 180);
+    }, 110);
 
     document.body.style.overflow = 'hidden';
   }
 
-  // ── Particle Network ──────────────────────────────────────
+  // ── Particle Network — disabled for performance ───────────
   function initParticles() {
     const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let animId;
-    const COUNT = window.innerWidth < 768 ? 40 : 80;
-    const CONNECT_DIST = 140;
+    if (canvas) canvas.style.display = 'none';
+  }
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    function createParticles() {
-      particles = [];
-      for (let i = 0; i < COUNT; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          r: Math.random() * 1.5 + 0.5,
-        });
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(138, 43, 226, 0.6)';
-        ctx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const q = particles[j];
-          const dx = p.x - q.x;
-          const dy = p.y - q.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECT_DIST) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(0, 206, 209, ${0.15 * (1 - dist / CONNECT_DIST)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      });
-
-      animId = requestAnimationFrame(draw);
-    }
-
-    resize();
-    createParticles();
-    draw();
-
-    window.addEventListener('resize', () => {
-      resize();
-      createParticles();
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) cancelAnimationFrame(animId);
-      else draw();
-    });
+  // ── Scroll perf: throttle paints while scrolling ──────────
+  function initScrollPerf() {
+    let timer;
+    window.addEventListener('scroll', () => {
+      document.body.classList.add('is-scrolling');
+      clearTimeout(timer);
+      timer = setTimeout(() => document.body.classList.remove('is-scrolling'), 140);
+    }, { passive: true });
   }
 
   // ── Scroll Progress ───────────────────────────────────────
@@ -362,6 +309,9 @@
     const terminal = document.getElementById('demoTerminal');
     if (!terminal) return;
 
+    let running = false;
+    let timerId = null;
+
     const commands = [
       { cmd: 'rebel status --all', out: ['API: online ✓', 'Voice: ready ✓', 'Codespace: active ✓'] },
       { cmd: 'rebel chat "Explain quantum computing"', out: ['Rebel Gpt: Quantum computing uses qubits…'] },
@@ -369,7 +319,8 @@
     ];
     let cmdIdx = 0;
 
-    setInterval(() => {
+    function tick() {
+      if (!running) return;
       const c = commands[cmdIdx % commands.length];
       cmdIdx++;
 
@@ -383,6 +334,7 @@
 
       c.out.forEach((line, i) => {
         setTimeout(() => {
+          if (!running) return;
           const outLine = document.createElement('div');
           outLine.className = 't-line t-out';
           outLine.textContent = line;
@@ -392,6 +344,7 @@
       });
 
       setTimeout(() => {
+        if (!running) return;
         const newCursor = document.createElement('div');
         newCursor.className = 't-line';
         newCursor.innerHTML = '<span class="t-prompt">rebel@ai:~$</span> <span class="t-cursor">▌</span>';
@@ -401,7 +354,32 @@
           terminal.removeChild(terminal.firstChild);
         }
       }, c.out.length * 400 + 300);
-    }, 6000);
+    }
+
+    function startDemo() {
+      if (running) return;
+      running = true;
+      tick();
+      timerId = setInterval(tick, 8000);
+    }
+
+    function stopDemo() {
+      running = false;
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+    }
+
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) startDemo();
+          else stopDemo();
+        });
+      }, { threshold: 0.15 });
+      obs.observe(terminal);
+    } else {
+      startDemo();
+    }
   }
 
   // ── Clear Chat Button ─────────────────────────────────────
@@ -446,11 +424,19 @@
       .replace(/\n/g, '<br>');
 
     codeBlocks.forEach((block, idx) => {
-      const escaped = block.code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      const blockHtml = `<div class="msg-code-block"><div class="msg-code-header"><span>${block.lang}</span><button class="msg-code-copy" onclick="RebelAdvanced.copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>${escaped}</pre></div>`;
+      const langMap = { js: 'app.js', javascript: 'app.js', ts: 'app.ts', html: 'index.html', css: 'style.css', md: 'README.md', python: 'app.py', php: 'index.php' };
+      const langKey = (block.lang || 'code').toLowerCase();
+      const fakeFile = langMap[langKey] || ('snippet.' + (langKey === 'code' ? 'txt' : langKey));
+      let body;
+      if (window.RebelSyntax && window.RebelSyntax.highlightCode) {
+        body = window.RebelSyntax.highlightCode(block.code, fakeFile);
+      } else {
+        body = block.code
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+      const blockHtml = `<div class="msg-code-block"><div class="msg-code-header"><span>${block.lang || 'code'}</span><button class="msg-code-copy" onclick="RebelAdvanced.copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>${body}</pre></div>`;
       html = html.replace(`%%CODEBLOCK_${idx}%%`, blockHtml);
     });
 
@@ -473,7 +459,7 @@
   // ── Init ──────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     initSplash();
-    initParticles();
+    initScrollPerf();
     initScrollProgress();
     initHeroTyping();
     initStatsCounters();
@@ -481,8 +467,12 @@
     initMobileMenu();
     initCommandPalette();
     initCTAButtons();
-    initTerminalDemo();
     initClearChat();
+
+    requestAnimationFrame(() => {
+      initParticles();
+      initTerminalDemo();
+    });
   });
 
   window.RebelAdvanced = { renderMarkdown, copyCode, copyMessage };

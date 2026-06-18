@@ -16,7 +16,6 @@
 .card-3d-tilt {
   transform-style: preserve-3d;
   transition: transform 0.15s ease-out, box-shadow 0.3s ease;
-  will-change: transform;
 }
 
 .card-3d-tilt:hover {
@@ -112,8 +111,61 @@
 @media (max-width: 768px) {
   .rebel-3d-canvas { opacity: 0.4; }
   .card-3d-tilt:hover { transform: none; }
+  .ambient-glow { filter: blur(80px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-3d-tilt, .avatar-3d-wrap, .terminal-window { animation: none !important; transform: none !important; }
+}
+
+.feature-card.card-3d-tilt,
+.stat-card.card-3d-tilt {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card.card-3d-tilt::before,
+.stat-card.card-3d-tilt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(0, 206, 209, 0.12) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.feature-card.card-3d-tilt:hover::before,
+.stat-card.card-3d-tilt:hover::before {
+  transform: translateX(120%);
+}
+
+.btn-magnetic {
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease;
+}
+
+.btn-magnetic:hover {
+  box-shadow: 0 14px 36px rgba(138, 43, 226, 0.45), 0 0 24px rgba(0, 206, 209, 0.2);
+}
+
+/* Performance modes */
+body.is-scrolling .rebel-3d-canvas,
+body.is-scrolling .particle-canvas {
+  opacity: 0.35 !important;
+}
+
+body.is-scrolling .ambient-glow {
+  animation-play-state: paused;
+}
+
+body.rebel-3d-active .particle-canvas.particle-lite {
+  opacity: 0.35;
+}
+
+body.rebel-3d-fallback .rebel-3d-canvas {
+  display: none;
+}
+
+body.rebel-3d-fallback .particle-canvas {
+  opacity: 0.65;
 }
